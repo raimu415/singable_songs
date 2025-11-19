@@ -4,28 +4,26 @@
   <meta charset="UTF-8" />
   <title>らいむの歌える曲リスト</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+        --bg: #020617;
+        --bg-card: rgba(15, 23, 42, 0.85);
+        --accent: #4b7fff;
+        --accent-soft: rgba(75, 127, 255, 0.23);
+        --accent-pink: #ff6ac1;
+        --text-main: #e5e7eb;
+        --text-sub: #9ca3af;
+        --border: rgba(148, 163, 184, 0.4);
+        --radius-lg: 18px;
+        --shadow-soft: 0 14px 40px rgba(0, 0, 0, 0.7);
+        }
 
-  <style>
-    /* ======================
-       ベーススタイル
-    ======================= */
-    :root {
-      --bg: #f3f4ff;
-      --bg-card: #ffffff;
-      --accent: #6366f1;
-      --accent-soft: rgba(99, 102, 241, 0.12);
-      --text-main: #111827;
-      --text-sub: #6b7280;
-      --border: #e5e7eb;
-      --radius-lg: 16px;
-      --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
-    }
+        /* ===== ベース ===== */
+        * {
+        box-sizing: border-box;
+        }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
+        body {
         margin: 0;
         padding: 0;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -34,335 +32,391 @@
         min-height: 100vh;
         position: relative;
         overflow-x: hidden;
-        background: #000; /* 画像読み込み前の一時背景 */
+        background: #000; /* 読み込み前の色 */
         }
 
+        /* ぼやけた背景写真 */
         body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: url("./bg.jpg") center center / cover no-repeat;
-            filter: blur(10px) brightness(0.85);
-            transform: scale(1.05);
-            z-index: -2;
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: url("./bg.jpg") center center / cover no-repeat;
+        filter: blur(12px) brightness(0.55);
+        transform: scale(1.06);
+        z-index: -2;
         }
 
-
-        /* ほんのりグラデーションかけて見やすくする */
+        /* 上からネオンっぽいグラデ */
         body::after {
         content: "";
         position: fixed;
         inset: 0;
-        background: radial-gradient(circle at top, rgba(99, 102, 241, 0.18), transparent 55%);
+        background:
+            radial-gradient(circle at top left, rgba(79, 70, 229, 0.65), transparent 55%),
+            radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.5), transparent 55%),
+            linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.97));
+        mix-blend-mode: screen;
         z-index: -1;
         }
 
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 12px 16px 32px;
-    }
+        .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 14px 16px 32px;
+        }
 
-    /* ======================
-       ヘッダー
-    ======================= */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      padding: 12px 0 10px;
-      margin-bottom: 10px;
-      backdrop-filter: blur(16px);
-    }
+        /* ===== ヘッダー ===== */
+        header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: 10px 0 8px;
+        }
 
-    .header-inner {
-      background: rgba(255, 255, 255, 0.92);
-      border-radius: 24px;
-      padding: 10px 14px 12px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-    }
+        .header-inner {
+        background: radial-gradient(
+            circle at top,
+            rgba(15, 23, 42, 0.98),
+            rgba(15, 23, 42, 0.92)
+            );
+        border-radius: 20px;
+        padding: 12px 16px 14px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        }
 
-    .title-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    h1 {
-      font-size: 1.3rem;
-      margin: 0;
-      letter-spacing: 0.03em;
-      display: flex;
-      align-items: center;
-      gap: 0.25em;
-    }
-
-    .title-chip {
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 1px solid rgba(129, 140, 248, 0.6);
-    }
-
-    .tagline {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-      text-align: center;
-    }
-
-    .note {
-      font-size: 0.75rem;
-      color: #9ca3af;
-      text-align: center;
-      margin-top: 2px;
-    }
-
-    /* ======================
-       検索 & フィルタ
-    ======================= */
-    .controls {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .search-box label {
-      font-size: 0.8rem;
-      color: var(--text-sub);
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .search-input-wrap {
-      position: relative;
-    }
-
-    .search-box input {
-      width: 100%;
-      padding: 9px 12px 9px 32px;
-      font-size: 0.95rem;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      outline: none;
-      background: #f9fafb;
-    }
-
-    .search-box input:focus {
-      border-color: var(--accent);
-      background: #ffffff;
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.9rem;
-      color: #9ca3af;
-      pointer-events: none;
-    }
-
-    .filter-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 2px;
-      justify-content: center;
-    }
-
-    .filter-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 0.78rem;
-      background: rgba(255, 255, 255, 0.9);
-      color: var(--text-sub);
-      cursor: pointer;
-      border: 1px solid rgba(209, 213, 219, 0.9);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
-    }
-
-    .filter-btn span.count {
-      font-size: 0.7rem;
-      padding: 0 4px;
-      border-radius: 999px;
-      background: #e5e7eb;
-      color: #4b5563;
-    }
-
-    .filter-btn.active {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
-    }
-
-    .filter-btn.active span.count {
-      background: rgba(248, 250, 252, 0.2);
-      color: #e5e7eb;
-    }
-
-    .filter-btn:active {
-      transform: translateY(1px);
-    }
-
-    /* ======================
-       セクション & テーブル
-    ======================= */
-    main {
-      margin-top: 12px;
-    }
-
-    .category-section {
-      margin-top: 18px;
-    }
-
-    .category-header {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-
-    .category-title {
-      font-size: 1rem;
-      margin: 0;
-      padding-left: 8px;
-      border-left: 4px solid var(--accent);
-    }
-
-    .category-badge {
-      font-size: 0.7rem;
-      color: var(--text-sub);
-    }
-
-    .table-wrapper {
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 6px 6px 4px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-      min-width: 320px;
-    }
-
-    th,
-    td {
-      padding: 6px 8px;
-      text-align: left;
-      vertical-align: top;
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      font-size: 0.75rem;
-      background: #f9fafb;
-      color: #6b7280;
-      white-space: nowrap;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    .song-title {
-      font-weight: 600;
-    }
-
-    .song-artist {
-      color: #4b5563;
-      font-size: 0.88rem;
-    }
-
-    .memo-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 1px 6px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      color: #4b5563;
-      background: #f9fafb;
-    }
-
-    .memo-pill.memo-ng {
-      border-color: #f87171;
-      background: #fef2f2;
-      color: #b91c1c;
-    }
-
-    .memo-pill.memo-training {
-      border-color: #38bdf8;
-      background: #ecfeff;
-      color: #0369a1;
-    }
-
-    .memo-pill.memo-key {
-      border-color: #a855f7;
-      background: #faf5ff;
-      color: #7e22ce;
-    }
-
-    .memo-text {
-      font-size: 0.8rem;
-      color: #4b5563;
-    }
-
-    .empty-msg {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--text-sub);
-    }
-
-    /* ======================
-       フッター
-    ======================= */
-    footer {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 0.72rem;
-      color: #9ca3af;
-    }
-
-    /* ======================
-       レスポンシブ
-    ======================= */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.15rem;
-      }
-
-      .title-row {
+        /* タイトル */
+        .title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
         justify-content: center;
-      }
+        }
 
-      table {
+        h1 {
+        margin: 0;
+        font-size: 1.9rem;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #e5edff;
+        text-shadow:
+            0 0 6px rgba(75, 127, 255, 0.9),
+            0 0 18px rgba(56, 189, 248, 0.8),
+            0 0 36px rgba(59, 130, 246, 0.7);
+        display: flex;
+        align-items: center;
+        gap: 0.35em;
+        }
+
+        h1 span {
+        font-size: 1.4rem;
+        filter: drop-shadow(0 0 8px rgba(251, 113, 133, 0.8));
+        }
+
+        .title-chip {
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: radial-gradient(circle at top left, #f97316, #7c3aed);
+        color: #0b1020;
+        border: 1px solid rgba(248, 250, 252, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        box-shadow:
+            0 0 10px rgba(249, 115, 22, 0.8),
+            0 0 26px rgba(124, 58, 237, 0.8);
+        }
+
+        .tagline {
+        font-size: 0.9rem;
+        color: var(--text-sub);
+        text-align: center;
+        }
+
+        .note {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 2px;
+        }
+
+        /* ===== 検索 & フィルタ ===== */
+        .controls {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        }
+
+        .search-box label {
+        font-size: 0.78rem;
+        color: #9ca3af;
+        display: block;
+        margin-bottom: 4px;
+        }
+
+        .search-input-wrap {
+        position: relative;
+        }
+
+        .search-box input {
+        width: 100%;
+        padding: 9px 12px 9px 32px;
+        font-size: 0.95rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        outline: none;
+        background: radial-gradient(circle at top left, #020617, #020617);
+        color: var(--text-main);
+        box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.8);
+        }
+
+        .search-box input::placeholder {
+        color: #6b7280;
+        }
+
+        .search-box input:focus {
+        border-color: var(--accent);
+        box-shadow:
+            0 0 0 1px rgba(15, 23, 42, 1),
+            0 0 18px rgba(59, 130, 246, 0.8);
+        }
+
+        .search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.9rem;
+        color: #6b7280;
+        pointer-events: none;
+        }
+
+        .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+        justify-content: center;
+        }
+
+        /* フィルタボタン（カテゴリ） */
+        .filter-btn {
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 0.75rem;
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text-sub);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition:
+            background 0.12s,
+            color 0.12s,
+            border-color 0.12s,
+            transform 0.06s,
+            box-shadow 0.12s;
+        }
+
+        .filter-btn span.count {
+        font-size: 0.68rem;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: rgba(31, 41, 55, 0.9);
+        color: #e5e7eb;
+        }
+
+        .filter-btn.active {
+        background: radial-gradient(circle at top, #4f46e5, #0ea5e9);
+        color: #f9fafb;
+        border-color: rgba(56, 189, 248, 0.9);
+        box-shadow:
+            0 0 10px rgba(56, 189, 248, 0.85),
+            0 0 22px rgba(79, 70, 229, 0.85);
+        }
+
+        .filter-btn.active span.count {
+        background: rgba(15, 23, 42, 0.9);
+        color: #e5e7eb;
+        }
+
+        .filter-btn:active {
+        transform: translateY(1px) scale(0.98);
+        }
+
+        /* ===== メイン & テーブル ===== */
+        main {
+        margin-top: 14px;
+        }
+
+        .category-section {
+        margin-top: 18px;
+        }
+
+        .category-header {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-bottom: 6px;
+        }
+
+        .category-title {
+        font-size: 1.05rem;
+        margin: 0;
+        padding-left: 10px;
+        border-left: 3px solid var(--accent);
+        color: #e5edff;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+        }
+
+        .category-badge {
+        font-size: 0.7rem;
+        color: var(--text-sub);
+        }
+
+        /* ガラスカード風テーブル */
+        .table-wrapper {
+        background: linear-gradient(
+            135deg,
+            rgba(15, 23, 42, 0.95),
+            rgba(15, 23, 42, 0.86)
+        );
+        border-radius: var(--radius-lg);
+        padding: 6px 6px 4px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid rgba(37, 99, 235, 0.7);
+        overflow-x: auto;
+        }
+
+        table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        min-width: 320px;
+        }
+
+        th,
+        td {
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+        }
+
+        th {
+        font-size: 0.78rem;
+        background: radial-gradient(
+            circle at top left,
+            rgba(15, 23, 42, 0.9),
+            rgba(15, 23, 42, 0.98)
+        );
+        color: #9ca3af;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        }
+
+        tr:last-child td {
+        border-bottom: none;
+        }
+
+        /* 曲名・アーティスト・メモ */
+        .song-title {
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        }
+
+        .song-artist {
+        color: #a5b4fc;
         font-size: 0.85rem;
-      }
+        }
 
-      th,
-      td {
-        padding: 6px 6px;
-      }
-    }
-  </style>
+        .memo-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 6px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        border: 1px solid rgba(148, 163, 184, 0.8);
+        color: #e5e7eb;
+        background: rgba(15, 23, 42, 0.9);
+        margin-right: 3px;
+        }
+
+        .memo-pill.memo-ng {
+        border-color: #f97373;
+        background: rgba(127, 29, 29, 0.9);
+        color: #fee2e2;
+        box-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
+        }
+
+        .memo-pill.memo-training {
+        border-color: #38bdf8;
+        background: rgba(8, 47, 73, 0.96);
+        color: #e0f2fe;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+        }
+
+        .memo-pill.memo-key {
+        border-color: #a855f7;
+        background: rgba(46, 16, 101, 0.95);
+        color: #f5e9ff;
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
+        }
+
+        .memo-text {
+        font-size: 0.8rem;
+        color: #cbd5f5;
+        margin-top: 1px;
+        }
+
+        .empty-msg {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-sub);
+        }
+
+        /* ===== フッター ===== */
+        footer {
+        margin-top: 26px;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #6b7280;
+        }
+
+        /* ===== スマホ対応 ===== */
+        @media (max-width: 600px) {
+        h1 {
+            font-size: 1.5rem;
+            letter-spacing: 0.12em;
+        }
+
+        .header-inner {
+            padding: 10px 10px 12px;
+        }
+
+        table {
+            font-size: 0.84rem;
+        }
+
+        th,
+        td {
+            padding: 6px 6px;
+        }
+
+        .container {
+            padding-inline: 10px;
+        }
+        }
+
+        </style>
 </head>
 <body>
   <div class="container">
