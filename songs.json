@@ -26,7 +26,7 @@
   {
     "title": "唱",
     "artist": "Ado",
-    "memo": "0/83",
+    "memo": "",
     "category": "jpop"
   },
   {
@@ -44,7 +44,7 @@
   {
     "title": "私は最強",
     "artist": "Ado",
-    "memo": "0/84",
+    "memo": "",
     "category": "jpop"
   },
   {
@@ -68,7 +68,7 @@
   {
     "title": "あたしは問題作",
     "artist": "Ado",
-    "memo": "/83",
+    "memo": "",
     "category": "jpop"
   },
   {
@@ -92,7 +92,7 @@
   {
     "title": "大切な人たちへ",
     "artist": "傘村トータ",
-    "memo": "-2/88",
+    "memo": "-2",
     "category": "jpop"
   },
   {
@@ -140,49 +140,49 @@
   {
     "title": "酔いどれ知らず",
     "artist": "Kanaria",
-    "memo": "0/85",
+    "memo": "0",
     "category": "jpop"
   },
   {
     "title": "KING",
     "artist": "Kanaria",
-    "memo": "/83〜",
+    "memo": "-2",
     "category": "jpop"
   },
   {
     "title": "レクイエム",
     "artist": "Kanaria",
-    "memo": "/86〜",
+    "memo": "",
     "category": "jpop"
   },
   {
     "title": "エンヴィーベイビー",
     "artist": "Kanaria",
-    "memo": "-1/85〜",
+    "memo": "-1",
     "category": "jpop"
   },
   {
     "title": "アイデンティティ",
     "artist": "Kanaria",
-    "memo": "/84〜",
+    "memo": "",
     "category": "jpop"
   },
   {
     "title": "デーモンロード",
     "artist": "Kanaria",
-    "memo": "/84〜",
+    "memo": "",
     "category": "jpop"
   },
   {
     "title": "QUEEN",
     "artist": "Kanaria",
-    "memo": "-4/87〜",
+    "memo": "-4",
     "category": "jpop"
   },
   {
     "title": "EYE",
     "artist": "Kanaria",
-    "memo": "-3/83〜",
+    "memo": "-3",
     "category": "jpop"
   },
   {
@@ -204,15 +204,9 @@
     "category": "jpop"
   },
   {
-    "title": "大脳的なランデブー",
-    "artist": "Kanaria",
-    "memo": "キー不明（+4予想）/80〜",
-    "category": "jpop"
-  },
-  {
     "title": "LOSER",
     "artist": "米津玄師",
-    "memo": "-4/85",
+    "memo": "-4",
     "category": "jpop"
   },
   {
@@ -242,7 +236,7 @@
   {
     "title": "ピースサイン",
     "artist": "米津玄師",
-    "memo": "-1/81",
+    "memo": "",
     "category": "jpop"
   },
   {
