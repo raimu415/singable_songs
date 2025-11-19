@@ -1,413 +1,648 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>らいむの歌える曲リスト</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>らいむの歌える曲リスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <style>
-        /* 全体レイアウト */
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f3f4ff;
-            color: #222;
-        }
+  <style>
+    /* ======================
+       ベーススタイル
+    ======================= */
+    :root {
+      --bg: #f3f4ff;
+      --bg-card: #ffffff;
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.12);
+      --text-main: #111827;
+      --text-sub: #6b7280;
+      --border: #e5e7eb;
+      --radius-lg: 16px;
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
 
-        .container {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 12px 16px 32px;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        /* ヘッダー */
-        header {
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        h1 {
-            font-size: 1.4rem;
-            margin: 8px 0 4px;
-        }
-        .tagline {
-            font-size: 0.9rem;
-            color: #555;
-        }
-        .note {
-            font-size: 0.8rem;
-            color: #777;
-        }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #e0e7ff 0, #f3f4ff 45%, #f9fafb 100%);
+      color: var(--text-main);
+    }
 
-        /* 検索ボックス */
-        .search-box {
-            margin: 16px 0 8px;
-        }
-        .search-box label {
-            font-size: 0.85rem;
-            color: #555;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 10px 12px;
-            font-size: 1rem;
-            border-radius: 999px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            outline: none;
-        }
-        .search-box input:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
-        }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 12px 16px 32px;
+    }
 
-        /* カテゴリ見出し */
-        .category {
-            margin-top: 24px;
-        }
-        .category h2 {
-            font-size: 1.05rem;
-            margin: 0 0 4px;
-            padding-left: 8px;
-            border-left: 4px solid #6366f1;
-        }
-        .category .count {
-            font-size: 0.78rem;
-            color: #666;
-            margin-left: 4px;
-        }
+    /* ======================
+       ヘッダー
+    ======================= */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 12px 0 10px;
+      margin-bottom: 10px;
+      backdrop-filter: blur(16px);
+    }
 
-        /* テーブルをスマホでも見やすく */
-        .table-wrapper {
-            margin-top: 6px;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 4px;
-            box-shadow: 0 2px 4px rgba(15,23,42,0.08);
-            overflow-x: auto; /* はみ出したら横スクロール */
-        }
+    .header-inner {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 24px;
+      padding: 10px 14px 12px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-            min-width: 320px;
-        }
-        th, td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: left;
-            vertical-align: top;
-        }
-        th {
-            font-size: 0.8rem;
-            background: #f1f5f9;
-            white-space: nowrap;
-        }
-        tr:last-child td {
-            border-bottom: none;
-        }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
-        /* タグっぽいメモ表示用 */
-        .memo {
-            font-size: 0.78rem;
-            color: #555;
-        }
+    h1 {
+      font-size: 1.3rem;
+      margin: 0;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 0.25em;
+    }
 
-        /* 行がヒットしなかったときに非表示にする用 */
-        .hidden-row {
-            display: none;
-        }
+    .title-chip {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(129, 140, 248, 0.6);
+    }
 
-        /* ローディング / メッセージ */
-        .status {
-            margin-top: 12px;
-            font-size: 0.85rem;
-            color: #666;
-            text-align: center;
-        }
-        .status.error {
-            color: #b91c1c;
-        }
+    .tagline {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      text-align: center;
+    }
 
-        /* フッター */
-        footer {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 0.75rem;
-            color: #777;
-        }
+    .note {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 2px;
+    }
 
-        /* 画面が小さいとき少し文字大きめに */
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.3rem;
-            }
-            table {
-                font-size: 0.85rem;
-            }
-            th, td {
-                padding: 6px 6px;
-            }
-        }
-    </style>
+    /* ======================
+       検索 & フィルタ
+    ======================= */
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-box label {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 9px 12px 9px 32px;
+      font-size: 0.95rem;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      outline: none;
+      background: #f9fafb;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent);
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+      justify-content: center;
+    }
+
+    .filter-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text-sub);
+      cursor: pointer;
+      border: 1px solid rgba(209, 213, 219, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
+    }
+
+    .filter-btn span.count {
+      font-size: 0.7rem;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      color: #4b5563;
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .filter-btn.active span.count {
+      background: rgba(248, 250, 252, 0.2);
+      color: #e5e7eb;
+    }
+
+    .filter-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* ======================
+       セクション & テーブル
+    ======================= */
+    main {
+      margin-top: 12px;
+    }
+
+    .category-section {
+      margin-top: 18px;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .category-title {
+      font-size: 1rem;
+      margin: 0;
+      padding-left: 8px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .category-badge {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+    }
+
+    .table-wrapper {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 6px 6px 4px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 320px;
+    }
+
+    th,
+    td {
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-size: 0.75rem;
+      background: #f9fafb;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .song-title {
+      font-weight: 600;
+    }
+
+    .song-artist {
+      color: #4b5563;
+      font-size: 0.88rem;
+    }
+
+    .memo-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: #4b5563;
+      background: #f9fafb;
+    }
+
+    .memo-pill.memo-ng {
+      border-color: #f87171;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .memo-pill.memo-training {
+      border-color: #38bdf8;
+      background: #ecfeff;
+      color: #0369a1;
+    }
+
+    .memo-pill.memo-key {
+      border-color: #a855f7;
+      background: #faf5ff;
+      color: #7e22ce;
+    }
+
+    .memo-text {
+      font-size: 0.8rem;
+      color: #4b5563;
+    }
+
+    .empty-msg {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    /* ======================
+       フッター
+    ======================= */
+    footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #9ca3af;
+    }
+
+    /* ======================
+       レスポンシブ
+    ======================= */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.15rem;
+      }
+
+      .title-row {
+        justify-content: center;
+      }
+
+      table {
+        font-size: 0.85rem;
+      }
+
+      th,
+      td {
+        padding: 6px 6px;
+      }
+    }
+  </style>
 </head>
 <body>
-<div class="container">
+  <div class="container">
     <header>
-        <h1>らいむの歌える曲リスト</h1>
-        <div class="tagline">配信でリクエストOKな曲をまとめました 🎤</div>
-        <div class="note">※曲名・アーティスト名・メモで検索できます</div>
+      <div class="header-inner">
+        <div class="title-row">
+          <h1>らいむの歌える曲リスト <span>🎤</span></h1>
+          <span class="title-chip">リクエスト歓迎</span>
+        </div>
+        <div class="tagline">
+          配信で歌える（歌いたい）曲をまとめたページです。
+        </div>
+        <div class="note">曲名・アーティスト・メモで検索できます</div>
+
+        <div class="controls">
+          <div class="search-box">
+            <label for="searchInput">検索（例：Ado / シャルル / ボカロ / 練習中 など）</label>
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="キーワードで絞り込み..."
+              />
+            </div>
+          </div>
+
+          <div class="filter-row" id="filterRow">
+            <!-- JSでボタンを差し込む -->
+          </div>
+        </div>
+      </div>
     </header>
 
-    <div class="search-box">
-        <label for="searchInput">検索（例：Ado / シャルル / ボカロ など）</label>
-        <input type="text" id="searchInput" placeholder="曲名・アーティスト名・メモで検索...">
-    </div>
-
-    <div id="status" class="status">曲データを読み込み中...</div>
-
-    <!-- カテゴリごとのブロックは JavaScript で自動生成する -->
-    <div id="categories-root"></div>
+    <main id="songSections">
+      <!-- JSでカテゴリごとのリストを描画 -->
+    </main>
 
     <footer>
-        更新日: <span id="updatedDate"></span><br>
-        ※少しずつ曲を追加していきます
+      更新日: <span id="updatedDate"></span><br />
+      ※ 少しずつ曲を追加＆整理していきます
     </footer>
-</div>
+  </div>
 
-<script>
-    // ---------------------------
-    // 設定
-    // ---------------------------
-    const SONGS_JSON_URL = "songs.json"; // 同じフォルダにある前提
+  <script>
+    // ======================
+    // カテゴリ定義
+    // ======================
+    const CATEGORY_LABELS = {
+      all: "すべて",
+      jpop: "J-POP / Ado / 傘村 / Kanaria など",
+      anime: "アニソン / ゲーソン",
+      vocaloid: "ボカロ",
+      other: "その他",
+      ng: "二度と歌いたくないやつ",
+      training: "頑張って覚えてるやつ"
+    };
 
-    // カテゴリ一覧（IDと表示名）
-    const CATEGORIES = [
-        { id: "vocaloid", label: "ボカロ" },
-        { id: "jpop",     label: "J-POP / アニソン" },
-        { id: "anime",    label: "アニメソング" },
-        { id: "training", label: "練習中" },
-        { id: "ng",       label: "二度と歌いたくないやつ" },
-        { id: "other",    label: "曲だけ知ってる曲" }
-    ];
+    const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training"];
 
-    // ---------------------------
-    // 日付表示
-    // ---------------------------
+    let allSongs = [];
+    let filteredCategory = "all";
+    let keyword = "";
+
+    const sectionsContainer = document.getElementById("songSections");
+    const searchInput = document.getElementById("searchInput");
+    const filterRow = document.getElementById("filterRow");
+
+    // ======================
+    // 更新日表示
+    // ======================
     (function setUpdatedDate() {
-        const updatedSpan = document.getElementById("updatedDate");
-        const today = new Date();
-        const y = today.getFullYear();
-        const m = String(today.getMonth() + 1).padStart(2, "0");
-        const d = String(today.getDate()).padStart(2, "0");
-        updatedSpan.textContent = `${y}/${m}/${d}`;
+      const updatedSpan = document.getElementById("updatedDate");
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, "0");
+      const d = String(today.getDate()).padStart(2, "0");
+      updatedSpan.textContent = `${y}/${m}/${d}`;
     })();
 
-    // ---------------------------
-    // DOM生成ヘルパー
-    // ---------------------------
-    function createElement(tag, attrs = {}, children = []) {
-        const el = document.createElement(tag);
-        Object.entries(attrs).forEach(([key, value]) => {
-            if (key === "class") el.className = value;
-            else if (key === "text") el.textContent = value;
-            else el.setAttribute(key, value);
-        });
-        children.forEach(child => el.appendChild(child));
-        return el;
-    }
-
-    // ---------------------------
-    // カテゴリセクションを作る
-    // ---------------------------
-    function createCategorySection(categoryId, label) {
-        const tbody = createElement("tbody", {
-            "data-category-body": categoryId
-        });
-
-        const table = createElement("table", {}, [
-            createElement("thead", {}, [
-                createElement("tr", {}, [
-                    createElement("th", { text: "曲名" }),
-                    createElement("th", { text: "アーティスト" }),
-                    createElement("th", { text: "メモ" })
-                ])
-            ]),
-            tbody
-        ]);
-
-        const wrapper = createElement("div", { class: "table-wrapper" }, [table]);
-
-        const countSpan = createElement("span", {
-            class: "count",
-            "data-category-count": categoryId,
-            text: "(0曲)"
-        });
-
-        const h2 = createElement("h2", {}, [
-            document.createTextNode(label),
-            countSpan
-        ]);
-
-        const section = createElement("section", {
-            class: "category",
-            "data-category-section": categoryId
-        }, [
-            h2,
-            wrapper
-        ]);
-
-        return section;
-    }
-
-    // ---------------------------
-    // 楽曲テーブルの描画
-    // ---------------------------
-    let allRows = []; // 検索用に全行を保持
-
-    function renderSongs(songs) {
-        const root = document.getElementById("categories-root");
-        root.innerHTML = ""; // 一旦クリア
-        allRows = [];
-
-        if (!Array.isArray(songs) || songs.length === 0) {
-            document.getElementById("status").textContent = "まだ曲が登録されていません。管理画面から追加してね。";
-            return;
-        } else {
-            document.getElementById("status").textContent = "";
-        }
-
-        // カテゴリごとに分類
-        const grouped = {};
-        CATEGORIES.forEach(cat => grouped[cat.id] = []);
-
-        songs.forEach(song => {
-            const cat = song.category || "other";
-            if (!grouped[cat]) {
-                grouped[cat] = [];
-            }
-            grouped[cat].push(song);
-        });
-
-        // カテゴリの順番にセクションを作成
-        CATEGORIES.forEach(cat => {
-            const list = grouped[cat.id] || [];
-            if (list.length === 0) {
-                // そのカテゴリに曲がない場合はセクション自体を作らない
-                return;
-            }
-
-            const section = createCategorySection(cat.id, cat.label);
-            root.appendChild(section);
-
-            const tbody = section.querySelector(`[data-category-body="${cat.id}"]`);
-            const countSpan = section.querySelector(`[data-category-count="${cat.id}"]`);
-            countSpan.textContent = `(${list.length}曲)`;
-
-            // 曲ごとの行を作成
-            list.forEach(song => {
-                const title  = song.title  || "";
-                const artist = song.artist || "";
-                const memo   = song.memo   || "";
-
-                const tr = createElement("tr", {
-                    "data-search-text": (title + " " + artist + " " + memo).toLowerCase()
-                });
-
-                const tdTitle = createElement("td", { "data-col": "title" });
-                tdTitle.textContent = title;
-
-                const tdArtist = createElement("td", { "data-col": "artist" });
-                tdArtist.textContent = artist;
-
-                const tdMemo = createElement("td", {
-                    "data-col": "memo",
-                    class: "memo"
-                });
-                tdMemo.textContent = memo;
-
-                tr.appendChild(tdTitle);
-                tr.appendChild(tdArtist);
-                tr.appendChild(tdMemo);
-
-                tbody.appendChild(tr);
-                allRows.push(tr);
-            });
-        });
-
-        if (root.children.length === 0) {
-            document.getElementById("status").textContent = "まだ曲が登録されていません。管理画面から追加してね。";
-        }
-    }
-
-    // ---------------------------
-    // 検索フィルター
-    // ---------------------------
-    function setupSearch() {
-        const input = document.getElementById("searchInput");
-        input.addEventListener("input", () => {
-            const keyword = input.value.toLowerCase().trim();
-
-            if (!keyword) {
-                // クリア時は全て表示
-                allRows.forEach(row => row.classList.remove("hidden-row"));
-                document.getElementById("status").textContent = "";
-                return;
-            }
-
-            let hitCount = 0;
-            allRows.forEach(row => {
-                const text = row.getAttribute("data-search-text") || "";
-                if (text.includes(keyword)) {
-                    row.classList.remove("hidden-row");
-                    hitCount++;
-                } else {
-                    row.classList.add("hidden-row");
-                }
-            });
-
-            const status = document.getElementById("status");
-            if (hitCount === 0) {
-                status.textContent = "該当する曲が見つかりませんでした。";
-            } else {
-                status.textContent = `${hitCount} 曲ヒットしました。`;
-            }
-        });
-    }
-
-    // ---------------------------
-    // JSON読み込み
-    // ---------------------------
+    // ======================
+    // songs.json 読み込み
+    // ======================
     async function loadSongs() {
-        const status = document.getElementById("status");
-        status.textContent = "曲データを読み込み中...";
-
-        try {
-            const res = await fetch(SONGS_JSON_URL, {
-                cache: "no-store"
-            });
-
-            if (!res.ok) {
-                throw new Error(`HTTP ${res.status}`);
-            }
-
-            const data = await res.json();
-            renderSongs(data);
-        } catch (err) {
-            console.error(err);
-            status.textContent = "曲データの読み込みに失敗しました。時間をおいて再度アクセスしてください。";
-            status.classList.add("error");
+      try {
+        const res = await fetch("songs.json", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("songs.json が読み込めませんでした");
         }
+        const data = await res.json();
+        allSongs = Array.isArray(data) ? data : [];
+        buildFilterButtons();
+        render();
+      } catch (err) {
+        console.error(err);
+        sectionsContainer.innerHTML =
+          '<p class="empty-msg">曲データの読み込みに失敗しました。</p>';
+      }
     }
 
-    // ---------------------------
-    // 初期化
-    // ---------------------------
-    setupSearch();
+    // ======================
+    // フィルタボタン生成
+    // ======================
+    function buildFilterButtons() {
+      // カテゴリごとの曲数
+      const counts = allSongs.reduce(
+        (acc, song) => {
+          const cat = song.category || "other";
+          acc.all++;
+          acc[cat] = (acc[cat] || 0) + 1;
+          return acc;
+        },
+        { all: 0 }
+      );
+
+      const cats = ["all", ...CATEGORY_ORDER];
+
+      filterRow.innerHTML = "";
+      cats.forEach((key) => {
+        const btn = document.createElement("button");
+        btn.className = "filter-btn" + (key === filteredCategory ? " active" : "");
+        btn.dataset.category = key;
+        btn.textContent = CATEGORY_LABELS[key] || key;
+        const countSpan = document.createElement("span");
+        countSpan.className = "count";
+        countSpan.textContent = counts[key] != null ? counts[key] : 0;
+        btn.appendChild(countSpan);
+
+        btn.addEventListener("click", () => {
+          filteredCategory = key;
+          document
+            .querySelectorAll(".filter-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          render();
+        });
+
+        filterRow.appendChild(btn);
+      });
+    }
+
+    // ======================
+    // レンダリング
+    // ======================
+    function render() {
+      const kw = keyword.toLowerCase().trim();
+      let songsToShow = allSongs.slice();
+
+      // カテゴリ絞り込み
+      if (filteredCategory !== "all") {
+        songsToShow = songsToShow.filter(
+          (s) => (s.category || "other") === filteredCategory
+        );
+      }
+
+      // キーワード検索
+      if (kw) {
+        songsToShow = songsToShow.filter((s) => {
+          const t = (s.title || "").toLowerCase();
+          const a = (s.artist || "").toLowerCase();
+          const m = (s.memo || "").toLowerCase();
+          return `${t} ${a} ${m}`.includes(kw);
+        });
+      }
+
+      if (songsToShow.length === 0) {
+        sectionsContainer.innerHTML =
+          '<p class="empty-msg">条件に合う曲がありません。キーワードやカテゴリを変えてみてください。</p>';
+        return;
+      }
+
+      // カテゴリごとにグルーピング
+      const groups = {};
+      songsToShow.forEach((s) => {
+        const cat = s.category || "other";
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(s);
+      });
+
+      // いい感じの順番で並べる
+      const order = CATEGORY_ORDER.filter((c) => groups[c]);
+      const htmlParts = [];
+
+      order.forEach((cat) => {
+        const list = groups[cat];
+        htmlParts.push(renderCategorySection(cat, list));
+      });
+
+      sectionsContainer.innerHTML = htmlParts.join("");
+    }
+
+    function renderCategorySection(catKey, songs) {
+      const label =
+        catKey === "jpop"
+          ? "J-POP / Ado / 傘村トータ / Kanaria など"
+          : catKey === "anime"
+          ? "アニソン / ゲーソン"
+          : catKey === "vocaloid"
+          ? "ボカロ"
+          : catKey === "ng"
+          ? "二度と歌いたくないやつ"
+          : catKey === "training"
+          ? "頑張って覚えてるやつ"
+          : "その他";
+
+      const headerTitle =
+        {
+          jpop: "J-POP / アーティスト系",
+          anime: "アニソン / ゲームソング",
+          vocaloid: "ボカロ",
+          other: "その他",
+          ng: "NGリスト（歌いたくない）",
+          training: "練習中の曲"
+        }[catKey] || "その他";
+
+      const rowsHtml = songs
+        .map((s) => {
+          const title = escapeHtml(s.title || "");
+          const artist = escapeHtml(s.artist || "");
+          const memo = s.memo || "";
+
+          const memoPills = [];
+
+          if (/二度と歌いたくない/.test(memo)) {
+            memoPills.push(
+              `<span class="memo-pill memo-ng">二度と歌いたくない</span>`
+            );
+          }
+          if (/練習中/.test(memo)) {
+            memoPills.push(
+              `<span class="memo-pill memo-training">練習中</span>`
+            );
+          }
+          if (/[-+]\d|\/\d{2}/.test(memo)) {
+            memoPills.push(
+              `<span class="memo-pill memo-key">キー情報あり</span>`
+            );
+          }
+
+          const memoText = memo
+            ? `<div class="memo-text">${escapeHtml(memo)}</div>`
+            : "";
+
+          return `
+          <tr>
+            <td>
+              <div class="song-title">${title}</div>
+            </td>
+            <td>
+              <div class="song-artist">${artist || "&nbsp;"}</div>
+            </td>
+            <td>
+              ${memoPills.join(" ")}
+              ${memoText}
+            </td>
+          </tr>
+        `;
+        })
+        .join("");
+
+      return `
+      <section class="category-section" data-category="${catKey}">
+        <div class="category-header">
+          <h2 class="category-title">${headerTitle}</h2>
+          <span class="category-badge">${label}</span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>曲名</th>
+                <th>アーティスト</th>
+                <th>メモ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // ======================
+    // イベント
+    // ======================
+    searchInput.addEventListener("input", (e) => {
+      keyword = e.target.value;
+      render();
+    });
+
+    // 初期ロード
     loadSongs();
-</script>
+  </script>
 </body>
 </html>
