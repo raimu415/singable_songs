@@ -37,14 +37,16 @@
         background: #000; /* 画像読み込み前の一時背景 */
         }
 
-        /* ぼやけた背景写真 */
         body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(135deg, #ff7eb3, #7afcff);
-            z-index: -2;
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: url("./bg.jpg") center center / cover no-repeat;
+        filter: blur(10px) brightness(0.85);
+        transform: scale(1.05);
+        z-index: -2;
         }
+
 
         /* ほんのりグラデーションかけて見やすくする */
         body::after {
