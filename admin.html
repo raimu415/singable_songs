@@ -220,7 +220,11 @@
     const REPO  = "singable_songs";
     const FILE_PATH = "songs.json";
     const GITHUB_API_BASE = "https://api.github.com";
-    const TOKEN_STORAGE_KEY = "songlist_github_pat";
+
+    // このタブの中だけで使うトークン（localStorageは使わない）
+    let tokenCache = "";
+
+    const TOKEN_STATUS_TEXT_DEFAULT = "トークン未設定（このタブ内でのみ保持）";
 
     const tokenInput      = document.getElementById("tokenInput");
     const saveTokenBtn    = document.getElementById("saveTokenBtn");
@@ -232,28 +236,17 @@
     const submitBtn  = document.getElementById("submitBtn");
 
     // ==========================
-    // トークンの管理
+    // トークンの管理（このタブ内のみ）
     // ==========================
     function getToken() {
-        return localStorage.getItem(TOKEN_STORAGE_KEY) || "";
-    }
-
-    function setToken(token) {
-        if (token) {
-            localStorage.setItem(TOKEN_STORAGE_KEY, token);
-        }
-    }
-
-    function clearToken() {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        return tokenCache || "";
     }
 
     function updateTokenStatusText() {
-        const t = getToken();
-        if (t) {
-            tokenStatusText.textContent = "トークン保存済み（このブラウザのみ）";
+        if (tokenCache) {
+            tokenStatusText.textContent = "このタブでトークン設定済み";
         } else {
-            tokenStatusText.textContent = "トークン未設定";
+            tokenStatusText.textContent = TOKEN_STATUS_TEXT_DEFAULT;
         }
     }
 
@@ -264,15 +257,15 @@
             alert("トークンが空です。GitHubで発行したトークンを貼り付けてください。");
             return;
         }
-        setToken(token);
-        tokenInput.value = "";
+        tokenCache = token;        // このタブのメモリにだけ保存
+        tokenInput.value = "";     // 入力欄は消す
         updateTokenStatusText();
-        alert("トークンを保存しました。このブラウザからだけ使えます。");
+        alert("トークンをこのタブ内に保存しました。このタブを閉じると消えます。");
     });
 
     clearTokenBtn.addEventListener("click", () => {
-        if (confirm("本当にこのブラウザに保存されたトークンを削除しますか？")) {
-            clearToken();
+        if (confirm("このタブで保持しているトークンを削除しますか？")) {
+            tokenCache = "";
             updateTokenStatusText();
             alert("トークンを削除しました。");
         }
@@ -402,5 +395,6 @@
         }
     });
 </script>
+
 </body>
 </html>
