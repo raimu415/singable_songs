@@ -23,7 +23,6 @@
     "memo": "",
     "category": "jpop"
   },
-
   {
     "title": "唱",
     "artist": "Ado",
@@ -84,7 +83,6 @@
     "memo": "",
     "category": "jpop"
   },
-
   {
     "title": "あなたの夜が明けるまで",
     "artist": "傘村トータ",
@@ -139,7 +137,6 @@
     "memo": "",
     "category": "jpop"
   },
-
   {
     "title": "酔いどれ知らず",
     "artist": "Kanaria",
@@ -212,7 +209,6 @@
     "memo": "キー不明（+4予想）/80〜",
     "category": "jpop"
   },
-
   {
     "title": "LOSER",
     "artist": "米津玄師",
@@ -249,7 +245,6 @@
     "memo": "-1/81",
     "category": "jpop"
   },
-
   {
     "title": "星座になれたら",
     "artist": "ぼっち・ざ・ろっく！",
@@ -280,7 +275,6 @@
     "memo": "やらない",
     "category": "anime"
   },
-
   {
     "title": "ADAMAS",
     "artist": "SAOアニソン",
@@ -341,7 +335,6 @@
     "memo": "",
     "category": "anime"
   },
-
   {
     "title": "僕らのLIVE 君とのLIFE",
     "artist": "ラブライブ！",
@@ -426,7 +419,6 @@
     "memo": "",
     "category": "anime"
   },
-
   {
     "title": "愛を伝えたいだとか",
     "artist": "あいみょん",
@@ -463,8 +455,6 @@
     "memo": "",
     "category": "jpop"
   },
-
-
   {
     "title": "合言葉",
     "artist": "",
@@ -537,8 +527,7 @@
     "memo": "",
     "category": "vocaloid"
   },
-
- {
+  {
     "title": "限りなく灰色へ",
     "artist": "",
     "memo": "",
@@ -574,7 +563,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "サラマンダー",
     "artist": "",
@@ -635,7 +623,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "タイムマシン",
     "artist": "",
@@ -690,7 +677,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "ニア",
     "artist": "",
@@ -703,7 +689,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "バグ",
     "artist": "",
@@ -776,7 +761,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "みくみくにしてあげる♪【してやんよ】",
     "artist": "",
@@ -807,7 +791,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "幽霊東京",
     "artist": "",
@@ -826,7 +809,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "リンちゃんなう！",
     "artist": "",
@@ -857,7 +839,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "Beat Eater",
     "artist": "",
@@ -936,7 +917,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "奏",
     "artist": "スキマスイッチ",
@@ -1165,7 +1145,6 @@
     "memo": "",
     "category": "vocaloid"
   },
-
   {
     "title": "soranji",
     "artist": "Mrs.GREEN APPLE",
@@ -1208,7 +1187,6 @@
     "memo": " -4/84",
     "category": "ng"
   },
-
   {
     "title": "ダーリン",
     "artist": "",
@@ -1238,5 +1216,11 @@
     "artist": "転スラ",
     "memo": "",
     "category": "training"
+  },
+  {
+    "title": "蕾",
+    "artist": "コブクロ",
+    "memo": "",
+    "category": "jpop"
   }
 ]
