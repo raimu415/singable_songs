@@ -304,6 +304,70 @@
         overflow-x: auto;
         }
 
+        /* 曲カード（全体の行） */
+        .song-row {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px 20px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        /* ホバー時の発光効果 */
+        .song-row:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25),
+                        0 0 15px rgba(100, 149, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 曲タイトル */
+        .song-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+        }
+
+        /* アーティスト名（少し薄く） */
+        .song-artist {
+            font-size: 14px;
+            opacity: 0.75;
+            color: #eee;
+            margin-top: 3px;
+        }
+
+        /* メモバッジ（難易度とか） */
+        .song-memo {
+            background: linear-gradient(135deg, #6d9dff, #b388ff);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #fff;
+            margin-left: 14px;
+            box-shadow: 0 0 12px rgba(100, 149, 255, 0.6);
+        }
+
+        /* カード左側の縦レイアウト */
+        .song-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* カード右側（memo） */
+        .song-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         table {
         width: 100%;
         border-collapse: collapse;
