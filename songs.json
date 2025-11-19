@@ -1,8 +1,1242 @@
 [
   {
-    "title": "うっせえわ",
+    "title": "Love so sweet",
+    "artist": "嵐",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "Happiness",
+    "artist": "嵐",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "Monster",
+    "artist": "嵐",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "truth",
+    "artist": "嵐",
+    "memo": "",
+    "category": "jpop"
+  },
+
+  {
+    "title": "唱",
+    "artist": "Ado",
+    "memo": "0/83",
+    "category": "jpop"
+  },
+  {
+    "title": "うっせぇわ",
     "artist": "Ado",
     "memo": "",
     "category": "jpop"
+  },
+  {
+    "title": "新時代",
+    "artist": "Ado",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "私は最強",
+    "artist": "Ado",
+    "memo": "0/84",
+    "category": "jpop"
+  },
+  {
+    "title": "逆行",
+    "artist": "Ado",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "踊",
+    "artist": "Ado",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "ギラギラ",
+    "artist": "Ado",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "あたしは問題作",
+    "artist": "Ado",
+    "memo": "/83",
+    "category": "jpop"
+  },
+  {
+    "title": "Tot Musica",
+    "artist": "Ado",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "オールナイトレディオ",
+    "artist": "Ado",
+    "memo": "",
+    "category": "jpop"
+  },
+
+  {
+    "title": "あなたの夜が明けるまで",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "大切な人たちへ",
+    "artist": "傘村トータ",
+    "memo": "-2/88",
+    "category": "jpop"
+  },
+  {
+    "title": "明けない夜のリリィ",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "おはよう、僕の歌姫",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "人工呼吸",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "15歳の主張",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "LIFE",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "敗走",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "君を好きなことがバレた",
+    "artist": "傘村トータ",
+    "memo": "",
+    "category": "jpop"
+  },
+
+  {
+    "title": "酔いどれ知らず",
+    "artist": "Kanaria",
+    "memo": "0/85",
+    "category": "jpop"
+  },
+  {
+    "title": "KING",
+    "artist": "Kanaria",
+    "memo": "/83〜",
+    "category": "jpop"
+  },
+  {
+    "title": "レクイエム",
+    "artist": "Kanaria",
+    "memo": "/86〜",
+    "category": "jpop"
+  },
+  {
+    "title": "エンヴィーベイビー",
+    "artist": "Kanaria",
+    "memo": "-1/85〜",
+    "category": "jpop"
+  },
+  {
+    "title": "アイデンティティ",
+    "artist": "Kanaria",
+    "memo": "/84〜",
+    "category": "jpop"
+  },
+  {
+    "title": "デーモンロード",
+    "artist": "Kanaria",
+    "memo": "/84〜",
+    "category": "jpop"
+  },
+  {
+    "title": "QUEEN",
+    "artist": "Kanaria",
+    "memo": "-4/87〜",
+    "category": "jpop"
+  },
+  {
+    "title": "EYE",
+    "artist": "Kanaria",
+    "memo": "-3/83〜",
+    "category": "jpop"
+  },
+  {
+    "title": "MIRA",
+    "artist": "Kanaria",
+    "memo": "覚えてない",
+    "category": "jpop"
+  },
+  {
+    "title": "百鬼祭",
+    "artist": "Kanaria",
+    "memo": "覚えてない",
+    "category": "jpop"
+  },
+  {
+    "title": "ヒトリユラリ",
+    "artist": "Kanaria",
+    "memo": "覚えてない",
+    "category": "jpop"
+  },
+  {
+    "title": "大脳的なランデブー",
+    "artist": "Kanaria",
+    "memo": "キー不明（+4予想）/80〜",
+    "category": "jpop"
+  },
+
+  {
+    "title": "LOSER",
+    "artist": "米津玄師",
+    "memo": "-4/85",
+    "category": "jpop"
+  },
+  {
+    "title": "Lemon",
+    "artist": "米津玄師",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "打上花火",
+    "artist": "米津玄師",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "灰色と青",
+    "artist": "米津玄師",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "パプリカ",
+    "artist": "米津玄師",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "ピースサイン",
+    "artist": "米津玄師",
+    "memo": "-1/81",
+    "category": "jpop"
+  },
+
+  {
+    "title": "星座になれたら",
+    "artist": "ぼっち・ざ・ろっく！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "青春コンプレックス",
+    "artist": "ぼっち・ざ・ろっく！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "ギターと孤独と蒼い惑星",
+    "artist": "ぼっち・ざ・ろっく！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "あのバンド",
+    "artist": "ぼっち・ざ・ろっく！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "忘れてた",
+    "artist": "ぼっち・ざ・ろっく！",
+    "memo": "やらない",
+    "category": "anime"
+  },
+
+  {
+    "title": "ADAMAS",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "crossing field",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "ANIMA",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "courage",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "Ubiquitous dB",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "longing",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "Break Beat Bark!",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "catch the Moment",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "smile for you",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "ユメノセカイ",
+    "artist": "SAOアニソン",
+    "memo": "",
+    "category": "anime"
+  },
+
+  {
+    "title": "僕らのLIVE 君とのLIFE",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "友情ノーチェンジ",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "Snow halation",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "愛してるばんざーい!",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "Oh,Love&Peace!",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "僕らは今のなかで",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "これからのSomeday",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "START:DASH!!(9人ver.)",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "それは僕たちの奇跡",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "ユメノトビラ",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "Mermaid festa vol.2 ～Passionate～",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "夢なき夢は夢じゃない",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "なわとび",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+  {
+    "title": "Shocking Party",
+    "artist": "ラブライブ！",
+    "memo": "",
+    "category": "anime"
+  },
+
+  {
+    "title": "愛を伝えたいだとか",
+    "artist": "あいみょん",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "貴方解剖純愛歌~死ね~",
+    "artist": "あいみょん",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "君はロックを聞かない",
+    "artist": "あいみょん",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "裸の心",
+    "artist": "あいみょん",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "ハルノヒ",
+    "artist": "あいみょん",
+    "memo": "",
+    "category": "jpop"
+  },
+  {
+    "title": "マリーゴールド",
+    "artist": "あいみょん",
+    "memo": "",
+    "category": "jpop"
+  },
+
+
+  {
+    "title": "合言葉",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "愛して愛して愛して",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "アニマル",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "天ノ弱",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "いかないで",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "威風堂々",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "命に嫌われている。",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ヴィラン",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ウミユリ海底譚",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "裏表ラバーズ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "おちゃめ機能",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "おどりゃんせ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+ {
+    "title": "限りなく灰色へ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "神っぽいな",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "神のまにまに",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "からくりピエロ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "グッバイ宣言",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ゴーストルール",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "サラマンダー",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "自傷無色",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "しねばいいのに",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "シネマ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ジャックポットサッドガール",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "シャルル",
+    "artist": "",
+    "memo": "0/85",
+    "category": "vocaloid"
+  },
+  {
+    "title": "スイートマジック",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "砂の惑星",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "セカイ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "そうだった！！",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "タイムマシン",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ちゅるりらちゅるりらだっだっだ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ツギハギスタッカート",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "転生林檎",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "とても痛い痛がりたい",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ドラマツルギー",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ドリーミンチュチュ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "トルコ行進曲＼(^o^)／ｵﾜﾀ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "デビルじゃないもん",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "ニア",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "脳漿炸裂ガール",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "バグ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ハッピーシンセサイザ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "パラジクロロベンゼン",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ハロ／ハワユ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "初音ミクの消失",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "初音ミクの激唱",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "独りんぼエンヴィー",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ヒバナ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ビバハピ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ヒビカセ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "フォニイ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ブリキノダンス",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "みくみくにしてあげる♪【してやんよ】",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "メランコリック",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "メルト",
+    "artist": "",
+    "memo": "-2/83",
+    "category": "vocaloid"
+  },
+  {
+    "title": "妄想感傷代償連盟",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "妄想税",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "幽霊東京",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "夜明けと蛍",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "夜もすがら君想ふ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "リンちゃんなう！",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "恋愛裁判",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ロウワー",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ロキ",
+    "artist": "",
+    "memo": "/84",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ロミオとシンデレラ",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "Beat Eater",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "Blessing",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "Booo!",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "Calc.",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "DAYBREAK FRONTLINE",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "drop pop candy",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "ECHO",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "Gimme*Gimme",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "p.h.",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "potatoになっていく",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "Ready Steady",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "Tell your World",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+  {
+    "title": "39みゅーじっく！",
+    "artist": "",
+    "memo": "",
+    "category": "vocaloid"
+  },
+
+  {
+    "title": "奏",
+    "artist": "スキマスイッチ",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "さよならエレジー",
+    "artist": "菅田将暉",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "明日の私に幸あれ",
+    "artist": "ナナヲアカリ",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "チューリングラブ",
+    "artist": "ナナヲアカリ",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "逆走少女",
+    "artist": "ナナヲアカリ",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "会いたくて",
+    "artist": "西野カナ",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "残酷な天使のテーゼ",
+    "artist": "高橋洋子",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "ぎゅっと。",
+    "artist": "もさを。",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "会いたい。",
+    "artist": "もさを。",
+    "memo": "-2/88 / 曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "ドライフラワー",
+    "artist": "優里",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "ペテルギウス",
+    "artist": "優里",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "レオ",
+    "artist": "優里",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "Mela!",
+    "artist": "緑黄色社会",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "Bunny Girl",
+    "artist": "AKASAKI",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "かくれんぼ",
+    "artist": "AliA",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "オトナブルー",
+    "artist": "ATARASHII GAKKO!",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "水平線",
+    "artist": "back number",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "高値の花子さん",
+    "artist": "back number",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "韻波句徒",
+    "artist": "CHEHON",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "Bling-Bang-Bang-Born",
+    "artist": "Creepy Nuts",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "キセキ",
+    "artist": "GReeeeN",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "春夏秋冬",
+    "artist": "Hilcrhyme",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "愛包ダンスホール",
+    "artist": "HIMEHINA",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "愛のかたまり",
+    "artist": "KinKi Kids",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "なにやってもうまくいかない",
+    "artist": "meiyo",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "小さな恋のうた",
+    "artist": "MONGOL800",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "革命",
+    "artist": "MOROHA",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "点描の唄",
+    "artist": "Mrs.GREEN APPLE",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "Pretender",
+    "artist": "Official髭男dism",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "MOTTAI",
+    "artist": "P丸様。",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "ないばいたりてぃ",
+    "artist": "P丸様。",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "APT.",
+    "artist": "ROSE & Bruno Mars",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "StudyEqualMagic！",
+    "artist": "S.E.M",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "晩餐歌",
+    "artist": "tuki.",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "怪獣の花唄",
+    "artist": "Vaundy",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "アイドル",
+    "artist": "YOASOBI",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "怪獣",
+    "artist": "サカナクション",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+  {
+    "title": "テトリス",
+    "artist": "Kanase Teto",
+    "memo": "曲だけ知ってる",
+    "category": "other"
+  },
+
+  {
+    "title": "soranji",
+    "artist": "Mrs.GREEN APPLE",
+    "memo": "二度と歌いたくない -4/80",
+    "category": "ng"
+  },
+  {
+    "title": "ライラック",
+    "artist": "",
+    "memo": "二度と歌いたくない",
+    "category": "ng"
+  },
+  {
+    "title": "僕のこと",
+    "artist": "Mrs.GREEN APPLE",
+    "memo": "二度と歌いたくない",
+    "category": "ng"
+  },
+  {
+    "title": "鬼の宴",
+    "artist": "友成空",
+    "memo": "二度と歌いたくない",
+    "category": "ng"
+  },
+  {
+    "title": "青のすみか",
+    "artist": "キタニタツヤ",
+    "memo": "二度と歌いたくない",
+    "category": "ng"
+  },
+  {
+    "title": "ミセスの曲",
+    "artist": "Mrs.GREEN APPLE",
+    "memo": "二度と歌いたくない",
+    "category": "ng"
+  },
+  {
+    "title": "女々しくて",
+    "artist": "ゴールデンボンバー",
+    "memo": "二度と歌いたくない -4/84",
+    "category": "ng"
+  },
+
+  {
+    "title": "ダーリン",
+    "artist": "",
+    "memo": "練習中",
+    "category": "training"
+  },
+  {
+    "title": "吉原ラメント",
+    "artist": "",
+    "memo": "練習中",
+    "category": "training"
+  },
+  {
+    "title": "スペシャルキス",
+    "artist": "",
+    "memo": "練習中",
+    "category": "training"
+  },
+  {
+    "title": "ウオノエガール",
+    "artist": "",
+    "memo": "練習中",
+    "category": "training"
+  },
+  {
+    "title": "転スラの曲",
+    "artist": "転スラ",
+    "memo": "練習中",
+    "category": "training"
   }
 ]
