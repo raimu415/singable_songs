@@ -510,6 +510,41 @@
             padding-inline: 10px;
         }
         }
+        /* ===== 曲カードの表示アニメーション＆ホバー ===== */
+
+        /* 1枚1枚の行 = カード扱い */
+        .song-row {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+        animation: songRowIn 0.55s cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
+        /* --row-index は JS 側で仕込む。番号に応じてディレイを変える */
+        animation-delay: calc(var(--row-index, 0) * 0.04s);
+
+        /* ホバー用transitionもここでまとめておく */
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease,
+            background 0.18s ease,
+            border-color 0.18s ease;
+        }
+
+
+        /* 下からふわっと出てきて、少しだけオーバーシュートして戻る */
+        @keyframes songRowIn {
+        0% {
+            opacity: 0;
+            transform: translateY(22px) scale(0.94);
+        }
+        55% {
+            opacity: 1;
+            transform: translateY(-3px) scale(1.02);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        }
+
 
         </style>
 </head>
@@ -728,7 +763,7 @@
         }[catKey] || "その他";
 
       const rowsHtml = songs
-        .map((s) => {
+        .map((s, index) => {
           const title = escapeHtml(s.title || "");
           const artist = escapeHtml(s.artist || "");
           const memo = s.memo || "";
@@ -759,7 +794,7 @@
             : "";
 
           return `
-          <tr class="${rowClasses.join(" ")}">
+          <tr class="song-row" style="--row-index:${index}">
             <td>
               <div class="song-title">${title}</div>
             </td>
