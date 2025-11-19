@@ -18,12 +18,16 @@
         --shadow-soft: 0 14px 40px rgba(0, 0, 0, 0.7);
         }
 
-        /* 行を触れる光る*/
-        tbody tr:hover{
-            background: rgba(56, 189, 248, 0.13);
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.14);
-            transition: 0.12 ease;
+        /* 行を触れると光る */
+        tbody tr {
+        transition: background 0.12s ease, box-shadow 0.12s ease;
         }
+
+        tbody tr:hover {
+        background: rgba(56, 189, 248, 0.13);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
 
         /* ===== ベース ===== */
         * {
@@ -383,17 +387,22 @@
         margin-top: 1px;
         }
         
-        /* NG曲（memoに「二度と歌いたくない」が含まれている行） */
-        td[data-col="memo"]:contains("二度と歌いたくない"),
-        td[data-col="memo"]:contains("NG") {
-        background: rgba(127, 29, 29, 0.4) !important;
-        color: #fee2e2 !important;
+        /* 行のステータス色付け */
+        tr.row-ng {
+        background: rgba(127, 29, 29, 0.32);
         }
 
-        /* 練習中（memoに「練習中」が含まれる行） */
-        td[data-col="memo"]:contains("練習中") {
-        background: rgba(8, 47, 73, 0.35) !important;
-        color: #e0f2fe !important;
+        tr.row-training {
+        background: rgba(8, 47, 73, 0.32);
+        }
+
+        /* ホバー時もちゃんと上書きしたい場合（任意） */
+        tr.row-ng:hover {
+        background: rgba(185, 28, 28, 0.45);
+        }
+
+        tr.row-training:hover {
+        background: rgba(3, 105, 161, 0.45);
         }
 
 
@@ -666,11 +675,13 @@
             memoPills.push(
               `<span class="memo-pill memo-ng">二度と歌いたくない</span>`
             );
+            rowClasses.push("row-ng");
           }
           if (/練習中/.test(memo)) {
             memoPills.push(
               `<span class="memo-pill memo-training">練習中</span>`
             );
+            rowClasses.push("row-training");
           }
           if (/[-+]\d|\/\d{2}/.test(memo)) {
             memoPills.push(
@@ -683,7 +694,7 @@
             : "";
 
           return `
-          <tr>
+          <tr class="${rowClasses.join(" ")}">
             <td>
               <div class="song-title">${title}</div>
             </td>
