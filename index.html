@@ -18,6 +18,13 @@
         --shadow-soft: 0 14px 40px rgba(0, 0, 0, 0.7);
         }
 
+        /* 行を触れる光る*/
+        tbody tr:hover{
+            background: rgba(56, 189, 248, 0.13);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.14);
+            transition: 0.12 ease;
+        }
+
         /* ===== ベース ===== */
         * {
         box-sizing: border-box;
@@ -375,6 +382,21 @@
         color: #cbd5f5;
         margin-top: 1px;
         }
+        
+        /* NG曲（memoに「二度と歌いたくない」が含まれている行） */
+        td[data-col="memo"]:contains("二度と歌いたくない"),
+        td[data-col="memo"]:contains("NG") {
+        background: rgba(127, 29, 29, 0.4) !important;
+        color: #fee2e2 !important;
+        }
+
+        /* 練習中（memoに「練習中」が含まれる行） */
+        td[data-col="memo"]:contains("練習中") {
+        background: rgba(8, 47, 73, 0.35) !important;
+        color: #e0f2fe !important;
+        }
+
+
 
         .empty-msg {
         margin-top: 24px;
