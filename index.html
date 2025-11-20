@@ -126,24 +126,6 @@
         font-size: 1.4rem;
         filter: drop-shadow(0 0 8px rgba(251, 113, 133, 0.8));
         }
-        /* 曲カードのフェードイン＋下からスッと出るアニメ */
-        .song-row {
-        opacity: 0;
-        transform: translateY(8px) scale(0.99);
-        animation: songFadeUp 0.45s ease-out forwards;
-        animation-delay: calc(0.015s * var(--row-index));
-        }
-
-        @keyframes songFadeUp {
-        from {
-            opacity: 0;
-            transform: translateY(8px) scale(0.99);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        }
 
         .title-chip {
         font-size: 0.72rem;
@@ -372,29 +354,6 @@
         overflow-x: auto;
         }
 
-        /* 曲カード（全体の行） */
-        .song-row {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 16px 20px;
-            border-radius: 14px;
-            margin-bottom: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(8px);
-            transition: all 0.3s ease;
-        }
-
-        /* ホバー時の発光効果 */
-        .song-row:hover {
-            background: rgba(255, 255, 255, 0.14);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25),
-                        0 0 15px rgba(100, 149, 255, 0.6);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
         /* 曲タイトル */
         .song-title {
             font-size: 20px;
@@ -421,19 +380,6 @@
             color: #fff;
             margin-left: 14px;
             box-shadow: 0 0 12px rgba(100, 149, 255, 0.6);
-        }
-
-        /* カード左側の縦レイアウト */
-        .song-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* カード右側（memo） */
-        .song-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
 
         table {
@@ -518,6 +464,40 @@
         color: #cbd5f5;
         margin-top: 1px;
         }
+        /* ===== 曲行（1曲分）・アニメーション ===== */
+        .song-row {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+        animation: songRowIn 0.55s cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
+        animation-delay: calc(var(--row-index, 0) * 0.04s);
+
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease,
+            background 0.18s ease,
+            border-color 0.18s ease;
+        }
+
+        .song-row:hover {
+        background: rgba(56, 189, 248, 0.13);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        /* フェードイン & 下からスッと出るアニメ */
+        @keyframes songRowIn {
+        0% {
+            opacity: 0;
+            transform: translateY(22px) scale(0.94);
+        }
+        55% {
+            opacity: 1;
+            transform: translateY(-3px) scale(1.02);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        }
         
         /* 行のステータス色付け */
         tr.row-ng {
@@ -537,18 +517,6 @@
         background: rgba(3, 105, 161, 0.45);
         }
 
-        .song-card {
-        padding: 14px 18px;
-        margin-bottom: 12px;
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid rgba(56, 189, 248, 0.25);
-        border-radius: 14px;
-        backdrop-filter: blur(8px);
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        }
-
         .song-title {
         font-size: 1.05rem;
         font-weight: 600;
@@ -558,12 +526,6 @@
         font-size: 0.85rem;
         color: #a5b4fc;
         }
-
-        .song-memo {
-        font-size: 0.8rem;
-        color: #cbd5f5;
-        }
-
 
         .empty-msg {
         margin-top: 24px;
@@ -604,41 +566,6 @@
             padding-inline: 10px;
         }
         }
-        /* ===== 曲カードの表示アニメーション＆ホバー ===== */
-
-        /* 1枚1枚の行 = カード扱い */
-        .song-row {
-        opacity: 0;
-        transform: translateY(18px) scale(0.96);
-        animation: songRowIn 0.55s cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
-        /* --row-index は JS 側で仕込む。番号に応じてディレイを変える */
-        animation-delay: calc(var(--row-index, 0) * 0.04s);
-
-        /* ホバー用transitionもここでまとめておく */
-        transition:
-            transform 0.18s ease,
-            box-shadow 0.18s ease,
-            background 0.18s ease,
-            border-color 0.18s ease;
-        }
-
-
-        /* 下からふわっと出てきて、少しだけオーバーシュートして戻る */
-        @keyframes songRowIn {
-        0% {
-            opacity: 0;
-            transform: translateY(22px) scale(0.94);
-        }
-        55% {
-            opacity: 1;
-            transform: translateY(-3px) scale(1.02);
-        }
-        100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        }
-
 
         </style>
 </head>
@@ -881,50 +808,54 @@
 
       const rowsHtml = songs
         .map((s, index) => {
-          const title = escapeHtml(s.title || "");
-          const artist = escapeHtml(s.artist || "");
-          const memo = s.memo || "";
+            const title = escapeHtml(s.title || "");
+            const artist = escapeHtml(s.artist || "");
+            const memo = s.memo || "";
 
-          const memoPills = [];
-          const rowClasses = [];
+            const memoPills = [];
+            const rowClasses = [];
 
-          if (/二度と歌いたくない/.test(memo)) {
+            if (/二度と歌いたくない/.test(memo)) {
             memoPills.push(
-              `<span class="memo-pill memo-ng">二度と歌いたくない</span>`
+                `<span class="memo-pill memo-ng">二度と歌いたくない</span>`
             );
             rowClasses.push("row-ng");
-          }
-          if (/練習中/.test(memo)) {
+            }
+            if (/練習中/.test(memo)) {
             memoPills.push(
-              `<span class="memo-pill memo-training">練習中</span>`
+                `<span class="memo-pill memo-training">練習中</span>`
             );
             rowClasses.push("row-training");
-          }
-          if (/[-+]\d|\/\d{2}/.test(memo)) {
+            }
+            if (/[-+]\d|\/\d{2}/.test(memo)) {
             memoPills.push(
-              `<span class="memo-pill memo-key">キー情報あり</span>`
+                `<span class="memo-pill memo-key">キー情報あり</span>`
             );
-          }
+            }
 
-        const memoText = memo
-        ? `<div class="memo-text">${escapeHtml(memo)}</div>`
-        : "";
+            const memoText = memo
+            ? `<div class="memo-text">${escapeHtml(memo)}</div>`
+            : "";
 
-        return `
-            <div class="song-card song-row" style="--row-index:${index}">
-            <div class="song-card-main">
-            <div class="song-title">${title}</div>
-            <div class="song-artist">${artist || ""}</div>
-            </div>
-            <div class="song-card-memo">
-            ${memoPills.join(" ")}
-            ${memoText}
-            </div>
-        </div>
-        `;
+            const extraClasses = rowClasses.length ? " " + rowClasses.join(" ") : "";
 
+            return `
+            <tr class="song-row${extraClasses}" style="--row-index:${index}">
+                <td>
+                <div class="song-title">${title}</div>
+                </td>
+                <td>
+                <div class="song-artist">${artist || "&nbsp;"}</div>
+                </td>
+                <td>
+                ${memoPills.join(" ")}
+                ${memoText}
+                </td>
+            </tr>
+            `;
         })
         .join("");
+
 
       return `
       <section class="category-section" data-category="${catKey}">
