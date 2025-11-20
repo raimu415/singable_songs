@@ -392,137 +392,143 @@
       }
     }
     function renderSongsTable() {
-    songsTableBody.innerHTML = "";
+        songsTableBody.innerHTML = "";
 
-    const filtered = songsData.filter(s => {
-        const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
-        return text.includes(tableSearchKeyword.toLowerCase());
-    });
+        const filtered = songsData
+            .map((song, originalIndex) => ({ song, originalIndex }))
+            .filter(item => {
+            const s = item.song;
+            const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
+            return text.includes(tableSearchKeyword.toLowerCase());
+            });
 
-    filtered.forEach((song, index) => {
-        const tr = document.createElement("tr");
+        filtered.forEach(({ song, originalIndex }) => {
+            const tr = document.createElement("tr");
+            tr.dataset.id = originalIndex;
 
-        const tdTitle = document.createElement("td");
-        const inTitle = document.createElement("input");
-        inTitle.type = "text";
-        inTitle.value = song.title || "";
-        inTitle.className = "small-input";
-        inTitle.addEventListener("input", () => {
-        song.title = inTitle.value;
+            const tdTitle = document.createElement("td");
+            const inTitle = document.createElement("input");
+            inTitle.type = "text";
+            inTitle.value = song.title || "";
+            inTitle.className = "small-input";
+            inTitle.addEventListener("input", () => {
+            songsData[originalIndex].title = inTitle.value;
+            });
+            tdTitle.appendChild(inTitle);
+
+            const tdArtist = document.createElement("td");
+            const inArtist = document.createElement("input");
+            inArtist.type = "text";
+            inArtist.value = song.artist || "";
+            inArtist.className = "small-input";
+            inArtist.addEventListener("input", () => {
+            songsData[originalIndex].artist = inArtist.value;
+            });
+            tdArtist.appendChild(inArtist);
+
+            const tdCat = document.createElement("td");
+            const selCat = document.createElement("select");
+            ["jpop","anime","vocaloid","other","ng","training"].forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = c;
+            selCat.appendChild(opt);
+            });
+            selCat.value = song.category || "other";
+            selCat.className = "small-input";
+            selCat.addEventListener("change", () => {
+            songsData[originalIndex].category = selCat.value;
+            });
+            tdCat.appendChild(selCat);
+
+            const tdMemo = document.createElement("td");
+            const inMemo = document.createElement("textarea");
+            inMemo.value = song.memo || "";
+            inMemo.className = "small-input";
+            inMemo.style.minHeight = "40px";
+            inMemo.addEventListener("input", () => {
+            songsData[originalIndex].memo = inMemo.value;
+            });
+            tdMemo.appendChild(inMemo);
+
+            const tdDel = document.createElement("td");
+            tdDel.className = "checkbox-center";
+            const chk = document.createElement("input");
+            chk.type = "checkbox";
+            chk.title = "削除フラグ";
+            chk.addEventListener("change", () => {
+            tr.dataset.toDelete = chk.checked ? "1" : "";
+            });
+            tdDel.appendChild(chk);
+
+            tr.appendChild(tdTitle);
+            tr.appendChild(tdArtist);
+            tr.appendChild(tdCat);
+            tr.appendChild(tdMemo);
+            tr.appendChild(tdDel);
+
+            songsTableBody.appendChild(tr);
         });
-        tdTitle.appendChild(inTitle);
+        }
 
-        const tdArtist = document.createElement("td");
-        const inArtist = document.createElement("input");
-        inArtist.type = "text";
-        inArtist.value = song.artist || "";
-        inArtist.className = "small-input";
-        inArtist.addEventListener("input", () => {
-        song.artist = inArtist.value;
-        });
-        tdArtist.appendChild(inArtist);
-
-        const tdCat = document.createElement("td");
-        const selCat = document.createElement("select");
-        ["jpop","anime","vocaloid","other","ng","training"].forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        selCat.appendChild(opt);
-        });
-        selCat.value = song.category || "other";
-        selCat.className = "small-input";
-        selCat.addEventListener("change", () => {
-        song.category = selCat.value;
-        });
-        tdCat.appendChild(selCat);
-
-        const tdMemo = document.createElement("td");
-        const inMemo = document.createElement("textarea");
-        inMemo.value = song.memo || "";
-        inMemo.className = "small-input";
-        inMemo.style.minHeight = "40px";
-        inMemo.addEventListener("input", () => {
-        song.memo = inMemo.value;
-        });
-        tdMemo.appendChild(inMemo);
-
-        const tdDel = document.createElement("td");
-        tdDel.className = "checkbox-center";
-        const chk = document.createElement("input");
-        chk.type = "checkbox";
-        chk.title = "削除フラグ";
-        tdDel.appendChild(chk);
-
-        tr.appendChild(tdTitle);
-        tr.appendChild(tdArtist);
-        tr.appendChild(tdCat);
-        tr.appendChild(tdMemo);
-        tr.appendChild(tdDel);
-
-        songsTableBody.appendChild(tr);
-
-        chk.addEventListener("change", () => {
-        tr.dataset.toDelete = chk.checked ? "1" : "";
-        });
-    });
-    }
 
 
     
     async function saveSongsJson() {
-      const { user, repo, branch, token } = getConfig();
-      if (!token) {
-        setSaveStatus("トークンを入力してください。", false);
-        return;
-      }
-
-      const rows = Array.from(songsTableBody.querySelectorAll("tr"));
-      const newSongs = [];
-      rows.forEach((tr, i) => {
-        if (tr.dataset.toDelete === "1") return;
-        const s = songsData[i];
-        if (!s) return;
-        if (!s.title && !s.artist && !s.memo) return;
-        newSongs.push(s);
-      });
-
-      const jsonText = JSON.stringify(newSongs, null, 2);
-      const contentB64 = b64encodeUnicode(jsonText);
-
-      setSaveStatus("保存中...", false);
-      try {
-        const res = await fetch(
-          `https://api.github.com/repos/${user}/${repo}/contents/songs.json`,
-          {
-            method: "PUT",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Accept": "application/vnd.github+json"
-            },
-            body: JSON.stringify({
-              message: "Update songs.json from admin.html",
-              content: contentB64,
-              sha: currentSha,
-              branch: branch
-            })
-          }
-        );
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          console.error("save error:", errData);
-          throw new Error("保存に失敗: " + res.status);
+        const { user, repo, branch, token } = getConfig();
+        if (!token) {
+            setSaveStatus("トークンを入力してください。", false);
+            return;
         }
-        const result = await res.json();
-        currentSha = result.content.sha;
-        songsData = newSongs;
-        renderSongsTable();
-        setSaveStatus("保存完了！ GitHub Pages にも少し時間差で反映されます。", true);
-      } catch (err) {
-        console.error(err);
-        setSaveStatus("保存エラー: " + err.message, false);
-      }
-    }
+
+        const rows = Array.from(songsTableBody.querySelectorAll("tr"));
+        const newSongs = [];
+
+        songsData.forEach((song, i) => {
+            const row = rows.find(r => Number(r.dataset.id) === i);
+            if (row && row.dataset.toDelete === "1") return;
+            newSongs.push(song);
+        });
+
+        const jsonText = JSON.stringify(newSongs, null, 2);
+        const contentB64 = b64encodeUnicode(jsonText);
+
+        setSaveStatus("保存中...", false);
+
+        try {
+            const res = await fetch(
+            `https://api.github.com/repos/${user}/${repo}/contents/songs.json`,
+            {
+                method: "PUT",
+                headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/vnd.github+json"
+                },
+                body: JSON.stringify({
+                message: "Update songs.json from admin.html",
+                content: contentB64,
+                sha: currentSha,
+                branch: branch
+                })
+            }
+            );
+
+            if (!res.ok) {
+            throw new Error("保存に失敗: " + res.status);
+            }
+
+            const result = await res.json();
+            currentSha = result.content.sha;
+            songsData = newSongs;
+            renderSongsTable();
+            setSaveStatus("保存完了！", true);
+
+        } catch (err) {
+            console.error(err);
+            setSaveStatus("保存エラー: " + err.message, false);
+        }
+        }
+
 
     function addSongToList() {
       const title = newTitle.value.trim();
