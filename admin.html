@@ -391,17 +391,15 @@
         setListStatus("読み込みに失敗しました: " + err.message, false);
       }
     }
-
     function renderSongsTable() {
-  songsTableBody.innerHTML = "";
+    songsTableBody.innerHTML = "";
 
-  // 🔍 検索フィルタを適用
-  const filtered = songsData.filter(s => {
-    const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
-    return text.includes(tableSearchKeyword.toLowerCase());
-  });
+    const filtered = songsData.filter(s => {
+        const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
+        return text.includes(tableSearchKeyword.toLowerCase());
+    });
 
-  filtered.forEach((song, index) => {
+    filtered.forEach((song, index) => {
         const tr = document.createElement("tr");
 
         const tdTitle = document.createElement("td");
@@ -454,9 +452,6 @@
         const chk = document.createElement("input");
         chk.type = "checkbox";
         chk.title = "削除フラグ";
-        chk.addEventListener("change", () => {
-        tr.dataset.toDelete = chk.checked ? "1" : "";
-        });
         tdDel.appendChild(chk);
 
         tr.appendChild(tdTitle);
@@ -466,9 +461,15 @@
         tr.appendChild(tdDel);
 
         songsTableBody.appendChild(tr);
+
+        chk.addEventListener("change", () => {
+        tr.dataset.toDelete = chk.checked ? "1" : "";
+        });
     });
     }
 
+
+    
     async function saveSongsJson() {
       const { user, repo, branch, token } = getConfig();
       if (!token) {
