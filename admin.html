@@ -331,6 +331,7 @@
 
     let songsData = [];
     let currentSha = null;
+    let tableSearchKeyword = "";
 
     function getConfig() {
       return {
@@ -365,12 +366,6 @@
     }
 
     async function fetchSongsJson() {
-        const tableSearchInput = document.getElementById("tableSearch");
-        tableSearchInput.addEventListener("input", (e) => {
-        tableSearchKeyword = e.target.value;
-        renderSongsTable();
-        });
-
       const { user, repo, branch } = getConfig();
       setListStatus("読み込み中...", false);
       songsTableBody.innerHTML = "";
@@ -398,13 +393,15 @@
     }
 
     function renderSongsTable() {
-      songsTableBody.innerHTML = "";
-      let tableScearchKeyword = "";
-      const filtered = songsData.filter(s => {
-            const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
-            return text.includes(tableSearchKeyword.toLowerCase());
-        });
-      songsData.forEach((song, index) => {
+  songsTableBody.innerHTML = "";
+
+  // 🔍 検索フィルタを適用
+  const filtered = songsData.filter(s => {
+    const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
+    return text.includes(tableSearchKeyword.toLowerCase());
+  });
+
+  filtered.forEach((song, index) => {
         const tr = document.createElement("tr");
 
         const tdTitle = document.createElement("td");
@@ -413,7 +410,7 @@
         inTitle.value = song.title || "";
         inTitle.className = "small-input";
         inTitle.addEventListener("input", () => {
-          songsData[index].title = inTitle.value;
+        song.title = inTitle.value;
         });
         tdTitle.appendChild(inTitle);
 
@@ -423,22 +420,22 @@
         inArtist.value = song.artist || "";
         inArtist.className = "small-input";
         inArtist.addEventListener("input", () => {
-          songsData[index].artist = inArtist.value;
+        song.artist = inArtist.value;
         });
         tdArtist.appendChild(inArtist);
 
         const tdCat = document.createElement("td");
         const selCat = document.createElement("select");
         ["jpop","anime","vocaloid","other","ng","training"].forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          selCat.appendChild(opt);
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        selCat.appendChild(opt);
         });
         selCat.value = song.category || "other";
         selCat.className = "small-input";
         selCat.addEventListener("change", () => {
-          songsData[index].category = selCat.value;
+        song.category = selCat.value;
         });
         tdCat.appendChild(selCat);
 
@@ -448,7 +445,7 @@
         inMemo.className = "small-input";
         inMemo.style.minHeight = "40px";
         inMemo.addEventListener("input", () => {
-          songsData[index].memo = inMemo.value;
+        song.memo = inMemo.value;
         });
         tdMemo.appendChild(inMemo);
 
@@ -457,6 +454,9 @@
         const chk = document.createElement("input");
         chk.type = "checkbox";
         chk.title = "削除フラグ";
+        chk.addEventListener("change", () => {
+        tr.dataset.toDelete = chk.checked ? "1" : "";
+        });
         tdDel.appendChild(chk);
 
         tr.appendChild(tdTitle);
@@ -466,12 +466,7 @@
         tr.appendChild(tdDel);
 
         songsTableBody.appendChild(tr);
-
-        // 削除チェックボックスの処理（後でまとめて）
-        chk.addEventListener("change", () => {
-          tr.dataset.toDelete = chk.checked ? "1" : "";
-        });
-      });
+    });
     }
 
     async function saveSongsJson() {
@@ -546,7 +541,11 @@
       newMemo.value = "";
       setAddStatus("ローカルリストに追加しました。「変更を保存」でGitHubへ反映されます。", true);
     }
-
+    const tableSearchInput = document.getElementById("tableSearch");
+    tableSearchInput.addEventListener("input", (e) => {
+        tableSearchKeyword = e.target.value;
+        renderSongsTable();
+        });
     btnReload.addEventListener("click", fetchSongsJson);
     btnSaveAll.addEventListener("click", saveSongsJson);
     btnAdd.addEventListener("click", addSongToList);
