@@ -366,6 +366,20 @@ toggle.addEventListener("click", () => {
   toggleLabel.textContent = collapsed ? "検索を開く" : "検索を閉じる";
 });
 
+// 「弾き語り」がメモにある曲を acoustic にする共通処理
+function normalizeSongs(songs) {
+  return songs.map(song => {
+    // すでに acoustic 指定されてるなら上書きしない
+    if (song.category === "acoustic") return song;
+
+    if (song.memo && song.memo.includes("弾き語り")) {
+      return { ...song, category: "acoustic" };
+    }
+    return song;
+  });
+}
+
+
 /* 更新日 */
 (function(){
   const el = document.getElementById("updatedDate");
@@ -373,21 +387,14 @@ toggle.addEventListener("click", () => {
   el.textContent = `${t.getFullYear()}/${String(t.getMonth()+1).padStart(2,"0")}/${String(t.getDate()).padStart(2,"0")}`;
 })();
 
-/* JSON 読み込み */
 async function loadSongs() {
   try {
     const res = await fetch("songs.json", { cache: "no-store" });
-    allSongs = await res.json();
+    const data = await res.json();
 
-    // ★★ ここで最初に「弾き語り → acoustic」分類しておく！
-    allSongs = allSongs.map(song => {
-      if (song.memo && song.memo.includes("弾き語り")) {
-        return { ...song, category: "acoustic" };
-      }
-      return song;
-    });
+    allSongs = normalizeSongs(data);
 
-    buildFilterButtons();  // ← 分類後に呼ぶので count が正しくなる
+    buildFilterButtons();
     render();
   } catch (e) {
     sectionsContainer.innerHTML = "<p style='text-align:center'>曲データ読み込みに失敗</p>";
@@ -397,13 +404,6 @@ async function loadSongs() {
 
 /* フィルタボタン */
 function buildFilterButtons() {
-  allSongs = allSongs.map(song => {
-    if (song.memo && song.memo.includes("弾き語り")) {
-      return { ...song, category: "acoustic" };
-    }
-    return song;
-  });
-
   const counts = allSongs.reduce((a,s)=>{
     const c = s.category || "other";
     a.all++;
@@ -428,15 +428,9 @@ function buildFilterButtons() {
   });
 }
 
+
 /* レンダリング */
 function render() {
-    // メモに「弾き語り」がある曲 → 自動で acoustic に分類する
-  allSongs = allSongs.map(song => {
-    if (song.memo && song.memo.includes("弾き語り")) {
-      return { ...song, category: "acoustic" };
-    }
-    return song;
-  });
   let list = allSongs.slice();
 
   if (filteredCategory!=="all") {
@@ -462,12 +456,14 @@ function render() {
     groups[c].push(s);
   });
 
-  const html = CATEGORY_ORDER.filter(c=>groups[c]).map(cat=>{
-    return renderCategorySection(cat, groups[cat]);
-  }).join("");
+  const html = CATEGORY_ORDER
+    .filter(c=>groups[c])
+    .map(cat=> renderCategorySection(cat, groups[cat]))
+    .join("");
 
   sectionsContainer.innerHTML = html;
 }
+
 
 /* セクションの描画（カード版） */
 function renderCategorySection(cat, list) {
