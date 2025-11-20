@@ -209,22 +209,63 @@ h1 {
 
 /* 1曲のカード */
 .song-card {
-  background: var(--card-bg);
-  padding: 14px 18px;
-  border-radius: var(--radius);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(8px);
-  box-shadow: var(--shadow);
+  position: relative;
+  background: radial-gradient(circle at top left, rgba(96,165,250,0.25), transparent 55%),
+              radial-gradient(circle at bottom right, rgba(236,72,153,0.25), transparent 55%),
+              rgba(15, 23, 42, 0.9);
+  padding: 16px 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(56, 189, 248, 0.7);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,0.8),
+    0 16px 35px rgba(0,0,0,0.6),
+    0 0 25px rgba(59,130,246,0.35);
 
+  overflow: hidden;
   opacity: 0;
-  transform: translateY(20px);
-  animation: fadeUp 0.5s ease forwards;
+  transform: translateY(20px) scale(0.97);
+  animation: fadeUp 0.6s ease forwards;
 }
 
 /* アニメーション個別ディレイ */
 .song-card {
   animation-delay: calc(var(--i) * 0.03s);
 }
+/* カードの内側でうっすら光が動く */
+.song-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(
+    from 180deg,
+    rgba(59,130,246,0.0),
+    rgba(59,130,246,0.5),
+    rgba(236,72,153,0.5),
+    rgba(56,189,248,0.8),
+    rgba(59,130,246,0.0)
+  );
+  opacity: 0;
+  mix-blend-mode: screen;
+  filter: blur(22px);
+  transform: rotate(0deg);
+  transition: opacity 0.3s ease, transform 4s linear;
+}
+
+/* ホバーで浮き上がって光る */
+.song-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 0 0 1px rgba(56,189,248,0.6),
+    0 22px 45px rgba(15,23,42,0.95),
+    0 0 40px rgba(96,165,250,0.8);
+}
+
+.song-card:hover::before {
+  opacity: 0.95;
+  transform: rotate(25deg);
+}
+
 
 @keyframes fadeUp {
   0% { opacity: 0; transform: translateY(20px) scale(0.97); }
@@ -234,46 +275,75 @@ h1 {
 
 /* タイトル・アーティスト */
 .song-title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 10px rgba(59,130,246,0.9),
+    0 0 18px rgba(56,189,248,0.9);
 }
 
 .song-artist {
-  opacity: 0.75;
-  margin-top: 2px;
-  font-size: 0.88rem;
+  opacity: 0.9;
+  margin-top: 3px;
+  font-size: 0.9rem;
+  color: #cbd5f5;
 }
 
-/* メモピル */
+.song-pills {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* メモピル共通 */
 .memo-pill {
-  display: inline-block;
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
   border-radius: 999px;
   font-size: 0.73rem;
-  margin-right: 4px;
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(15,23,42,0.9);
+  box-shadow:
+    0 0 10px rgba(148,163,184,0.4),
+    0 0 18px rgba(15,23,42,0.9);
 }
 
-/* 色別 */
+/* 色別強化 */
 .memo-ng {
-  background: rgba(185, 28, 28, 0.7);
+  background: radial-gradient(circle at top left, #fecaca, #b91c1c);
   color: #fff;
+  border-color: rgba(254,202,202,0.9);
+  box-shadow: 0 0 12px rgba(248,113,113,0.9);
 }
+
 .memo-training {
-  background: rgba(8, 105, 161, 0.7);
+  background: radial-gradient(circle at top left, #bfdbfe, #1d4ed8);
   color: #e0f2fe;
+  border-color: rgba(191,219,254,0.9);
+  box-shadow: 0 0 12px rgba(96,165,250,0.9);
 }
+
 .memo-key {
-  background: rgba(124, 58, 237, 0.7);
-  color: #fff;
+  background: radial-gradient(circle at top left, #ddd6fe, #7c3aed);
+  color: #f5f3ff;
+  border-color: rgba(221,214,254,0.9);
+  box-shadow: 0 0 12px rgba(129,140,248,0.9);
 }
 
 /* メモ文章 */
 .memo-text {
   font-size: 0.8rem;
-  margin-top: 4px;
-  opacity: 0.9;
+  margin-top: 8px;
+  opacity: 0.95;
+  color: #e5e7f5;
 }
+
+
+
 
 /* セクションタイトル */
 .category-title {
@@ -287,6 +357,15 @@ h1 {
 .category-badge {
   font-size: 0.75rem;
   color: var(--text-sub);
+}
+.category-title {
+  margin: 22px 0 8px;
+  padding-left: 12px;
+  font-size: 1.15rem;
+  border-left: 4px solid var(--accent);
+  text-shadow:
+    0 0 10px rgba(59,130,246,0.9),
+    0 0 22px rgba(56,189,248,0.9);
 }
 </style>
 
