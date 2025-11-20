@@ -160,7 +160,57 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
+
+        /* 折りたたみ用 */
+        max-height: 500px;        /* 中身よりちょっと大きめならOK */
+        opacity: 1;
+        overflow: hidden;
+        transition:
+            max-height 0.28s ease,
+            opacity 0.2s ease,
+            margin-top 0.2s ease;
         }
+        
+        /* 閉じたときの状態 */
+        .controls.collapsed {
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+        pointer-events: none;
+        }
+
+        /* トグルボタン行 */
+        .controls-toggle-row {
+        margin-top: 8px;
+        display: flex;
+        justify-content: flex-end;
+        }
+
+        /* トグルボタン本体 */
+        .controls-toggle {
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        background: radial-gradient(circle at top left,#020617,#020617);
+        color: #e5e7eb;
+        font-size: 0.72rem;
+        padding: 4px 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        box-shadow: 0 0 0 1px rgba(15,23,42,0.8);
+        }
+
+        .controls-toggle:hover {
+        border-color: #4b7fff;
+        box-shadow:
+            0 0 0 1px rgba(15,23,42,1),
+            0 0 12px rgba(59,130,246,0.7);
+        }
+
+        .controls-toggle-icon {
+        font-size: 0.8rem;
+        }   
 
         .search-box label {
         font-size: 0.78rem;
@@ -560,10 +610,17 @@
           配信で歌える（歌いたい）曲をまとめたページです。
         </div>
         <div class="note">曲名・アーティスト・メモで検索できます</div>
+        <!-- ★ 追加：開閉ボタン -->
+        <div class="controls-toggle-row">
+        <button type="button" class="controls-toggle" id="controlsToggle">
+            <span class="controls-toggle-icon" id="controlsToggleIcon">▲</span>
+            <span id="controlsToggleLabel">検索・絞り込みを閉じる</span>
+        </button>
+        </div>
 
-        <div class="controls">
+        <div class="controls" id="controls">
           <div class="search-box">
-            <label for="searchInput">検索（例：Ado / シャルル / ボカロ / 練習中 など）</label>
+            <label for="searchInput">検索（例：Ado / シャルル / ボカロ / 弾き語り など）</label>
             <div class="search-input-wrap">
               <span class="search-icon">🔍</span>
               <input
@@ -614,7 +671,23 @@
     const sectionsContainer = document.getElementById("songSections");
     const searchInput = document.getElementById("searchInput");
     const filterRow = document.getElementById("filterRow");
+    /* 開閉ボタン関連 */
+    const controls = document.getElementById("controls");
+    const controlsToggle = document.getElementById("controlsToggle");
+    const controlsToggleLabel = document.getElementById("controlsToggleLabel");
+    const controlsToggleIcon = document.getElementById("controlsToggleIcon");
 
+    // ===== 検索パネルの開閉 =====
+    controlsToggle.addEventListener("click", () => {
+    const isCollapsed = controls.classList.toggle("collapsed");
+    if (isCollapsed) {
+        controlsToggleLabel.textContent = "検索・絞り込みを開く";
+        controlsToggleIcon.textContent = "▼";
+    } else {
+        controlsToggleLabel.textContent = "検索・絞り込みを閉じる";
+        controlsToggleIcon.textContent = "▲";
+    }
+    });
     // ======================
     // 更新日表示
     // ======================
