@@ -818,7 +818,7 @@
   {
     "title": "ロキ",
     "artist": "",
-    "memo": "/84",
+    "memo": "",
     "category": "vocaloid"
   },
   {
@@ -1106,13 +1106,13 @@
   {
     "title": "晩餐歌",
     "artist": "tuki.",
-    "memo": "曲だけ知ってる",
+    "memo": "",
     "category": "jpop"
   },
   {
     "title": "怪獣の花唄",
     "artist": "Vaundy",
-    "memo": "曲だけ知ってる",
+    "memo": "",
     "category": "jpop"
   },
   {
@@ -1172,7 +1172,7 @@
   {
     "title": "女々しくて",
     "artist": "ゴールデンボンバー",
-    "memo": " -4/84",
+    "memo": " -4",
     "category": "ng"
   },
   {
@@ -1228,5 +1228,11 @@
     "artist": "コブクロ",
     "memo": "",
     "category": "jpop"
+  },
+  {
+    "title": "シンデレラボーイ",
+    "artist": "Saucy Dog",
+    "category": "jpop",
+    "memo": "弾き語り"
   }
 ]
