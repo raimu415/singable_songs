@@ -387,6 +387,13 @@ async function loadSongs() {
 
 /* フィルタボタン */
 function buildFilterButtons() {
+  allSongs = allSongs.map(song => {
+    if (song.memo && song.memo.includes("弾き語り")) {
+      return { ...song, category: "acoustic" };
+    }
+    return song;
+  });
+
   const counts = allSongs.reduce((a,s)=>{
     const c = s.category || "other";
     a.all++;
