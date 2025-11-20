@@ -263,6 +263,26 @@
       <div class="flex-between">
         <h2 style="font-size:1rem;margin:0;">3. 曲一覧を読み込み & 編集</h2>
         <button id="btnReload">songs.json を再読み込み</button>
+        <!-- 曲一覧検索 -->
+        <div style="margin:10px 0;">
+        <label style="font-size:0.8rem;">曲一覧検索（リアルタイム）</label>
+        <input
+            type="text"
+            id="tableSearch"
+            placeholder="例：Ado / 練習中 / ボカロ / -2 など"
+            style="
+            width:100%;
+            padding:6px 8px;
+            border-radius:8px;
+            border:1px solid rgba(148,163,184,0.7);
+            background:#020617;
+            color:#e5e7eb;
+            font-size:0.88rem;
+            margin-top:4px;
+            "
+        />
+        </div>
+
       </div>
       <div id="listStatus" class="status"></div>
       <div style="margin-top:8px;overflow:auto;max-height:60vh;">
@@ -345,6 +365,12 @@
     }
 
     async function fetchSongsJson() {
+        const tableSearchInput = document.getElementById("tableSearch");
+        tableSearchInput.addEventListener("input", (e) => {
+        tableSearchKeyword = e.target.value;
+        renderSongsTable();
+        });
+
       const { user, repo, branch } = getConfig();
       setListStatus("読み込み中...", false);
       songsTableBody.innerHTML = "";
@@ -373,6 +399,11 @@
 
     function renderSongsTable() {
       songsTableBody.innerHTML = "";
+      let tableScearchKeyword = "";
+      const filtered = songsData.filter(s => {
+            const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
+            return text.includes(tableSearchKeyword.toLowerCase());
+        });
       songsData.forEach((song, index) => {
         const tr = document.createElement("tr");
 
