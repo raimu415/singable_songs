@@ -342,10 +342,11 @@ const CATEGORY_LABELS = {
   vocaloid: "ボカロ",
   other: "その他",
   ng: "NG（歌いたくない）",
-  training: "練習中"
+  training: "練習中",
+  acoustic: "弾き語り"
 };
 
-const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training"];
+const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training", "acoustic"];
 
 let allSongs = [];
 let filteredCategory = "all";
@@ -442,6 +443,13 @@ function render() {
   }).join("");
 
   sectionsContainer.innerHTML = html;
+   // ★ メモに「弾き語り」があったらカテゴリを acoustic にする
+  allSongs = allSongs.map(song => {
+    if (song.memo && song.memo.includes("弾き語り")) {
+      return { ...song, category: "acoustic" };
+    }
+    return song;
+  });
 }
 
 /* セクションの描画（カード版） */
