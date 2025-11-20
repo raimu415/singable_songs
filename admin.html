@@ -188,6 +188,7 @@
           <option value="other">other</option>
           <option value="ng">ng</option>
           <option value="training">training</option>
+          <option value="acoustic">acoustic</option>
         </select>
       </div>
     </div>
@@ -346,7 +347,7 @@
       /* カテゴリ */
       const tdCategory = document.createElement("td");
       const sel = document.createElement("select");
-      ["jpop","anime","vocaloid","other","ng","training"].forEach(c=>{
+      ["jpop","anime","vocaloid","other","ng","training", "acoustic"].forEach(c=>{
         const opt = document.createElement("option");
         opt.value = c;
         opt.textContent = c;
