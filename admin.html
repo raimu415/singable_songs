@@ -83,11 +83,6 @@
       border-color: #f97373;
     }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-
     .row {
       display: flex;
       gap: 8px;
@@ -100,24 +95,13 @@
       min-width: 120px;
     }
 
-    .token-warning {
-      font-size: 0.78rem;
-      color: #f97373;
-      margin-top: 4px;
-    }
-
     .status {
       font-size: 0.8rem;
       margin-top: 6px;
     }
 
-    .status.ok {
-      color: #22c55e;
-    }
-
-    .status.err {
-      color: #f97373;
-    }
+    .status.ok { color: #22c55e; }
+    .status.err { color: #f97373; }
 
     table {
       width: 100%;
@@ -145,420 +129,360 @@
       padding: 3px 5px;
     }
 
-    .badge {
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: #111827;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-    }
-
-    .badge.ng {
-      border-color: #f97373;
-      color: #fecaca;
-    }
-
-    .badge.training {
-      border-color: #38bdf8;
-      color: #bae6fd;
-    }
-
-    .flex-between {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .nowrap {
-      white-space: nowrap;
-    }
-
     .checkbox-center {
       text-align: center;
     }
 
-    @media (max-width: 700px) {
-      table {
-        font-size: 0.78rem;
-      }
-      th, td {
-        padding: 3px 4px;
-      }
-    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>らいむ管理画面（songs.json 編集）</h1>
-    <div class="note">
-      ✅ GitHub の <code>songs.json</code> を直接読み込んで編集・保存します。<br>
-      ✅ 「トークン」はこのページでしか使わず、ブラウザに保存しません。
-    </div>
 
-    <!-- GitHub設定 -->
-    <div class="card">
-      <h2 style="font-size:1rem;margin:0 0 6px;">1. GitHub設定</h2>
-      <div class="row">
-        <div>
-          <label>GitHubユーザー名</label>
-          <input type="text" id="ghUser" value="raimu415" />
-        </div>
-        <div>
-          <label>リポジトリ名</label>
-          <input type="text" id="ghRepo" value="singable_songs" />
-        </div>
-        <div>
-          <label>ブランチ</label>
-          <input type="text" id="ghBranch" value="main" />
-        </div>
+<div class="container">
+  <h1>らいむ管理画面（songs.json 編集）</h1>
+  <div class="note">
+    GitHub の <code>songs.json</code> を直接読み込み・編集します。  
+    トークンはブラウザに保存されません。
+  </div>
+
+  <!-- GitHub設定 -->
+  <div class="card">
+    <h2 style="font-size:1rem;margin:0 0 6px;">1. GitHub設定</h2>
+    <div class="row">
+      <div>
+        <label>GitHubユーザー名</label>
+        <input type="text" id="ghUser" value="raimu415" />
       </div>
-      <div style="margin-top:8px;">
-        <label>Personal Access Token（PAT）</label>
-        <input type="password" id="ghToken" placeholder="ghp_ から始まるトークン" />
-        <div class="token-warning">
-          ※ このページを閉じるとトークン情報は残りません。<br>
-          ※ 権限は「Contents: Read and write」だけでOK。
-        </div>
+      <div>
+        <label>リポジトリ名</label>
+        <input type="text" id="ghRepo" value="singable_songs" />
+      </div>
+      <div>
+        <label>ブランチ</label>
+        <input type="text" id="ghBranch" value="main" />
       </div>
     </div>
-
-    <!-- 曲追加 -->
-    <div class="card">
-      <h2 style="font-size:1rem;margin:0 0 6px;">2. 曲を追加</h2>
-      <div class="row">
-        <div>
-          <label>曲名（title）</label>
-          <input type="text" id="newTitle" />
-        </div>
-        <div>
-          <label>アーティスト（artist）</label>
-          <input type="text" id="newArtist" />
-        </div>
-        <div>
-          <label>カテゴリ（category）</label>
-          <select id="newCategory">
-            <option value="jpop">J-POP / アーティスト</option>
-            <option value="anime">アニソン / ゲーソン</option>
-            <option value="vocaloid">ボカロ</option>
-            <option value="other">その他</option>
-            <option value="ng">NG（歌いたくない）</option>
-            <option value="training">練習中</option>
-          </select>
-        </div>
-      </div>
-      <div style="margin-top:8px;">
-        <label>メモ（memo）</label>
-        <textarea id="newMemo" placeholder="キー、状態（練習中 / 二度と歌いたくない など）"></textarea>
-      </div>
-      <div style="margin-top:8px;">
-        <button class="primary" id="btnAdd">曲を追加（末尾に追加）</button>
-        <span id="addStatus" class="status"></span>
-      </div>
-    </div>
-
-    <!-- 曲一覧・編集 -->
-    <div class="card">
-      <div class="flex-between">
-        <h2 style="font-size:1rem;margin:0;">3. 曲一覧を読み込み & 編集</h2>
-        <button id="btnReload">songs.json を再読み込み</button>
-        <!-- 曲一覧検索 -->
-        <div style="margin:10px 0;">
-        <label style="font-size:0.8rem;">曲一覧検索（リアルタイム）</label>
-        <input
-            type="text"
-            id="tableSearch"
-            placeholder="例：Ado / 練習中 / ボカロ / -2 など"
-            style="
-            width:100%;
-            padding:6px 8px;
-            border-radius:8px;
-            border:1px solid rgba(148,163,184,0.7);
-            background:#020617;
-            color:#e5e7eb;
-            font-size:0.88rem;
-            margin-top:4px;
-            "
-        />
-        </div>
-
-      </div>
-      <div id="listStatus" class="status"></div>
-      <div style="margin-top:8px;overflow:auto;max-height:60vh;">
-        <table id="songsTable">
-          <thead>
-            <tr>
-              <th style="min-width:140px;">曲名</th>
-              <th style="min-width:120px;">アーティスト</th>
-              <th style="min-width:100px;">カテゴリ</th>
-              <th style="min-width:180px;">メモ</th>
-              <th class="nowrap">削除</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- JSで埋める -->
-          </tbody>
-        </table>
-      </div>
-      <div style="margin-top:10px;" class="flex-between">
-        <span style="font-size:0.8rem;">編集後は必ず「変更を保存」を押してください。</span>
-        <button class="primary" id="btnSaveAll">変更を保存（songs.json 上書き）</button>
-      </div>
-      <div id="saveStatus" class="status"></div>
+    <div style="margin-top:8px;">
+      <label>Personal Access Token（PAT）</label>
+      <input type="password" id="ghToken" placeholder="ghp_..." />
     </div>
   </div>
 
-  <script>
-    const ghUserInput = document.getElementById("ghUser");
-    const ghRepoInput = document.getElementById("ghRepo");
-    const ghBranchInput = document.getElementById("ghBranch");
-    const ghTokenInput = document.getElementById("ghToken");
+  <!-- 曲追加 -->
+  <div class="card">
+    <h2 style="font-size:1rem;margin:0 0 6px;">2. 曲を追加</h2>
+    <div class="row">
+      <div>
+        <label>曲名</label>
+        <input type="text" id="newTitle" />
+      </div>
+      <div>
+        <label>アーティスト</label>
+        <input type="text" id="newArtist" />
+      </div>
+      <div>
+        <label>カテゴリ</label>
+        <select id="newCategory">
+          <option value="jpop">jpop</option>
+          <option value="anime">anime</option>
+          <option value="vocaloid">vocaloid</option>
+          <option value="other">other</option>
+          <option value="ng">ng</option>
+          <option value="training">training</option>
+        </select>
+      </div>
+    </div>
 
-    const btnReload = document.getElementById("btnReload");
-    const btnSaveAll = document.getElementById("btnSaveAll");
-    const btnAdd = document.getElementById("btnAdd");
+    <label>メモ</label>
+    <textarea id="newMemo"></textarea>
 
-    const songsTableBody = document.querySelector("#songsTable tbody");
-    const listStatus = document.getElementById("listStatus");
-    const saveStatus = document.getElementById("saveStatus");
-    const addStatus = document.getElementById("addStatus");
-
-    const newTitle = document.getElementById("newTitle");
-    const newArtist = document.getElementById("newArtist");
-    const newCategory = document.getElementById("newCategory");
-    const newMemo = document.getElementById("newMemo");
-
-    let songsData = [];
-    let currentSha = null;
-    let tableSearchKeyword = "";
-
-    function getConfig() {
-      return {
-        user: ghUserInput.value.trim(),
-        repo: ghRepoInput.value.trim(),
-        branch: ghBranchInput.value.trim(),
-        token: ghTokenInput.value.trim()
-      };
-    }
-
-    function setListStatus(msg, ok = false) {
-      listStatus.textContent = msg;
-      listStatus.className = "status " + (ok ? "ok" : "err");
-    }
-
-    function setSaveStatus(msg, ok = false) {
-      saveStatus.textContent = msg;
-      saveStatus.className = "status " + (ok ? "ok" : "err");
-    }
-
-    function setAddStatus(msg, ok = false) {
-      addStatus.textContent = msg;
-      addStatus.className = "status " + (ok ? "ok" : "err");
-    }
-
-    function b64encodeUnicode(str) {
-      return btoa(unescape(encodeURIComponent(str)));
-    }
-
-    function b64decodeUnicode(str) {
-      return decodeURIComponent(escape(atob(str)));
-    }
-
-    async function fetchSongsJson() {
-      const { user, repo, branch } = getConfig();
-      setListStatus("読み込み中...", false);
-      songsTableBody.innerHTML = "";
-      try {
-        const res = await fetch(
-          `https://api.github.com/repos/${user}/${repo}/contents/songs.json?ref=${branch}`
-        );
-        if (!res.ok) {
-          throw new Error("APIエラー: " + res.status);
-        }
-        const data = await res.json();
-        currentSha = data.sha;
-        const jsonText = b64decodeUnicode(data.content);
-        const arr = JSON.parse(jsonText);
-        if (!Array.isArray(arr)) {
-          throw new Error("songs.json が配列ではありません");
-        }
-        songsData = arr;
-        renderSongsTable();
-        setListStatus(`読み込み完了: ${songsData.length} 曲`, true);
-      } catch (err) {
-        console.error(err);
-        setListStatus("読み込みに失敗しました: " + err.message, false);
-      }
-    }
-    function renderSongsTable() {
-        songsTableBody.innerHTML = "";
-
-        const filtered = songsData
-            .map((song, originalIndex) => ({ song, originalIndex }))
-            .filter(item => {
-            const s = item.song;
-            const text = `${s.title||""} ${s.artist||""} ${s.category||""} ${s.memo||""}`.toLowerCase();
-            return text.includes(tableSearchKeyword.toLowerCase());
-            });
-
-        filtered.forEach(({ song, originalIndex }) => {
-            const tr = document.createElement("tr");
-            tr.dataset.id = originalIndex;
-
-            const tdTitle = document.createElement("td");
-            const inTitle = document.createElement("input");
-            inTitle.type = "text";
-            inTitle.value = song.title || "";
-            inTitle.className = "small-input";
-            inTitle.addEventListener("input", () => {
-            songsData[originalIndex].title = inTitle.value;
-            });
-            tdTitle.appendChild(inTitle);
-
-            const tdArtist = document.createElement("td");
-            const inArtist = document.createElement("input");
-            inArtist.type = "text";
-            inArtist.value = song.artist || "";
-            inArtist.className = "small-input";
-            inArtist.addEventListener("input", () => {
-            songsData[originalIndex].artist = inArtist.value;
-            });
-            tdArtist.appendChild(inArtist);
-
-            const tdCat = document.createElement("td");
-            const selCat = document.createElement("select");
-            ["jpop","anime","vocaloid","other","ng","training"].forEach(c => {
-            const opt = document.createElement("option");
-            opt.value = c;
-            opt.textContent = c;
-            selCat.appendChild(opt);
-            });
-            selCat.value = song.category || "other";
-            selCat.className = "small-input";
-            selCat.addEventListener("change", () => {
-            songsData[originalIndex].category = selCat.value;
-            });
-            tdCat.appendChild(selCat);
-
-            const tdMemo = document.createElement("td");
-            const inMemo = document.createElement("textarea");
-            inMemo.value = song.memo || "";
-            inMemo.className = "small-input";
-            inMemo.style.minHeight = "40px";
-            inMemo.addEventListener("input", () => {
-            songsData[originalIndex].memo = inMemo.value;
-            });
-            tdMemo.appendChild(inMemo);
-
-            const tdDel = document.createElement("td");
-            tdDel.className = "checkbox-center";
-            const chk = document.createElement("input");
-            chk.type = "checkbox";
-            chk.title = "削除フラグ";
-            chk.addEventListener("change", () => {
-            tr.dataset.toDelete = chk.checked ? "1" : "";
-            });
-            tdDel.appendChild(chk);
-
-            tr.appendChild(tdTitle);
-            tr.appendChild(tdArtist);
-            tr.appendChild(tdCat);
-            tr.appendChild(tdMemo);
-            tr.appendChild(tdDel);
-
-            songsTableBody.appendChild(tr);
-        });
-        }
+    <button class="primary" id="btnAdd" style="margin-top:8px;">追加</button>
+    <div id="addStatus" class="status"></div>
+  </div>
 
 
+  <!-- 曲一覧 -->
+  <div class="card">
+    <div class="flex-between">
+      <h2 style="font-size:1rem;margin:0;">3. 曲一覧</h2>
+      <button id="btnReload">再読み込み</button>
+    </div>
 
-    
-    async function saveSongsJson() {
-        const { user, repo, branch, token } = getConfig();
-        if (!token) {
-            setSaveStatus("トークンを入力してください。", false);
-            return;
-        }
+    <label style="margin-top:6px;">曲一覧検索（リアルタイム）</label>
+    <input type="text" id="tableSearch" placeholder="Ado / 練習中 / -2 など" />
 
-        const rows = Array.from(songsTableBody.querySelectorAll("tr"));
-        const newSongs = [];
+    <div id="listStatus" class="status"></div>
 
-        songsData.forEach((song, i) => {
-            const row = rows.find(r => Number(r.dataset.id) === i);
-            if (row && row.dataset.toDelete === "1") return;
-            newSongs.push(song);
-        });
+    <div style="margin-top:8px;overflow:auto;max-height:60vh;">
+      <table id="songsTable">
+        <thead>
+          <tr>
+            <th>曲名</th>
+            <th>アーティスト</th>
+            <th>カテゴリ</th>
+            <th>メモ</th>
+            <th>削除</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
-        const jsonText = JSON.stringify(newSongs, null, 2);
-        const contentB64 = b64encodeUnicode(jsonText);
+    <div class="flex-between" style="margin-top:10px;">
+      <span style="font-size:0.8rem;">変更後は「保存」を押す</span>
+      <button class="primary" id="btnSaveAll">変更を保存</button>
+    </div>
 
-        setSaveStatus("保存中...", false);
-
-        try {
-            const res = await fetch(
-            `https://api.github.com/repos/${user}/${repo}/contents/songs.json`,
-            {
-                method: "PUT",
-                headers: {
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/vnd.github+json"
-                },
-                body: JSON.stringify({
-                message: "Update songs.json from admin.html",
-                content: contentB64,
-                sha: currentSha,
-                branch: branch
-                })
-            }
-            );
-
-            if (!res.ok) {
-            throw new Error("保存に失敗: " + res.status);
-            }
-
-            const result = await res.json();
-            currentSha = result.content.sha;
-            songsData = newSongs;
-            renderSongsTable();
-            setSaveStatus("保存完了！", true);
-
-        } catch (err) {
-            console.error(err);
-            setSaveStatus("保存エラー: " + err.message, false);
-        }
-        }
+    <div id="saveStatus" class="status"></div>
+  </div>
+</div>
 
 
-    function addSongToList() {
-      const title = newTitle.value.trim();
-      const artist = newArtist.value.trim();
-      const category = newCategory.value;
-      const memo = newMemo.value.trim();
+<script>
+  const ghUserInput = document.getElementById("ghUser");
+  const ghRepoInput = document.getElementById("ghRepo");
+  const ghBranchInput = document.getElementById("ghBranch");
+  const ghTokenInput = document.getElementById("ghToken");
 
-      if (!title) {
-        setAddStatus("曲名は必須です。", false);
-        return;
-      }
+  const btnReload = document.getElementById("btnReload");
+  const btnSaveAll = document.getElementById("btnSaveAll");
+  const btnAdd = document.getElementById("btnAdd");
 
-      songsData.push({ title, artist, category, memo });
+  const songsTableBody = document.querySelector("#songsTable tbody");
+  const tableSearchInput = document.getElementById("tableSearch");
+
+  const listStatus = document.getElementById("listStatus");
+  const saveStatus = document.getElementById("saveStatus");
+  const addStatus = document.getElementById("addStatus");
+
+  const newTitle = document.getElementById("newTitle");
+  const newArtist = document.getElementById("newArtist");
+  const newCategory = document.getElementById("newCategory");
+  const newMemo = document.getElementById("newMemo");
+
+  let songsData = [];
+  let currentSha = null;
+  let tableSearchKeyword = "";
+
+
+  /* GitHub API設定 */
+  function getConfig() {
+    return {
+      user: ghUserInput.value.trim(),
+      repo: ghRepoInput.value.trim(),
+      branch: ghBranchInput.value.trim(),
+      token: ghTokenInput.value.trim()
+    };
+  }
+
+  function b64encodeUnicode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+  function b64decodeUnicode(str) {
+    return decodeURIComponent(escape(atob(str)));
+  }
+
+
+  /* songs.json を取得 */
+  async function fetchSongsJson() {
+    const { user, repo, branch } = getConfig();
+    listStatus.textContent = "読み込み中...";
+    songsTableBody.innerHTML = "";
+
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${user}/${repo}/contents/songs.json?ref=${branch}`
+      );
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const data = await res.json();
+      currentSha = data.sha;
+
+      songsData = JSON.parse(b64decodeUnicode(data.content));
       renderSongsTable();
-      newTitle.value = "";
-      newArtist.value = "";
-      newMemo.value = "";
-      setAddStatus("ローカルリストに追加しました。「変更を保存」でGitHubへ反映されます。", true);
-    }
-    const tableSearchInput = document.getElementById("tableSearch");
-    tableSearchInput.addEventListener("input", (e) => {
-        tableSearchKeyword = e.target.value;
-        renderSongsTable();
-        });
-    btnReload.addEventListener("click", fetchSongsJson);
-    btnSaveAll.addEventListener("click", saveSongsJson);
-    btnAdd.addEventListener("click", addSongToList);
 
-    // ページ表示時に自動で一度読み込む
-    fetchSongsJson();
-  </script>
+      listStatus.textContent = `読み込み完了：${songsData.length} 曲`;
+      listStatus.className = "status ok";
+    }
+    catch (err) {
+      listStatus.textContent = "読み込み失敗：" + err.message;
+      listStatus.className = "status err";
+    }
+  }
+
+
+  /* テーブル描画（削除ズレ防止版） */
+  function renderSongsTable() {
+    songsTableBody.innerHTML = "";
+
+    const filtered = songsData
+      .map((song, index) => ({ song, index }))
+      .filter(({ song }) => {
+        const text = `${song.title} ${song.artist} ${song.category} ${song.memo}`.toLowerCase();
+        return text.includes(tableSearchKeyword.toLowerCase());
+      });
+
+    filtered.forEach(({ song, index }) => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = index;
+
+      /* タイトル */
+      const tdTitle = document.createElement("td");
+      const inputTitle = document.createElement("input");
+      inputTitle.type = "text";
+      inputTitle.value = song.title;
+      inputTitle.className = "small-input";
+      inputTitle.oninput = () => { songsData[index].title = inputTitle.value; };
+      tdTitle.appendChild(inputTitle);
+
+      /* アーティスト */
+      const tdArtist = document.createElement("td");
+      const inputArtist = document.createElement("input");
+      inputArtist.type = "text";
+      inputArtist.value = song.artist;
+      inputArtist.className = "small-input";
+      inputArtist.oninput = () => { songsData[index].artist = inputArtist.value; };
+      tdArtist.appendChild(inputArtist);
+
+      /* カテゴリ */
+      const tdCategory = document.createElement("td");
+      const sel = document.createElement("select");
+      ["jpop","anime","vocaloid","other","ng","training"].forEach(c=>{
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
+      sel.value = song.category;
+      sel.className = "small-input";
+      sel.onchange = () => { songsData[index].category = sel.value; };
+      tdCategory.appendChild(sel);
+
+      /* メモ */
+      const tdMemo = document.createElement("td");
+      const textarea = document.createElement("textarea");
+      textarea.value = song.memo;
+      textarea.className = "small-input";
+      textarea.style.minHeight = "40px";
+      textarea.oninput = () => { songsData[index].memo = textarea.value; };
+      tdMemo.appendChild(textarea);
+
+      /* 削除 */
+      const tdDel = document.createElement("td");
+      tdDel.className = "checkbox-center";
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.onchange = () => {
+        tr.dataset.toDelete = chk.checked ? "1" : "";
+      };
+      tdDel.appendChild(chk);
+
+      tr.appendChild(tdTitle);
+      tr.appendChild(tdArtist);
+      tr.appendChild(tdCategory);
+      tr.appendChild(tdMemo);
+      tr.appendChild(tdDel);
+
+      songsTableBody.appendChild(tr);
+    });
+  }
+
+
+  /* 保存（削除ズレなし） */
+  async function saveSongsJson() {
+    const { user, repo, branch, token } = getConfig();
+    if (!token) {
+      saveStatus.textContent = "トークンを入力してください";
+      saveStatus.className = "status err";
+      return;
+    }
+
+    saveStatus.textContent = "保存中...";
+    saveStatus.className = "status";
+
+    const rows = Array.from(songsTableBody.querySelectorAll("tr"));
+    const newSongs = [];
+
+    songsData.forEach((s, i) => {
+      const row = rows.find(r => Number(r.dataset.id) === i);
+      if (row && row.dataset.toDelete === "1") return;
+      newSongs.push(s);
+    });
+
+    try {
+      const contentB64 = b64encodeUnicode(JSON.stringify(newSongs, null, 2));
+
+      const res = await fetch(
+        `https://api.github.com/repos/${user}/${repo}/contents/songs.json`,
+        {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/vnd.github+json"
+          },
+          body: JSON.stringify({
+            message: "Update songs.json from admin.html",
+            content: contentB64,
+            sha: currentSha,
+            branch
+          })
+        }
+      );
+
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const result = await res.json();
+      currentSha = result.content.sha;
+      songsData = newSongs;
+
+      renderSongsTable();
+      saveStatus.textContent = "保存完了！";
+      saveStatus.className = "status ok";
+    }
+    catch (err) {
+      saveStatus.textContent = "保存失敗：" + err.message;
+      saveStatus.className = "status err";
+    }
+  }
+
+
+  /* 曲追加 */
+  function addSongToList() {
+    const title = newTitle.value.trim();
+    if (!title) {
+      addStatus.textContent = "曲名は必須です";
+      addStatus.className = "status err";
+      return;
+    }
+
+    songsData.push({
+      title,
+      artist: newArtist.value.trim(),
+      category: newCategory.value,
+      memo: newMemo.value.trim()
+    });
+
+    newTitle.value = "";
+    newArtist.value = "";
+    newMemo.value = "";
+
+    addStatus.textContent = "追加しました。保存で反映されます。";
+    addStatus.className = "status ok";
+    renderSongsTable();
+  }
+
+
+  /* イベント登録 */
+  tableSearchInput.oninput = (e) => {
+    tableSearchKeyword = e.target.value;
+    renderSongsTable();
+  };
+
+  btnReload.onclick = fetchSongsJson;
+  btnSaveAll.onclick = saveSongsJson;
+  btnAdd.onclick = addSongToList;
+
+  fetchSongsJson();
+</script>
+
 </body>
 </html>
