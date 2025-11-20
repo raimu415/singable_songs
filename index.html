@@ -781,105 +781,94 @@
 
       sectionsContainer.innerHTML = htmlParts.join("");
     }
-
     function renderCategorySection(catKey, songs) {
-      const label =
+    const label =
         catKey === "jpop"
-          ? "J-POP / Ado / 傘村トータ / Kanaria など"
-          : catKey === "anime"
-          ? "アニソン / ゲーソン"
-          : catKey === "vocaloid"
-          ? "ボカロ"
-          : catKey === "ng"
-          ? "二度と歌いたくないやつ"
-          : catKey === "training"
-          ? "頑張って覚えてるやつ"
-          : "その他";
+        ? "J-POP / Ado / 傘村トータ / Kanaria など"
+        : catKey === "anime"
+        ? "アニソン / ゲーソン"
+        : catKey === "vocaloid"
+        ? "ボカロ"
+        : catKey === "ng"
+        ? "二度と歌いたくないやつ"
+        : catKey === "training"
+        ? "頑張って覚えてるやつ"
+        : "その他";
 
-      const headerTitle =
+    const headerTitle =
         {
-          jpop: "J-POP / アーティスト系",
-          anime: "アニソン / ゲームソング",
-          vocaloid: "ボカロ",
-          other: "その他",
-          ng: "NGリスト（歌いたくない）",
-          training: "練習中の曲"
+        jpop: "J-POP / アーティスト系",
+        anime: "アニソン / ゲームソング",
+        vocaloid: "ボカロ",
+        other: "その他",
+        ng: "NGリスト（歌いたくない）",
+        training: "練習中の曲"
         }[catKey] || "その他";
 
-      const rowsHtml = songs
+    const rowsHtml = songs
         .map((s, index) => {
-            const title = escapeHtml(s.title || "");
-            const artist = escapeHtml(s.artist || "");
-            const memo = s.memo || "";
+        const title = escapeHtml(s.title || "");
+        const artist = escapeHtml(s.artist || "");
+        const memo = s.memo || "";
 
-            const memoPills = [];
-            const rowClasses = [];
+        const memoPills = [];
+        const rowClasses = [];
 
-            if (/二度と歌いたくない/.test(memo)) {
+        if (/二度と歌いたくない/.test(memo)) {
             memoPills.push(
-                `<span class="memo-pill memo-ng">二度と歌いたくない</span>`
+            `<span class="memo-pill memo-ng">二度と歌いたくない</span>`
             );
             rowClasses.push("row-ng");
-            }
-            if (/練習中/.test(memo)) {
+        }
+        if (/練習中/.test(memo)) {
             memoPills.push(
-                `<span class="memo-pill memo-training">練習中</span>`
+            `<span class="memo-pill memo-training">練習中</span>`
             );
             rowClasses.push("row-training");
-            }
-            if (/[-+]\d|\/\d{2}/.test(memo)) {
+        }
+        if (/[-+]\d|\/\d{2}/.test(memo)) {
             memoPills.push(
-                `<span class="memo-pill memo-key">キー情報あり</span>`
+            `<span class="memo-pill memo-key">キー情報あり</span>`
             );
-            }
+        }
 
-            const memoText = memo
+        const memoText = memo
             ? `<div class="memo-text">${escapeHtml(memo)}</div>`
             : "";
 
-            const extraClasses = rowClasses.length ? " " + rowClasses.join(" ") : "";
+        const extraClasses = rowClasses.length ? " " + rowClasses.join(" ") : "";
 
-            return `
-            <tr class="song-row${extraClasses}" style="--row-index:${index}">
-                <td>
+        return `
+            <div class="song-card song-row${extraClasses}" style="--row-index:${index}">
+            <div class="song-info">
                 <div class="song-title">${title}</div>
-                </td>
-                <td>
-                <div class="song-artist">${artist || "&nbsp;"}</div>
-                </td>
-                <td>
+                <div class="song-artist">${artist}</div>
+            </div>
+            <div class="song-right">
                 ${memoPills.join(" ")}
                 ${memoText}
-                </td>
-            </tr>
-            `;
+            </div>
+            </div>
+        `;
         })
         .join("");
 
-
-      return `
-      <section class="category-section" data-category="${catKey}">
+    return `
+        <section class="category-section" data-category="${catKey}">
         <div class="category-header">
-          <h2 class="category-title">${headerTitle}</h2>
-          <span class="category-badge">${label}</span>
+            <h2 class="category-title">${headerTitle}</h2>
+            <span class="category-badge">${label}</span>
         </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>曲名</th>
-                <th>アーティスト</th>
-                <th>メモ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
+
+        <!-- ★ テーブルを消してカード表示のみ！ -->
+        <div class="category-card-list">
+            ${rowsHtml}
         </div>
-      </section>
+        </section>
     `;
     }
+
+
 
     function escapeHtml(str) {
       return String(str)
