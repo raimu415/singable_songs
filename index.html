@@ -466,27 +466,39 @@ function render() {
 
 
 /* セクションの描画（カード版） */
-function renderCategorySection(cat, list) {
-  return `
-    <h2 class="category-title">${CATEGORY_LABELS[cat]}</h2>
-    <div class="song-grid">
-      ${list.map((s,i)=>renderCard(s,i)).join("")}
-    </div>
-  `;
-}
-
-/* カード1枚 */
 function renderCard(s, i) {
   const title = escape(s.title);
   const artist = escape(s.artist || "");
   const memo = s.memo || "";
 
-  const pills = [];
-  if (/二度と歌いたくない/.test(memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
-  if (/練習中/.test(memo)) pills.push(`<span class="memo-pill memo-training">練習中</span>`);
-  if (/[-+]\d|\/\d{2}/.test(memo)) pills.push(`<span class="memo-pill memo-key">キー</span>`);
+  // メモからキー情報だけ抜き出す（例: -2, +3 など）
+  const keyMatch = memo.match(/[-+]\d+/);
 
-  const memoText = memo ? `<div class="memo-text">${escape(memo)}</div>` : "";
+  const pills = [];
+  if (/二度と歌いたくない/.test(memo)) {
+    pills.push(`<span class="memo-pill memo-ng">NG</span>`);
+  }
+  if (/練習中/.test(memo)) {
+    pills.push(`<span class="memo-pill memo-training">練習中</span>`);
+  }
+  // ★ キーの横に値を表示
+  if (keyMatch) {
+    pills.push(
+      `<span class="memo-pill memo-key">キー ${escape(keyMatch[0])}</span>`
+    );
+  }
+
+  // メモ本文からキー値だけ消してあげる（下に重複して出さないように）
+  let memoForView = memo;
+  if (keyMatch) {
+    memoForView = memoForView.replace(keyMatch[0], "").trim();
+    // 末尾に「/」とかだけ残っちゃうのを軽くお掃除
+    memoForView = memoForView.replace(/[\/｜|・:：、。-]+$/,"").trim();
+  }
+
+  const memoText = memoForView
+    ? `<div class="memo-text">${escape(memoForView)}</div>`
+    : "";
 
   return `
     <div class="song-card" style="--i:${i}">
@@ -497,6 +509,7 @@ function renderCard(s, i) {
     </div>
   `;
 }
+
 
 function escape(str) {
   return String(str)
