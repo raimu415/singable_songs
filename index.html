@@ -466,6 +466,16 @@ function render() {
 
 
 /* セクションの描画（カード版） */
+function renderCategorySection(cat, list) {
+  return `
+    <h2 class="category-title">${CATEGORY_LABELS[cat]}</h2>
+    <div class="song-grid">
+      ${list.map((s,i)=>renderCard(s,i)).join("")}
+    </div>
+  `;
+}
+
+/* カード1枚 */
 function renderCard(s, i) {
   const title = escape(s.title);
   const artist = escape(s.artist || "");
