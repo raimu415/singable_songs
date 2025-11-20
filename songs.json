@@ -962,7 +962,7 @@
   {
     "title": "ドライフラワー",
     "artist": "優里",
-    "memo": "",
+    "memo": "弾き語り",
     "category": "jpop"
   },
   {
@@ -1232,6 +1232,30 @@
   {
     "title": "シンデレラボーイ",
     "artist": "Saucy Dog",
+    "category": "jpop",
+    "memo": "弾き語り"
+  },
+  {
+    "title": "やきそばパンのうた",
+    "artist": "めいちゃん",
+    "category": "jpop",
+    "memo": "弾き語り"
+  },
+  {
+    "title": "三人のおじさん",
+    "artist": "BUMP OF CHICKEN",
+    "category": "jpop",
+    "memo": "弾き語り"
+  },
+  {
+    "title": "猫",
+    "artist": "あいみょん",
+    "category": "jpop",
+    "memo": "-2"
+  },
+  {
+    "title": "かくれんぼ",
+    "artist": "優里",
     "category": "jpop",
     "memo": "弾き語り"
   }
