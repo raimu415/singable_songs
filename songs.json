@@ -1276,5 +1276,41 @@
     "artist": "SAO/春奈るな",
     "category": "anime",
     "memo": ""
+  },
+  {
+    "title": "Surges",
+    "artist": "Orangesar",
+    "category": "ng",
+    "memo": "歌詞一生覚えられん"
+  },
+  {
+    "title": "Henceforth",
+    "artist": "Orangestar",
+    "category": "ng",
+    "memo": "普通に無理"
+  },
+  {
+    "title": "怪物",
+    "artist": "YOASOBI",
+    "category": "jpop",
+    "memo": ""
+  },
+  {
+    "title": "夜に駆ける",
+    "artist": "YOASOBI",
+    "category": "jpop",
+    "memo": ""
+  },
+  {
+    "title": "群青",
+    "artist": "YOASOBI",
+    "category": "jpop",
+    "memo": ""
+  },
+  {
+    "title": "勇者",
+    "artist": "YOASOBI",
+    "category": "training",
+    "memo": ""
   }
 ]
