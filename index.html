@@ -413,6 +413,13 @@ function buildFilterButtons() {
 
 /* レンダリング */
 function render() {
+    // メモに「弾き語り」がある曲 → 自動で acoustic に分類する
+  allSongs = allSongs.map(song => {
+    if (song.memo && song.memo.includes("弾き語り")) {
+      return { ...song, category: "acoustic" };
+    }
+    return song;
+  });
   let list = allSongs.slice();
 
   if (filteredCategory!=="all") {
@@ -443,20 +450,6 @@ function render() {
   }).join("");
 
   sectionsContainer.innerHTML = html;
-   // メモに「弾き語り」がある曲 → 自動で acoustic に分類する
-  allSongs = allSongs.map(song => {
-    if (song.memo && song.memo.includes("弾き語り")) {
-      return { ...song, category: "acoustic" };
-    }
-    return song;
-  });
-   // メモに「弾き語り」があったらカテゴリを acoustic にする
-  allSongs = allSongs.map(song => {
-    if (song.memo && song.memo.includes("弾き語り")) {
-      return { ...song, category: "acoustic" };
-    }
-    return song;
-  });
 }
 
 /* セクションの描画（カード版） */
