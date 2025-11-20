@@ -378,12 +378,22 @@ async function loadSongs() {
   try {
     const res = await fetch("songs.json", { cache: "no-store" });
     allSongs = await res.json();
-    buildFilterButtons();
+
+    // ★★ ここで最初に「弾き語り → acoustic」分類しておく！
+    allSongs = allSongs.map(song => {
+      if (song.memo && song.memo.includes("弾き語り")) {
+        return { ...song, category: "acoustic" };
+      }
+      return song;
+    });
+
+    buildFilterButtons();  // ← 分類後に呼ぶので count が正しくなる
     render();
   } catch (e) {
     sectionsContainer.innerHTML = "<p style='text-align:center'>曲データ読み込みに失敗</p>";
   }
 }
+
 
 /* フィルタボタン */
 function buildFilterButtons() {
