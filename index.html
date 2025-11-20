@@ -4,891 +4,496 @@
   <meta charset="UTF-8" />
   <title>らいむの歌える曲リスト</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-        :root {
-        --bg: #020617;
-        --bg-card: rgba(15, 23, 42, 0.85);
-        --accent: #4b7fff;
-        --accent-soft: rgba(75, 127, 255, 0.23);
-        --accent-pink: #ff6ac1;
-        --text-main: #e5e7eb;
-        --text-sub: #9ca3af;
-        --border: rgba(148, 163, 184, 0.4);
-        --radius-lg: 18px;
-        --shadow-soft: 0 14px 40px rgba(0, 0, 0, 0.7);
-        }
-
-        /* 行を触れると光る */
-        tbody tr {
-        transition: background 0.12s ease, box-shadow 0.12s ease;
-        }
-
-        tbody tr:hover {
-        background: rgba(56, 189, 248, 0.13);
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-        }
-
-
-        /* ===== ベース ===== */
-        * {
-        box-sizing: border-box;
-        }
-
-        body {
-        margin: 0;
-        padding: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-            sans-serif;
-        color: var(--text-main);
-        min-height: 100vh;
-        position: relative;
-        overflow-x: hidden;
-        background: #000; /* 読み込み前の色 */
-        }
-
-        /* ぼやけた背景写真 */
-        body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: url("./bg.jpg") center center / cover no-repeat;
-        filter: blur(12px) brightness(0.55);
-        transform: scale(1.06);
-        z-index: -2;
-        }
-
-        /* 上からネオンっぽいグラデ */
-        body::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background:
-            radial-gradient(circle at top left, rgba(79, 70, 229, 0.65), transparent 55%),
-            radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.5), transparent 55%),
-            linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.97));
-        mix-blend-mode: screen;
-        z-index: -1;
-        }
-
-        .container {
-        max-width: 980px;
-        margin: 0 auto;
-        padding: 14px 16px 32px;
-        }
-
-        /* ===== ヘッダー ===== */
-        header {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        padding: 10px 0 8px;
-        }
-
-        .header-inner {
-        background: radial-gradient(
-            circle at top,
-            rgba(15, 23, 42, 0.98),
-            rgba(15, 23, 42, 0.92)
-            );
-        border-radius: 20px;
-        padding: 12px 16px 14px;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(56, 189, 248, 0.25);
-        }
-
-        /* タイトル */
-        .title-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 6px;
-        flex-wrap: wrap;
-        justify-content: center;
-        }
-
-        h1 {
-        margin: 0;
-        font-size: 1.9rem;
-        font-weight: 900;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: #e5edff;
-        text-shadow:
-            0 0 6px rgba(75, 127, 255, 0.9),
-            0 0 18px rgba(56, 189, 248, 0.8),
-            0 0 36px rgba(59, 130, 246, 0.7);
-        display: flex;
-        align-items: center;
-        gap: 0.35em;
-        }
-
-        h1 span {
-        font-size: 1.4rem;
-        filter: drop-shadow(0 0 8px rgba(251, 113, 133, 0.8));
-        }
-
-        .title-chip {
-        font-size: 0.72rem;
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: radial-gradient(circle at top left, #f97316, #7c3aed);
-        color: #0b1020;
-        border: 1px solid rgba(248, 250, 252, 0.8);
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        box-shadow:
-            0 0 10px rgba(249, 115, 22, 0.8),
-            0 0 26px rgba(124, 58, 237, 0.8);
-        }
-
-        .tagline {
-        font-size: 0.9rem;
-        color: var(--text-sub);
-        text-align: center;
-        }
-
-        .note {
-        font-size: 0.75rem;
-        color: #6b7280;
-        text-align: center;
-        margin-top: 2px;
-        }
-
-        /* ===== 検索 & フィルタ ===== */
-        .controls {
-        margin-top: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-
-        /* 折りたたみ用 */
-        max-height: 500px;        /* 中身よりちょっと大きめならOK */
-        opacity: 1;
-        overflow: hidden;
-        transition:
-            max-height 0.28s ease,
-            opacity 0.2s ease,
-            margin-top 0.2s ease;
-        }
-        
-        /* 閉じたときの状態 */
-        .controls.collapsed {
-        max-height: 0;
-        opacity: 0;
-        margin-top: 0;
-        pointer-events: none;
-        }
-
-        /* トグルボタン行 */
-        .controls-toggle-row {
-        margin-top: 8px;
-        display: flex;
-        justify-content: flex-end;
-        }
-
-        /* トグルボタン本体 */
-        .controls-toggle {
-        border-radius: 999px;
-        border: 1px solid rgba(148, 163, 184, 0.7);
-        background: radial-gradient(circle at top left,#020617,#020617);
-        color: #e5e7eb;
-        font-size: 0.72rem;
-        padding: 4px 10px;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        cursor: pointer;
-        box-shadow: 0 0 0 1px rgba(15,23,42,0.8);
-        }
-
-        .controls-toggle:hover {
-        border-color: #4b7fff;
-        box-shadow:
-            0 0 0 1px rgba(15,23,42,1),
-            0 0 12px rgba(59,130,246,0.7);
-        }
-
-        .controls-toggle-icon {
-        font-size: 0.8rem;
-        }   
-
-        .search-box label {
-        font-size: 0.78rem;
-        color: #9ca3af;
-        display: block;
-        margin-bottom: 4px;
-        }
-
-        .search-input-wrap {
-        position: relative;
-        }
-
-        .search-box input {
-        width: 100%;
-        padding: 9px 12px 9px 32px;
-        font-size: 0.95rem;
-        border-radius: 999px;
-        border: 1px solid rgba(148, 163, 184, 0.7);
-        outline: none;
-        background: radial-gradient(circle at top left, #020617, #020617);
-        color: var(--text-main);
-        box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.8);
-        }
-
-        .search-box input::placeholder {
-        color: #6b7280;
-        }
-
-        .search-box input:focus {
-        border-color: var(--accent);
-        box-shadow:
-            0 0 0 1px rgba(15, 23, 42, 1),
-            0 0 18px rgba(59, 130, 246, 0.8);
-        }
-
-        .search-icon {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 0.9rem;
-        color: #6b7280;
-        pointer-events: none;
-        }
-
-        .filter-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 4px;
-        justify-content: center;
-        }
-
-        /* フィルタボタン（カテゴリ） */
-        .filter-btn {
-        border: 1px solid rgba(148, 163, 184, 0.7);
-        border-radius: 999px;
-        padding: 4px 9px;
-        font-size: 0.75rem;
-        background: rgba(15, 23, 42, 0.9);
-        color: var(--text-sub);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        transition:
-            background 0.12s,
-            color 0.12s,
-            border-color 0.12s,
-            transform 0.06s,
-            box-shadow 0.12s;
-        }
-
-        .filter-btn span.count {
-        font-size: 0.68rem;
-        padding: 1px 6px;
-        border-radius: 999px;
-        background: rgba(31, 41, 55, 0.9);
-        color: #e5e7eb;
-        }
-
-        .filter-btn.active {
-        background: radial-gradient(circle at top, #4f46e5, #0ea5e9);
-        color: #f9fafb;
-        border-color: rgba(56, 189, 248, 0.9);
-        box-shadow:
-            0 0 10px rgba(56, 189, 248, 0.85),
-            0 0 22px rgba(79, 70, 229, 0.85);
-        }
-
-        .filter-btn.active span.count {
-        background: rgba(15, 23, 42, 0.9);
-        color: #e5e7eb;
-        }
-
-        .filter-btn:active {
-        transform: translateY(1px) scale(0.98);
-        }
-
-        /* ===== メイン & テーブル ===== */
-        main {
-        margin-top: 14px;
-        }
-
-        .category-section {
-        margin-top: 18px;
-        }
-
-        .category-header {
-        display: flex;
-        align-items: baseline;
-        gap: 6px;
-        margin-bottom: 6px;
-        }
-
-        .category-title {
-        font-size: 1.05rem;
-        margin: 0;
-        padding-left: 10px;
-        border-left: 3px solid var(--accent);
-        color: #e5edff;
-        text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
-        }
-
-        .category-badge {
-        font-size: 0.7rem;
-        color: var(--text-sub);
-        }
-
-        /* ガラスカード風テーブル */
-        .table-wrapper {
-        background: linear-gradient(
-            135deg,
-            rgba(15, 23, 42, 0.95),
-            rgba(15, 23, 42, 0.86)
-        );
-        border-radius: var(--radius-lg);
-        padding: 6px 6px 4px;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(37, 99, 235, 0.7);
-        overflow-x: auto;
-        }
-
-        /* 曲タイトル */
-        .song-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 0.5px;
-            text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
-        }
-
-        /* アーティスト名（少し薄く） */
-        .song-artist {
-            font-size: 14px;
-            opacity: 0.75;
-            color: #eee;
-            margin-top: 3px;
-        }
-
-        /* メモバッジ（難易度とか） */
-        .song-memo {
-            background: linear-gradient(135deg, #6d9dff, #b388ff);
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            color: #fff;
-            margin-left: 14px;
-            box-shadow: 0 0 12px rgba(100, 149, 255, 0.6);
-        }
-
-        table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-        min-width: 320px;
-        }
-
-        th,
-        td {
-        padding: 6px 8px;
-        text-align: left;
-        vertical-align: top;
-        border-bottom: 1px solid rgba(31, 41, 55, 0.9);
-        }
-
-        th {
-        font-size: 0.78rem;
-        background: radial-gradient(
-            circle at top left,
-            rgba(15, 23, 42, 0.9),
-            rgba(15, 23, 42, 0.98)
-        );
-        color: #9ca3af;
-        white-space: nowrap;
-        position: sticky;
-        top: 0;
-        z-index: 5;
-        }
-
-        tr:last-child td {
-        border-bottom: none;
-        }
-
-        /* 曲名・アーティスト・メモ */
-        .song-title {
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        }
-
-        .song-artist {
-        color: #a5b4fc;
-        font-size: 0.85rem;
-        }
-
-        .memo-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 1px 6px;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        border: 1px solid rgba(148, 163, 184, 0.8);
-        color: #e5e7eb;
-        background: rgba(15, 23, 42, 0.9);
-        margin-right: 3px;
-        }
-
-        .memo-pill.memo-ng {
-        border-color: #f97373;
-        background: rgba(127, 29, 29, 0.9);
-        color: #fee2e2;
-        box-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
-        }
-
-        .memo-pill.memo-training {
-        border-color: #38bdf8;
-        background: rgba(8, 47, 73, 0.96);
-        color: #e0f2fe;
-        box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
-        }
-
-        .memo-pill.memo-key {
-        border-color: #a855f7;
-        background: rgba(46, 16, 101, 0.95);
-        color: #f5e9ff;
-        box-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
-        }
-
-        .memo-text {
-        font-size: 0.8rem;
-        color: #cbd5f5;
-        margin-top: 1px;
-        }
-        /* ===== 曲行（1曲分）・アニメーション ===== */
-        .song-row {
-        opacity: 0;
-        transform: translateY(18px) scale(0.96);
-        animation: songRowIn 0.55s cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
-        animation-delay: calc(var(--row-index, 0) * 0.04s);
-
-        transition:
-            transform 0.18s ease,
-            box-shadow 0.18s ease,
-            background 0.18s ease,
-            border-color 0.18s ease;
-        }
-
-        .song-row:hover {
-        background: rgba(56, 189, 248, 0.13);
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-        }
-
-        /* フェードイン & 下からスッと出るアニメ */
-        @keyframes songRowIn {
-        0% {
-            opacity: 0;
-            transform: translateY(22px) scale(0.94);
-        }
-        55% {
-            opacity: 1;
-            transform: translateY(-3px) scale(1.02);
-        }
-        100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        }
-        
-        /* 行のステータス色付け */
-        tr.row-ng {
-        background: rgba(127, 29, 29, 0.32);
-        }
-
-        tr.row-training {
-        background: rgba(8, 47, 73, 0.32);
-        }
-
-        /* ホバー時もちゃんと上書きしたい場合（任意） */
-        tr.row-ng:hover {
-        background: rgba(185, 28, 28, 0.45);
-        }
-
-        tr.row-training:hover {
-        background: rgba(3, 105, 161, 0.45);
-        }
-
-        .song-title {
-        font-size: 1.05rem;
-        font-weight: 600;
-        }
-
-        .song-artist {
-        font-size: 0.85rem;
-        color: #a5b4fc;
-        }
-
-        .empty-msg {
-        margin-top: 24px;
-        text-align: center;
-        font-size: 0.85rem;
-        color: var(--text-sub);
-        }
-
-        /* ===== フッター ===== */
-        footer {
-        margin-top: 26px;
-        text-align: center;
-        font-size: 0.7rem;
-        color: #6b7280;
-        }
-
-        /* ===== スマホ対応 ===== */
-        @media (max-width: 600px) {
-        h1 {
-            font-size: 1.5rem;
-            letter-spacing: 0.12em;
-        }
-
-        .header-inner {
-            padding: 10px 10px 12px;
-        }
-
-        table {
-            font-size: 0.84rem;
-        }
-
-        th,
-        td {
-            padding: 6px 6px;
-        }
-
-        .container {
-            padding-inline: 10px;
-        }
-        }
-
-        </style>
+
+<style>
+/* =========================================================
+   ベースカラー変数
+========================================================= */
+:root {
+  --text-main: #e5e7eb;
+  --text-sub: #9ca3af;
+  --card-bg: rgba(15, 23, 42, 0.72);
+  --card-border: rgba(56, 189, 248, 0.25);
+  --accent: #60a5fa;
+  --radius: 16px;
+  --shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+/* =========================================================
+   ベース設定
+========================================================= */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--text-main);
+  background: #000;
+}
+
+/* ぼやけ背景 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("bg.jpg") center/cover no-repeat;
+  filter: blur(12px) brightness(0.55);
+  transform: scale(1.06);
+  z-index: -2;
+}
+
+/* ネオンオーバーレイ */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.65), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.5), transparent 55%),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95));
+  mix-blend-mode: screen;
+  z-index: -1;
+}
+
+/* コンテナ */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px 14px 40px;
+}
+
+/* =========================================================
+   ヘッダー
+========================================================= */
+header {
+  position: sticky;
+  top: 0;
+  padding: 8px 0 10px;
+  z-index: 30;
+}
+
+.header-inner {
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: var(--shadow);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-shadow:
+    0 0 6px rgba(75, 127, 255, 0.9),
+    0 0 18px rgba(56, 189, 248, 0.9);
+}
+
+.tagline {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  margin-top: 3px;
+}
+
+.note {
+  text-align: center;
+  font-size: 0.75rem;
+  margin-top: 2px;
+  color: var(--text-sub);
+}
+
+/* =========================================================
+   検索エリア（開閉式）
+========================================================= */
+
+.controls-toggle-row {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.controls-toggle {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.controls {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+/* 閉じた状態 */
+.controls.collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 検索ボックス */
+.search-box label {
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+  color: var(--text-sub);
+}
+
+.search-input-wrap {
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 12px 10px 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text-main);
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  opacity: 0.6;
+}
+
+/* フィルタボタン */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.filter-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  color: var(--text-sub);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  color: #fff;
+  border-color: rgba(56, 189, 248, 0.9);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+}
+
+/* =========================================================
+   カード表示（ここがメイン！）
+========================================================= */
+
+.song-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* 1曲のカード */
+.song-card {
+  background: var(--card-bg);
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 0.5s ease forwards;
+}
+
+/* アニメーション個別ディレイ */
+.song-card {
+  animation-delay: calc(var(--i) * 0.03s);
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(20px) scale(0.97); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* タイトル・アーティスト */
+.song-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.song-artist {
+  opacity: 0.75;
+  margin-top: 2px;
+  font-size: 0.88rem;
+}
+
+/* メモピル */
+.memo-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  margin-right: 4px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* 色別 */
+.memo-ng {
+  background: rgba(185, 28, 28, 0.7);
+  color: #fff;
+}
+.memo-training {
+  background: rgba(8, 105, 161, 0.7);
+  color: #e0f2fe;
+}
+.memo-key {
+  background: rgba(124, 58, 237, 0.7);
+  color: #fff;
+}
+
+/* メモ文章 */
+.memo-text {
+  font-size: 0.8rem;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+/* セクションタイトル */
+.category-title {
+  margin: 18px 0 6px;
+  padding-left: 10px;
+  font-size: 1.1rem;
+  border-left: 3px solid var(--accent);
+  text-shadow: 0 0 6px rgba(59,130,246,0.6);
+}
+
+.category-badge {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+}
+</style>
+
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="header-inner">
-        <div class="title-row">
-          <h1>らいむの歌える曲リスト <span>🎤</span></h1>
-          <span class="title-chip">リクエスト歓迎</span>
-        </div>
-        <div class="tagline">
-          配信で歌える（歌いたい）曲をまとめたページです。
-        </div>
-        <div class="note">曲名・アーティスト・メモで検索できます</div>
-        <!-- ★ 追加：開閉ボタン -->
-        <div class="controls-toggle-row">
-        <button type="button" class="controls-toggle" id="controlsToggle">
-            <span class="controls-toggle-icon" id="controlsToggleIcon">▲</span>
-            <span id="controlsToggleLabel">検索・絞り込みを閉じる</span>
-        </button>
-        </div>
 
-        <div class="controls" id="controls">
-          <div class="search-box">
-            <label for="searchInput">検索（例：Ado / シャルル / ボカロ / 弾き語り など）</label>
-            <div class="search-input-wrap">
-              <span class="search-icon">🔍</span>
-              <input
-                type="text"
-                id="searchInput"
-                placeholder="キーワードで絞り込み..."
-              />
-            </div>
-          </div>
+<div class="container">
 
-          <div class="filter-row" id="filterRow">
-            <!-- JSでボタンを差し込む -->
-          </div>
+<header>
+  <div class="header-inner">
+
+    <h1>らいむの歌える曲リスト 🎤</h1>
+    <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
+    <div class="note">曲名・アーティスト・メモで検索できます</div>
+
+    <!-- 開閉ボタン -->
+    <div class="controls-toggle-row">
+      <button id="controlsToggle" class="controls-toggle">
+        <span id="toggleIcon">▲</span> <span id="toggleLabel">検索を閉じる</span>
+      </button>
+    </div>
+
+    <!-- 検索パネル -->
+    <div id="controls" class="controls">
+      <div class="search-box">
+        <label for="searchInput">検索キーワード</label>
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="例：Ado / 練習中 など">
         </div>
       </div>
-    </header>
 
-    <main id="songSections">
-      <!-- JSでカテゴリごとのリストを描画 -->
-    </main>
+      <div class="filter-row" id="filterRow"></div>
+    </div>
 
-    <footer>
-      更新日: <span id="updatedDate"></span><br />
-      ※ 少しずつ曲を追加＆整理していきます
-    </footer>
   </div>
+</header>
 
-  <script>
-    // ======================
-    // カテゴリ定義
-    // ======================
-    const CATEGORY_LABELS = {
-      all: "すべて",
-      jpop: "J-POP / Ado / 傘村 / Kanaria など",
-      anime: "アニソン / ゲーソン",
-      vocaloid: "ボカロ",
-      other: "その他",
-      ng: "二度と歌いたくないやつ",
-      training: "頑張って覚えてるやつ"
-    };
+<main id="songSections"></main>
 
-    const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training"];
+<footer style="text-align:center;margin-top:40px;color:#9ca3af;font-size:0.75rem;">
+  更新日: <span id="updatedDate"></span>
+</footer>
 
-    let allSongs = [];
-    let filteredCategory = "all";
-    let keyword = "";
+</div>
 
-    const sectionsContainer = document.getElementById("songSections");
-    const searchInput = document.getElementById("searchInput");
-    const filterRow = document.getElementById("filterRow");
-    /* 開閉ボタン関連 */
-    const controls = document.getElementById("controls");
-    const controlsToggle = document.getElementById("controlsToggle");
-    const controlsToggleLabel = document.getElementById("controlsToggleLabel");
-    const controlsToggleIcon = document.getElementById("controlsToggleIcon");
+<!-- ================= JS ================= -->
+<script>
+const CATEGORY_LABELS = {
+  all: "すべて",
+  jpop: "J-POP / アーティスト系",
+  anime: "アニソン / ゲーソン",
+  vocaloid: "ボカロ",
+  other: "その他",
+  ng: "NG（歌いたくない）",
+  training: "練習中"
+};
 
-    // ===== 検索パネルの開閉 =====
-    controlsToggle.addEventListener("click", () => {
-    const isCollapsed = controls.classList.toggle("collapsed");
-    if (isCollapsed) {
-        controlsToggleLabel.textContent = "検索・絞り込みを開く";
-        controlsToggleIcon.textContent = "▼";
-    } else {
-        controlsToggleLabel.textContent = "検索・絞り込みを閉じる";
-        controlsToggleIcon.textContent = "▲";
-    }
-    });
-    // ======================
-    // 更新日表示
-    // ======================
-    (function setUpdatedDate() {
-      const updatedSpan = document.getElementById("updatedDate");
-      const today = new Date();
-      const y = today.getFullYear();
-      const m = String(today.getMonth() + 1).padStart(2, "0");
-      const d = String(today.getDate()).padStart(2, "0");
-      updatedSpan.textContent = `${y}/${m}/${d}`;
-    })();
+const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training"];
 
-    // ======================
-    // songs.json 読み込み
-    // ======================
-    async function loadSongs() {
-      try {
-        const res = await fetch("songs.json", { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error("songs.json が読み込めませんでした");
-        }
-        const data = await res.json();
-        allSongs = Array.isArray(data) ? data : [];
-        buildFilterButtons();
-        render();
-      } catch (err) {
-        console.error(err);
-        sectionsContainer.innerHTML =
-          '<p class="empty-msg">曲データの読み込みに失敗しました。</p>';
-      }
-    }
+let allSongs = [];
+let filteredCategory = "all";
+let keyword = "";
 
-    // ======================
-    // フィルタボタン生成
-    // ======================
-    function buildFilterButtons() {
-      // カテゴリごとの曲数
-      const counts = allSongs.reduce(
-        (acc, song) => {
-          const cat = song.category || "other";
-          acc.all++;
-          acc[cat] = (acc[cat] || 0) + 1;
-          return acc;
-        },
-        { all: 0 }
-      );
+const sectionsContainer = document.getElementById("songSections");
+const searchInput = document.getElementById("searchInput");
+const filterRow = document.getElementById("filterRow");
+const controls = document.getElementById("controls");
+const toggle = document.getElementById("controlsToggle");
+const toggleIcon = document.getElementById("toggleIcon");
+const toggleLabel = document.getElementById("toggleLabel");
 
-      const cats = ["all", ...CATEGORY_ORDER];
+toggle.addEventListener("click", () => {
+  const collapsed = controls.classList.toggle("collapsed");
+  toggleIcon.textContent = collapsed ? "▼" : "▲";
+  toggleLabel.textContent = collapsed ? "検索を開く" : "検索を閉じる";
+});
 
-      filterRow.innerHTML = "";
-      cats.forEach((key) => {
-        const btn = document.createElement("button");
-        btn.className = "filter-btn" + (key === filteredCategory ? " active" : "");
-        btn.dataset.category = key;
-        btn.textContent = CATEGORY_LABELS[key] || key;
-        const countSpan = document.createElement("span");
-        countSpan.className = "count";
-        countSpan.textContent = counts[key] != null ? counts[key] : 0;
-        btn.appendChild(countSpan);
+/* 更新日 */
+(function(){
+  const el = document.getElementById("updatedDate");
+  const t = new Date();
+  el.textContent = `${t.getFullYear()}/${String(t.getMonth()+1).padStart(2,"0")}/${String(t.getDate()).padStart(2,"0")}`;
+})();
 
-        btn.addEventListener("click", () => {
-          filteredCategory = key;
-          document
-            .querySelectorAll(".filter-btn")
-            .forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          render();
-        });
+/* JSON 読み込み */
+async function loadSongs() {
+  try {
+    const res = await fetch("songs.json", { cache: "no-store" });
+    allSongs = await res.json();
+    buildFilterButtons();
+    render();
+  } catch (e) {
+    sectionsContainer.innerHTML = "<p style='text-align:center'>曲データ読み込みに失敗</p>";
+  }
+}
 
-        filterRow.appendChild(btn);
-      });
-    }
+/* フィルタボタン */
+function buildFilterButtons() {
+  const counts = allSongs.reduce((a,s)=>{
+    const c = s.category || "other";
+    a.all++;
+    a[c] = (a[c]||0)+1;
+    return a;
+  },{all:0});
 
-    // ======================
-    // レンダリング
-    // ======================
-    function render() {
-      const kw = keyword.toLowerCase().trim();
-      let songsToShow = allSongs.slice();
+  filterRow.innerHTML = "";
 
-      // カテゴリ絞り込み
-      if (filteredCategory !== "all") {
-        songsToShow = songsToShow.filter(
-          (s) => (s.category || "other") === filteredCategory
-        );
-      }
-
-      // キーワード検索
-      if (kw) {
-        songsToShow = songsToShow.filter((s) => {
-          const t = (s.title || "").toLowerCase();
-          const a = (s.artist || "").toLowerCase();
-          const m = (s.memo || "").toLowerCase();
-          return `${t} ${a} ${m}`.includes(kw);
-        });
-      }
-
-      if (songsToShow.length === 0) {
-        sectionsContainer.innerHTML =
-          '<p class="empty-msg">条件に合う曲がありません。キーワードやカテゴリを変えてみてください。</p>';
-        return;
-      }
-
-      // カテゴリごとにグルーピング
-      const groups = {};
-      songsToShow.forEach((s) => {
-        const cat = s.category || "other";
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(s);
-      });
-
-      // いい感じの順番で並べる
-      const order = CATEGORY_ORDER.filter((c) => groups[c]);
-      const htmlParts = [];
-
-      order.forEach((cat) => {
-        const list = groups[cat];
-        htmlParts.push(renderCategorySection(cat, list));
-      });
-
-      sectionsContainer.innerHTML = htmlParts.join("");
-    }
-    function renderCategorySection(catKey, songs) {
-    const label =
-        catKey === "jpop"
-        ? "J-POP / Ado / 傘村トータ / Kanaria など"
-        : catKey === "anime"
-        ? "アニソン / ゲーソン"
-        : catKey === "vocaloid"
-        ? "ボカロ"
-        : catKey === "ng"
-        ? "二度と歌いたくないやつ"
-        : catKey === "training"
-        ? "頑張って覚えてるやつ"
-        : "その他";
-
-    const headerTitle =
-        {
-        jpop: "J-POP / アーティスト系",
-        anime: "アニソン / ゲームソング",
-        vocaloid: "ボカロ",
-        other: "その他",
-        ng: "NGリスト（歌いたくない）",
-        training: "練習中の曲"
-        }[catKey] || "その他";
-
-    const rowsHtml = songs
-        .map((s, index) => {
-        const title = escapeHtml(s.title || "");
-        const artist = escapeHtml(s.artist || "");
-        const memo = s.memo || "";
-
-        const memoPills = [];
-        const rowClasses = [];
-
-        if (/二度と歌いたくない/.test(memo)) {
-            memoPills.push(
-            `<span class="memo-pill memo-ng">二度と歌いたくない</span>`
-            );
-            rowClasses.push("row-ng");
-        }
-        if (/練習中/.test(memo)) {
-            memoPills.push(
-            `<span class="memo-pill memo-training">練習中</span>`
-            );
-            rowClasses.push("row-training");
-        }
-        if (/[-+]\d|\/\d{2}/.test(memo)) {
-            memoPills.push(
-            `<span class="memo-pill memo-key">キー情報あり</span>`
-            );
-        }
-
-        const memoText = memo
-            ? `<div class="memo-text">${escapeHtml(memo)}</div>`
-            : "";
-
-        const extraClasses = rowClasses.length ? " " + rowClasses.join(" ") : "";
-
-        return `
-            <div class="song-card song-row${extraClasses}" style="--row-index:${index}">
-            <div class="song-info">
-                <div class="song-title">${title}</div>
-                <div class="song-artist">${artist}</div>
-            </div>
-            <div class="song-right">
-                ${memoPills.join(" ")}
-                ${memoText}
-            </div>
-            </div>
-        `;
-        })
-        .join("");
-
-    return `
-        <section class="category-section" data-category="${catKey}">
-        <div class="category-header">
-            <h2 class="category-title">${headerTitle}</h2>
-            <span class="category-badge">${label}</span>
-        </div>
-
-        <!-- ★ テーブルを消してカード表示のみ！ -->
-        <div class="category-card-list">
-            ${rowsHtml}
-        </div>
-        </section>
-    `;
-    }
-
-
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    // ======================
-    // イベント
-    // ======================
-    searchInput.addEventListener("input", (e) => {
-      keyword = e.target.value;
+  ["all",...CATEGORY_ORDER].forEach(cat=>{
+    const btn = document.createElement("button");
+    btn.className = "filter-btn"+(cat===filteredCategory?" active":"");
+    btn.dataset.category = cat;
+    btn.innerHTML = `${CATEGORY_LABELS[cat]} <span class="count">(${counts[cat]||0})</span>`;
+    btn.onclick = ()=>{
+      filteredCategory = cat;
+      document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
       render();
-    });
+    };
+    filterRow.appendChild(btn);
+  });
+}
 
-    // 初期ロード
-    loadSongs();
-  </script>
+/* レンダリング */
+function render() {
+  let list = allSongs.slice();
+
+  if (filteredCategory!=="all") {
+    list = list.filter(s => (s.category || "other") === filteredCategory);
+  }
+
+  const kw = keyword.toLowerCase();
+  if (kw) {
+    list = list.filter(s =>
+      `${s.title||""} ${s.artist||""} ${s.memo||""}`.toLowerCase().includes(kw)
+    );
+  }
+
+  if (!list.length) {
+    sectionsContainer.innerHTML = "<p style='text-align:center;margin-top:20px;'>該当する曲がありません</p>";
+    return;
+  }
+
+  const groups = {};
+  list.forEach(s=>{
+    const c = s.category || "other";
+    if (!groups[c]) groups[c] = [];
+    groups[c].push(s);
+  });
+
+  const html = CATEGORY_ORDER.filter(c=>groups[c]).map(cat=>{
+    return renderCategorySection(cat, groups[cat]);
+  }).join("");
+
+  sectionsContainer.innerHTML = html;
+}
+
+/* セクションの描画（カード版） */
+function renderCategorySection(cat, list) {
+  return `
+    <h2 class="category-title">${CATEGORY_LABELS[cat]}</h2>
+    <div class="song-grid">
+      ${list.map((s,i)=>renderCard(s,i)).join("")}
+    </div>
+  `;
+}
+
+/* カード1枚 */
+function renderCard(s, i) {
+  const title = escape(s.title);
+  const artist = escape(s.artist || "");
+  const memo = s.memo || "";
+
+  const pills = [];
+  if (/二度と歌いたくない/.test(memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
+  if (/練習中/.test(memo)) pills.push(`<span class="memo-pill memo-training">練習中</span>`);
+  if (/[-+]\d|\/\d{2}/.test(memo)) pills.push(`<span class="memo-pill memo-key">キー</span>`);
+
+  const memoText = memo ? `<div class="memo-text">${escape(memo)}</div>` : "";
+
+  return `
+    <div class="song-card" style="--i:${i}">
+      <div class="song-title">${title}</div>
+      <div class="song-artist">${artist}</div>
+      <div class="song-pills">${pills.join(" ")}</div>
+      ${memoText}
+    </div>
+  `;
+}
+
+function escape(str) {
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+/* 入力イベント */
+searchInput.addEventListener("input", (e)=>{
+  keyword = e.target.value;
+  render();
+});
+
+loadSongs();
+
+</script>
+
 </body>
 </html>
