@@ -519,6 +519,32 @@
         background: rgba(3, 105, 161, 0.45);
         }
 
+        .song-card {
+        padding: 14px 18px;
+        margin-bottom: 12px;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        border-radius: 14px;
+        backdrop-filter: blur(8px);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        }
+
+        .song-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        }
+
+        .song-artist {
+        font-size: 0.85rem;
+        color: #a5b4fc;
+        }
+
+        .song-memo {
+        font-size: 0.8rem;
+        color: #cbd5f5;
+        }
 
 
         .empty-msg {
@@ -862,24 +888,23 @@
             );
           }
 
-          const memoText = memo
-            ? `<div class="memo-text">${escapeHtml(memo)}</div>`
-            : "";
+        const memoText = memo
+        ? `<div class="memo-text">${escapeHtml(memo)}</div>`
+        : "";
 
-          return `
-          <tr class="song-row" style="--row-index:${index}">
-            <td>
-              <div class="song-title">${title}</div>
-            </td>
-            <td>
-              <div class="song-artist">${artist || "&nbsp;"}</div>
-            </td>
-            <td>
-              ${memoPills.join(" ")}
-              ${memoText}
-            </td>
-          </tr>
+        return `
+        <div class="song-card">
+            <div class="song-card-main">
+            <div class="song-title">${title}</div>
+            <div class="song-artist">${artist || ""}</div>
+            </div>
+            <div class="song-card-memo">
+            ${memoPills.join(" ")}
+            ${memoText}
+            </div>
+        </div>
         `;
+
         })
         .join("");
 
