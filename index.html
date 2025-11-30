@@ -383,6 +383,94 @@ h1 {
     0 0 10px rgba(59,130,246,0.9),
     0 0 22px rgba(56,189,248,0.9);
 }
+
+/* --- <style> の一番下に追加 --- */
+
+/* ルーレットボタン */
+.roulette-btn {
+  background: linear-gradient(45deg, #ff6b6b, #f06595);
+  border: none;
+  padding: 8px 24px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.roulette-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(240, 101, 149, 0.6);
+}
+.roulette-btn:active {
+  transform: scale(0.95);
+}
+
+/* モーダル（結果画面） */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background: #1e293b;
+  border: 1px solid var(--accent);
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 90%;
+  width: 400px;
+  box-shadow: 0 0 50px rgba(96, 165, 250, 0.5);
+  transform: scale(0.8);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-overlay.show .modal-content {
+  transform: scale(1);
+}
+
+.modal-title {
+  color: var(--text-sub);
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+.modal-result {
+  font-size: 1.8rem;
+  font-weight: 900;
+  margin: 20px 0;
+  color: #fff;
+  text-shadow: 0 0 15px var(--accent);
+  min-height: 3rem; /* 文字数でガタつかないように */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.3;
+}
+.modal-close {
+  background: transparent;
+  border: 1px solid var(--text-sub);
+  color: var(--text-main);
+  padding: 8px 24px;
+  border-radius: 999px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.modal-close:hover {
+  background: rgba(255,255,255,0.1);
+}
 </style>
 
 </head>
@@ -396,6 +484,20 @@ h1 {
     <h1>らいむの歌える曲リスト 🎤</h1>
     <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
     <div class="note">曲名・アーティスト・メモで検索できます</div>
+    <div style="text-align:center; margin: 10px 0;">
+      <button id="rouletteBtn" class="roulette-btn">
+        🎲 おまかせ選曲！
+      </button>
+    </div>
+
+    <div id="rouletteModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-title">🎵 次の曲は...</div>
+        <div id="rouletteResult" class="modal-result">???</div>
+        <button id="closeModal" class="modal-close">閉じる</button>
+      </div>
+    </div>
+    
 
     <!-- 開閉ボタン -->
     <div class="controls-toggle-row">
@@ -696,6 +798,69 @@ sortSelect.addEventListener("change", (e) => {
   currentSort = e.target.value;
   render();
 });
+/* --- <script> 内、loadSongs(); の直前に追加 --- */
+
+const rouletteBtn = document.getElementById("rouletteBtn");
+const modal = document.getElementById("rouletteModal");
+const modalResult = document.getElementById("rouletteResult");
+const closeModal = document.getElementById("closeModal");
+
+// 現在表示されているリストを取得する関数
+function getCurrentList() {
+  let list = allSongs.slice();
+  // カテゴリフィルタ
+  if (filteredCategory !== "all") {
+    list = list.filter(s => (s.category || "other") === filteredCategory);
+  }
+  // キーワード検索
+  const kw = keyword.toLowerCase();
+  if (kw) {
+    list = list.filter(s =>
+      `${s.title||""} ${s.artist||""} ${s.memo||""}`.toLowerCase().includes(kw)
+    );
+  }
+  return list;
+}
+
+// ルーレット開始
+rouletteBtn.addEventListener("click", () => {
+  const list = getCurrentList();
+  
+  if (list.length === 0) {
+    alert("選べる曲がありません！");
+    return;
+  }
+
+  // モーダル表示
+  modal.classList.add("show");
+  modalResult.textContent = "抽選中...";
+
+  // ドラムロール演出
+  let count = 0;
+  const maxCount = 20; // パラパラする回数
+  const interval = setInterval(() => {
+    // ランダムに仮表示
+    const randomTemp = list[Math.floor(Math.random() * list.length)];
+    modalResult.textContent = randomTemp.title;
+    count++;
+
+    if (count >= maxCount) {
+      clearInterval(interval);
+      // ★最終決定★
+      const winner = list[Math.floor(Math.random() * list.length)];
+      modalResult.innerHTML = `
+        <div style="font-size:0.8em; opacity:0.8;">${winner.artist}</div>
+        <div>${winner.title}</div>
+      `;
+    }
+  }, 80); // 0.08秒ごとに切り替え
+});
+
+// モーダル閉じる
+closeModal.addEventListener("click", () => {
+  modal.classList.remove("show");
+});
+
 
 loadSongs();
 
