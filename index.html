@@ -690,31 +690,6 @@ h1.glitch-effect::after {
   clip-path: inset(0 0 0 0);
   animation: glitch-anim 2.5s infinite linear alternate;
 }
-
-/* 画面全体に走査線をかぶせる */
-body::after {
-  /* 既存のbody::after（ネオンオーバーレイ）の設定を上書きします */
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: 
-    /* 細い横線の繰り返しパターン */
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.2) 3px, /* 線の色と太さ */
-      rgba(0, 0, 0, 0.2) 4px
-    ),
-    /* 元々のネオングラデーションも維持 */
-    radial-gradient(circle at top left, rgba(79, 70, 229, 0.4), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.3), transparent 55%);
-  
-  mix-blend-mode: overlay; /* 重ね合わせモードを変更 */
-  z-index: 9999; /* 最前面に */
-  pointer-events: none; /* クリックを邪魔しない */
-  opacity: 0.7; /* 線の濃さ */
-}
 </style>
 
 </head>
