@@ -29,6 +29,7 @@ body {
   font-family: "Segoe UI", system-ui, sans-serif;
   color: var(--text-main);
   background: #000;
+  overflow-x: hidden; /* 横スクロール防止 */
 }
 
 /* ぼやけ背景 */
@@ -39,7 +40,7 @@ body::before {
   background: url("bg.jpg") center/cover no-repeat;
   filter: blur(12px) brightness(0.55);
   transform: scale(1.06);
-  z-index: -2;
+  z-index: -5;
 }
 
 /* ネオンオーバーレイ */
@@ -52,7 +53,8 @@ body::after {
     radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.5), transparent 55%),
     linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95));
   mix-blend-mode: screen;
-  z-index: -1;
+  z-index: -4;
+  pointer-events: none;
 }
 
 /* コンテナ */
@@ -60,10 +62,84 @@ body::after {
   max-width: 960px;
   margin: 0 auto;
   padding: 16px 14px 40px;
+  position: relative;
+  z-index: 10;
 }
 
 /* =========================================================
-   ヘッダー
+   ★激変機能1：システム起動画面（Boot Screen）
+========================================================= */
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 99999; /* 最前面 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 40px;
+  font-family: "Courier New", monospace;
+  color: #0f0; /* ハッカーグリーン */
+  font-size: 1.2rem;
+  line-height: 1.5;
+  transition: opacity 0.8s ease;
+}
+#boot-screen.fadeout {
+  opacity: 0;
+  pointer-events: none;
+}
+.boot-log {
+  margin: 2px 0;
+  opacity: 0;
+  animation: fadeInLog 0.1s forwards;
+}
+@keyframes fadeInLog { to { opacity: 1; } }
+
+/* =========================================================
+   ★激変機能2：マウスの軌跡（Canvas）
+========================================================= */
+#cursor-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* クリックを邪魔しない */
+  z-index: 9999; /* サイトより手前、Bootより奥 */
+}
+
+/* =========================================================
+   ★激変機能3：背景ビジュアライザー
+========================================================= */
+.visualizer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40vh; /* 画面下半分くらい */
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  z-index: -3; /* 背景の手前 */
+  pointer-events: none;
+  opacity: 0.3; /* うっすら表示 */
+  mask-image: linear-gradient(to top, black, transparent); /* 上の方をぼかす */
+}
+.viz-bar {
+  width: 10px;
+  background: linear-gradient(to top, #60a5fa, #ec4899);
+  border-radius: 5px 5px 0 0;
+  animation: bounceBar infinite ease-in-out alternate;
+}
+@keyframes bounceBar {
+  0% { height: 5%; }
+  100% { height: 90%; }
+}
+
+
+/* =========================================================
+   既存スタイル（ヘッダー・カードなど）
 ========================================================= */
 header {
   position: sticky;
@@ -86,567 +162,16 @@ h1 {
   text-align: center;
   font-weight: 900;
   letter-spacing: 0.15em;
-  text-shadow:
-    0 0 6px rgba(75, 127, 255, 0.9),
-    0 0 18px rgba(56, 189, 248, 0.9);
-}
-
-.tagline {
-  text-align: center;
-  font-size: 0.9rem;
-  color: var(--text-sub);
-  margin-top: 3px;
-}
-
-.note {
-  text-align: center;
-  font-size: 0.75rem;
-  margin-top: 2px;
-  color: var(--text-sub);
-}
-
-/* =========================================================
-   検索エリア（開閉式）
-========================================================= */
-
-.controls-toggle-row {
-  margin-top: 8px;
-  text-align: right;
-}
-
-.controls-toggle {
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  color: var(--text-main);
-  cursor: pointer;
-}
-
-.controls {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  max-height: 500px;
-  opacity: 1;
-  overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.2s ease;
-}
-
-/* 閉じた状態 */
-.controls.collapsed {
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* 検索ボックス */
-.search-box label {
-  font-size: 0.78rem;
-  margin-bottom: 4px;
-  color: var(--text-sub);
-}
-
-.search-input-wrap {
-  position: relative;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 10px 12px 10px 34px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.8);
-  color: var(--text-main);
-}
-
-.search-icon {
-  position: absolute;
-  top: 50%;
-  left: 10px;
-  transform: translateY(-50%);
-  opacity: 0.6;
-}
-
-/* ソート用プルダウンのデザイン */
-.sort-select {
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.8);
-  color: var(--text-main);
-  font-size: 0.85rem;
-  outline: none;
-  cursor: pointer;
-}
-.sort-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
-}
-
-/* フィルタボタン */
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
-}
-
-.filter-btn {
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  color: var(--text-sub);
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.filter-btn.active {
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
-  color: #fff;
-  border-color: rgba(56, 189, 248, 0.9);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
-}
-
-/* =========================================================
-   カード表示（ここがメイン！）
-========================================================= */
-
-.song-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
-  margin-top: 14px;
-}
-
-/* 1曲のカード */
-.song-card {
-  position: relative;
-  background: radial-gradient(circle at top left, rgba(96,165,250,0.25), transparent 55%),
-              radial-gradient(circle at bottom right, rgba(236,72,153,0.25), transparent 55%),
-              rgba(15, 23, 42, 0.9);
-  padding: 16px 20px;
-  border-radius: 22px;
-  border: 1px solid rgba(56, 189, 248, 0.7);
-  backdrop-filter: blur(12px);
-  box-shadow:
-    0 0 0 1px rgba(15,23,42,0.8),
-    0 16px 35px rgba(0,0,0,0.6),
-    0 0 25px rgba(59,130,246,0.35);
-
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(20px) scale(0.97);
-  animation: fadeUp 0.6s ease forwards;
-  perspective: 1000px;
-  transform-style: preserve-3d;
-}
-
-/* アニメーション個別ディレイ */
-.song-card {
-  animation-delay: calc(var(--i) * 0.03s);
-}
-/* カードの中身が浮き出るようにする */
-.song-card > * {
-  transform: translateZ(20px); /* 文字などを少し手前に浮かせる */
-}
-/* カードの内側でうっすら光が動く */
-.song-card::before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  background: conic-gradient(
-    from 180deg,
-    rgba(59,130,246,0.0),
-    rgba(59,130,246,0.5),
-    rgba(236,72,153,0.5),
-    rgba(56,189,248,0.8),
-    rgba(59,130,246,0.0)
-  );
-  opacity: 0;
-  mix-blend-mode: screen;
-  filter: blur(22px);
-  transform: rotate(0deg);
-  transition: opacity 0.3s ease, transform 4s linear;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* カードの表面を走る光 */
-.song-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%; /* 最初は左枠外に隠す */
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: skewX(-25deg); /* 斜めにする */
-  pointer-events: none; /* クリックを邪魔しない */
-  z-index: 1;
-  transition: left 0.5s; /* 0.5秒で移動 */
-}
-
-/* ホバーした時に光を右へ移動 */
-.song-card:hover::after {
-  left: 150%; /* 右枠外まで突き抜ける */
-  transition: left 0.7s ease-in-out;
-}
-
-/* ホバーで浮き上がって光る */
-.song-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow:
-    0 0 0 1px rgba(56,189,248,0.6),
-    0 22px 45px rgba(15,23,42,0.95),
-    0 0 40px rgba(96,165,250,0.8);
-}
-
-.song-card:hover::before {
-  opacity: 0.95;
-  transform: rotate(25deg);
-}
-
-
-@keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(20px) scale(0.97); }
-  60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* タイトル・アーティスト */
-.song-title {
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-shadow:
-    0 0 10px rgba(59,130,246,0.9),
-    0 0 18px rgba(56,189,248,0.9);
-}
-
-.song-artist {
-  opacity: 0.9;
-  margin-top: 3px;
-  font-size: 0.9rem;
-  color: #cbd5f5;
-}
-
-.song-pills {
-  margin-top: 6px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.song-title, 
-.song-artist, 
-.song-pills, 
-.memo-text, 
-.card-actions {
-  position: relative;
-  z-index: 2; /* 背景より手前に表示 */
-}
-
-/* メモピル共通 */
-.memo-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 0.73rem;
-  border: 1px solid rgba(255,255,255,0.35);
-  background: rgba(15,23,42,0.9);
-  box-shadow:
-    0 0 10px rgba(148,163,184,0.4),
-    0 0 18px rgba(15,23,42,0.9);
-}
-
-/* 色別強化 */
-.memo-ng {
-  background: radial-gradient(circle at top left, #fecaca, #b91c1c);
-  color: #fff;
-  border-color: rgba(254,202,202,0.9);
-  box-shadow: 0 0 12px rgba(248,113,113,0.9);
-}
-
-.memo-training {
-  background: radial-gradient(circle at top left, #bfdbfe, #1d4ed8);
-  color: #e0f2fe;
-  border-color: rgba(191,219,254,0.9);
-  box-shadow: 0 0 12px rgba(96,165,250,0.9);
-}
-
-.memo-key {
-  background: radial-gradient(circle at top left, #ddd6fe, #7c3aed);
-  color: #f5f3ff;
-  border-color: rgba(221,214,254,0.9);
-  box-shadow: 0 0 12px rgba(129,140,248,0.9);
-}
-
-/* メモ文章 */
-.memo-text {
-  font-size: 0.8rem;
-  margin-top: 8px;
-  opacity: 0.95;
-  color: #e5e7f5;
-}
-
-
-
-
-/* セクションタイトル */
-.category-title {
-  margin: 18px 0 6px;
-  padding-left: 10px;
-  font-size: 1.1rem;
-  border-left: 3px solid var(--accent);
-  text-shadow: 0 0 6px rgba(59,130,246,0.6);
-}
-
-.category-badge {
-  font-size: 0.75rem;
-  color: var(--text-sub);
-}
-.category-title {
-  margin: 22px 0 8px;
-  padding-left: 12px;
-  font-size: 1.15rem;
-  border-left: 4px solid var(--accent);
-  text-shadow:
-    0 0 10px rgba(59,130,246,0.9),
-    0 0 22px rgba(56,189,248,0.9);
-}
-
-/* ルーレットボタン */
-.roulette-btn {
-  background: linear-gradient(45deg, #ff6b6b, #f06595);
-  border: none;
-  padding: 8px 24px;
-  border-radius: 999px;
-  color: #fff;
-  font-weight: bold;
-  font-size: 0.9rem;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.roulette-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(240, 101, 149, 0.6);
-}
-.roulette-btn:active {
-  transform: scale(0.95);
-}
-
-/* モーダル（結果画面） */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(5px);
-  z-index: 100;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-.modal-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.modal-content {
-  background: #1e293b;
-  border: 1px solid var(--accent);
-  padding: 40px;
-  border-radius: 20px;
-  text-align: center;
-  max-width: 90%;
-  width: 400px;
-  box-shadow: 0 0 50px rgba(96, 165, 250, 0.5);
-  transform: scale(0.8);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.modal-overlay.show .modal-content {
-  transform: scale(1);
-}
-
-.modal-title {
-  color: var(--text-sub);
-  font-size: 1rem;
-  margin-bottom: 10px;
-}
-.modal-result {
-  font-size: 1.8rem;
-  font-weight: 900;
-  margin: 20px 0;
-  color: #fff;
-  text-shadow: 0 0 15px var(--accent);
-  min-height: 3rem; /* 文字数でガタつかないように */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.3;
-}
-.modal-close {
-  background: transparent;
-  border: 1px solid var(--text-sub);
-  color: var(--text-main);
-  padding: 8px 24px;
-  border-radius: 999px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-.modal-close:hover {
-  background: rgba(255,255,255,0.1);
-}
-
-/* --- <style> の一番下に追加 --- */
-
-/* YouTubeボタンなどのアクションエリア */
-.card-actions {
-  margin-top: 12px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-/* YouTubeリンクボタン */
-.btn-youtube {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(220, 38, 38, 0.2);
-  color: #fca5a5;
-  border: 1px solid rgba(220, 38, 38, 0.5);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  text-decoration: none;
-  transition: 0.2s;
-}
-.btn-youtube:hover {
-  background: rgba(220, 38, 38, 0.8);
-  color: #fff;
-}
-
-/* コピーボタン */
-.btn-copy {
-  background: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  color: var(--text-sub);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.btn-copy:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(56, 189, 248, 0.1);
-}
-
-/* コピー完了時のトースト通知（画面下にふわっと出るやつ） */
-.toast-notification {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: rgba(16, 185, 129, 0.9); /* 緑色 */
-  color: #fff;
-  padding: 8px 20px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  opacity: 0;
-  transition: transform 0.3s, opacity 0.3s;
-  z-index: 200;
-  pointer-events: none;
-}
-.toast-notification.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-/* 背景の漂う光 */
-.background-lights {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  z-index: -1; /* 背景画像のさらに手前、コンテンツの奥 */
-  pointer-events: none;
-}
-
-.background-lights li {
-  position: absolute;
-  display: block;
-  list-style: none;
-  width: 20px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  bottom: -150px; /* 画面の下からスタート */
-  border-radius: 50%; /* 丸くする */
-  animation: floatUp 25s linear infinite; /* 25秒かけてゆっくり上がる */
-}
-
-/* 個別の設定（大きさ、場所、速度をランダムにする） */
-.background-lights li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
-.background-lights li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
-.background-lights li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
-.background-lights li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
-.background-lights li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
-.background-lights li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
-.background-lights li:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
-.background-lights li:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
-.background-lights li:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
-.background-lights li:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
-
-@keyframes floatUp {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateY(-1000px) rotate(720deg);
-    opacity: 0;
-  }
-}
-h1 {
+  /* ネオン呼吸アニメーション */
   animation: neonPulse 3s infinite alternate;
 }
 
 @keyframes neonPulse {
-  0% {
-    text-shadow:
-      0 0 6px rgba(75, 127, 255, 0.7),
-      0 0 15px rgba(56, 189, 248, 0.6);
-  }
-  100% {
-    text-shadow:
-      0 0 10px rgba(75, 127, 255, 1),
-      0 0 25px rgba(56, 189, 248, 1),
-      0 0 40px rgba(96, 165, 250, 0.8); /* 強く光る */
-  }
+  0% { text-shadow: 0 0 6px rgba(75, 127, 255, 0.7), 0 0 15px rgba(56, 189, 248, 0.6); }
+  100% { text-shadow: 0 0 10px rgba(75, 127, 255, 1), 0 0 25px rgba(56, 189, 248, 1), 0 0 40px rgba(96, 165, 250, 0.8); }
 }
 
-/* グリッチのアニメーション定義 */
+/* グリッチ演出 */
 @keyframes glitch-anim {
   0% { clip-path: inset(20% 0 50% 0); transform: translate(-2px, 3px); }
   10% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -3px); }
@@ -657,47 +182,197 @@ h1 {
   100% { clip-path: inset(50% 0 30% 0); transform: translate(0, 0); }
 }
 
-/* タイトルに適用するクラス */
-h1.glitch-effect {
-  position: relative;
-  color: white; /* ベースの色 */
+h1.glitch-effect { position: relative; color: white; }
+h1.glitch-effect::before, h1.glitch-effect::after {
+  content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent;
 }
-
-/* 色ズレの影（赤と青）を作る */
-h1.glitch-effect::before,
-h1.glitch-effect::after {
-  content: attr(data-text); /* 元のテキストをコピー */
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent; /* 背景は透明 */
-}
-
-/* 赤い影 */
 h1.glitch-effect::before {
-  left: 2px;
-  text-shadow: -1px 0 rgba(255,0,0,0.7);
-  clip-path: inset(0 0 0 0);
-  animation: glitch-anim 2s infinite linear alternate-reverse;
+  left: 2px; text-shadow: -1px 0 rgba(255,0,0,0.7); animation: glitch-anim 2s infinite linear alternate-reverse; clip-path: inset(0 0 0 0);
 }
-
-/* 青い影 */
 h1.glitch-effect::after {
-  left: -2px;
-  text-shadow: 1px 0 rgba(0,0,255,0.7);
-  clip-path: inset(0 0 0 0);
-  animation: glitch-anim 2.5s infinite linear alternate;
+  left: -2px; text-shadow: 1px 0 rgba(0,0,255,0.7); animation: glitch-anim 2.5s infinite linear alternate; clip-path: inset(0 0 0 0);
 }
-</style>
 
+.tagline { text-align: center; font-size: 0.9rem; color: var(--text-sub); margin-top: 3px; }
+.note { text-align: center; font-size: 0.75rem; margin-top: 2px; color: var(--text-sub); }
+
+/* 開閉ボタン */
+.controls-toggle-row { margin-top: 8px; text-align: right; }
+.controls-toggle {
+  padding: 4px 12px; border-radius: 999px; font-size: 0.75rem;
+  background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148, 163, 184, 0.6);
+  color: var(--text-main); cursor: pointer;
+}
+
+/* 検索パネル */
+.controls {
+  margin-top: 12px; display: flex; flex-direction: column; gap: 10px;
+  max-height: 500px; opacity: 1; overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+.controls.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
+
+.search-box label { font-size: 0.78rem; margin-bottom: 4px; color: var(--text-sub); }
+.search-input-wrap { position: relative; }
+.search-box input {
+  width: 100%; padding: 10px 12px 10px 34px; border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7); background: rgba(15, 23, 42, 0.8); color: var(--text-main);
+}
+.search-icon { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); opacity: 0.6; }
+
+.sort-select {
+  padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.8); color: var(--text-main); font-size: 0.85rem; outline: none; cursor: pointer;
+}
+.sort-select:focus { border-color: var(--accent); box-shadow: 0 0 8px rgba(56, 189, 248, 0.5); }
+
+/* フィルタボタン */
+.filter-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.filter-btn {
+  padding: 5px 10px; border-radius: 999px; background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.6); color: var(--text-sub); font-size: 0.75rem; cursor: pointer;
+}
+.filter-btn.active {
+  background: linear-gradient(135deg, #4f46e5, #0ea5e9); color: #fff;
+  border-color: rgba(56, 189, 248, 0.9); box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+}
+
+/* カードグリッド */
+.song-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 14px; }
+
+/* カード */
+.song-card {
+  position: relative;
+  background: radial-gradient(circle at top left, rgba(96,165,250,0.25), transparent 55%),
+              radial-gradient(circle at bottom right, rgba(236,72,153,0.25), transparent 55%),
+              rgba(15, 23, 42, 0.9);
+  padding: 16px 20px; border-radius: 22px; border: 1px solid rgba(56, 189, 248, 0.7);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(15,23,42,0.8), 0 16px 35px rgba(0,0,0,0.6), 0 0 25px rgba(59,130,246,0.35);
+  overflow: hidden; opacity: 0; transform: translateY(20px) scale(0.97);
+  animation: fadeUp 0.6s ease forwards;
+  animation-delay: calc(var(--i) * 0.03s);
+  
+  /* 3D設定 */
+  perspective: 1000px; transform-style: preserve-3d;
+}
+
+.song-card > * { transform: translateZ(20px); }
+
+/* カードの光エフェクト */
+.song-card::before {
+  content: ""; position: absolute; inset: -40%;
+  background: conic-gradient(from 180deg, rgba(59,130,246,0.0), rgba(59,130,246,0.5), rgba(236,72,153,0.5), rgba(56,189,248,0.8), rgba(59,130,246,0.0));
+  opacity: 0; mix-blend-mode: screen; filter: blur(22px);
+  transform: rotate(0deg); transition: opacity 0.3s ease, transform 4s linear;
+  pointer-events: none; z-index: 0;
+}
+.song-card::after {
+  content: ""; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-25deg); pointer-events: none; z-index: 1; transition: left 0.5s;
+}
+
+.song-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 0 0 1px rgba(56,189,248,0.6), 0 22px 45px rgba(15,23,42,0.95), 0 0 40px rgba(96,165,250,0.8); }
+.song-card:hover::before { opacity: 0.95; transform: rotate(25deg); }
+.song-card:hover::after { left: 150%; transition: left 0.7s ease-in-out; }
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(20px) scale(0.97); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.song-title { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.04em; text-shadow: 0 0 10px rgba(59,130,246,0.9), 0 0 18px rgba(56,189,248,0.9); }
+.song-artist { opacity: 0.9; margin-top: 3px; font-size: 0.9rem; color: #cbd5f5; }
+.song-pills { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+.song-title, .song-artist, .song-pills, .memo-text, .card-actions { position: relative; z-index: 2; }
+
+.memo-pill {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px;
+  border-radius: 999px; font-size: 0.73rem; border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(15,23,42,0.9); box-shadow: 0 0 10px rgba(148,163,184,0.4), 0 0 18px rgba(15,23,42,0.9);
+}
+.memo-ng { background: radial-gradient(circle at top left, #fecaca, #b91c1c); color: #fff; border-color: rgba(254,202,202,0.9); box-shadow: 0 0 12px rgba(248,113,113,0.9); }
+.memo-training { background: radial-gradient(circle at top left, #bfdbfe, #1d4ed8); color: #e0f2fe; border-color: rgba(191,219,254,0.9); box-shadow: 0 0 12px rgba(96,165,250,0.9); }
+.memo-key { background: radial-gradient(circle at top left, #ddd6fe, #7c3aed); color: #f5f3ff; border-color: rgba(221,214,254,0.9); box-shadow: 0 0 12px rgba(129,140,248,0.9); }
+
+.memo-text { font-size: 0.8rem; margin-top: 8px; opacity: 0.95; color: #e5e7f5; }
+.category-title { margin: 22px 0 8px; padding-left: 12px; font-size: 1.15rem; border-left: 4px solid var(--accent); text-shadow: 0 0 10px rgba(59,130,246,0.9), 0 0 22px rgba(56,189,248,0.9); }
+
+/* ルーレットボタン */
+.roulette-btn {
+  background: linear-gradient(45deg, #ff6b6b, #f06595); border: none; padding: 8px 24px;
+  border-radius: 999px; color: #fff; font-weight: bold; font-size: 0.9rem; cursor: pointer;
+  box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4); transition: transform 0.2s, box-shadow 0.2s;
+}
+.roulette-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(240, 101, 149, 0.6); }
+.roulette-btn:active { transform: scale(0.95); }
+
+/* モーダル */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+  z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0;
+  pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.modal-content {
+  background: #1e293b; border: 1px solid var(--accent); padding: 40px; border-radius: 20px;
+  text-align: center; max-width: 90%; width: 400px; box-shadow: 0 0 50px rgba(96, 165, 250, 0.5);
+  transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-overlay.show .modal-content { transform: scale(1); }
+.modal-title { color: var(--text-sub); font-size: 1rem; margin-bottom: 10px; }
+.modal-result { font-size: 1.8rem; font-weight: 900; margin: 20px 0; color: #fff; text-shadow: 0 0 15px var(--accent); min-height: 3rem; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
+.modal-close { background: transparent; border: 1px solid var(--text-sub); color: var(--text-main); padding: 8px 24px; border-radius: 999px; cursor: pointer; margin-top: 10px; }
+.modal-close:hover { background: rgba(255,255,255,0.1); }
+
+/* YouTube・コピーボタン */
+.card-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+.btn-youtube { display: inline-flex; align-items: center; gap: 4px; background: rgba(220, 38, 38, 0.2); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.5); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; transition: 0.2s; }
+.btn-youtube:hover { background: rgba(220, 38, 38, 0.8); color: #fff; }
+.btn-copy { background: transparent; border: 1px solid rgba(148, 163, 184, 0.4); color: var(--text-sub); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
+.btn-copy:hover { border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1); }
+
+/* 通知 */
+.toast-notification {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: rgba(16, 185, 129, 0.9); color: #fff; padding: 8px 20px; border-radius: 999px;
+  font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0;
+  transition: transform 0.3s, opacity 0.3s; z-index: 200; pointer-events: none;
+}
+.toast-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* 背景粒子 */
+.background-lights { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0; z-index: -1; pointer-events: none; }
+.background-lights li { position: absolute; display: block; list-style: none; width: 20px; height: 20px; background: rgba(255, 255, 255, 0.15); bottom: -150px; border-radius: 50%; animation: floatUp 25s linear infinite; }
+.background-lights li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
+.background-lights li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+.background-lights li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
+.background-lights li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+.background-lights li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
+.background-lights li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
+.background-lights li:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
+.background-lights li:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+.background-lights li:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+.background-lights li:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+@keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0.5; } 100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; } }
+
+</style>
 </head>
 <body>
+
+<div id="boot-screen"></div>
+
+<canvas id="cursor-canvas"></canvas>
+
+<div class="visualizer-container" id="visualizer"></div>
+
 <ul class="background-lights">
   <li></li><li></li><li></li><li></li><li></li>
   <li></li><li></li><li></li><li></li><li></li>
 </ul>
+
 <div class="container">
 
 <header>
@@ -710,37 +385,24 @@ h1.glitch-effect::after {
     </h1>
     <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
     <div class="note">曲名・アーティスト・メモで検索できます</div>
-    <div style="text-align:center; margin: 10px 0;">
-      <button id="rouletteBtn" class="roulette-btn">
-        🎲 おまかせ選曲！
-      </button>
-    </div>
-
-    <div id="rouletteModal" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-title">🎵 次の曲は...</div>
-        <div id="rouletteResult" class="modal-result">???</div>
-        <button id="closeModal" class="modal-close">閉じる</button>
-      </div>
-    </div>
     
+    <div style="text-align:center; margin: 10px 0;">
+      <button id="rouletteBtn" class="roulette-btn">🎲 おまかせ選曲！</button>
+    </div>
 
-    <!-- 開閉ボタン -->
- <div class="controls-toggle-row">
+    <div class="controls-toggle-row">
       <button id="controlsToggle" class="controls-toggle">
         <span id="toggleIcon">▲</span> <span id="toggleLabel">検索を閉じる</span>
       </button>
     </div>
 
     <div id="controls" class="controls">
-    
       <div class="search-box">
         <label for="searchInput">検索キーワード</label>
         <div class="search-input-wrap">
           <span class="search-icon">🔍</span>
           <input type="text" id="searchInput" placeholder="例：Ado / 練習中 など">
         </div>
-    
         <div style="margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
           <label for="sortSelect" style="font-size:0.75rem; color:var(--text-sub); margin:0;">並び替え:</label>
           <select id="sortSelect" class="sort-select">
@@ -750,9 +412,9 @@ h1.glitch-effect::after {
           </select>
         </div>
       </div>
-
-    <div class="filter-row" id="filterRow" style="margin-top: 12px;"></div>
+      <div class="filter-row" id="filterRow" style="margin-top: 12px;"></div>
     </div>
+  </div>
 </header>
 
 <main id="songSections"></main>
@@ -762,12 +424,21 @@ h1.glitch-effect::after {
 </footer>
 
 </div>
-<script>
-/* =========================================================
-   1. 定数・変数の定義
-   ========================================================= */
 
-// カテゴリごとの表示名（絵文字付き）
+<div id="rouletteModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-title">🎵 次の曲は...</div>
+    <div id="rouletteResult" class="modal-result">???</div>
+    <button id="closeModal" class="modal-close">閉じる</button>
+  </div>
+</div>
+
+<div id="toast" class="toast-notification">✅ コピーしました！</div>
+
+<script>
+// =========================================================
+// 1. 定数・変数
+// =========================================================
 const CATEGORY_LABELS = {
   all: "すべて",
   jpop: "J-POP / アーティスト",
@@ -778,422 +449,297 @@ const CATEGORY_LABELS = {
   training: "🔰 練習中",
   acoustic: "🎸 弾き語り"
 };
-
-// 表示する順番
 const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training", "acoustic"];
+let allSongs = [];
+let filteredCategory = "all";
+let keyword = "";
+let currentSort = "default";
 
-// データの入れ物（状態管理）
-let allSongs = [];           // 全曲データ
-let filteredCategory = "all"; // 現在選ばれているカテゴリ
-let keyword = "";            // 検索ボックスの文字
-let currentSort = "default"; // 現在の並び順
-
-// HTMLの要素を取得（操作するために必要）
 const sectionsContainer = document.getElementById("songSections");
 const searchInput = document.getElementById("searchInput");
 const filterRow = document.getElementById("filterRow");
-const controls = document.getElementById("controls"); // 検索エリア全体
-const toggle = document.getElementById("controlsToggle"); // 開閉ボタン
+const controls = document.getElementById("controls");
+const toggle = document.getElementById("controlsToggle");
 const toggleIcon = document.getElementById("toggleIcon");
 const toggleLabel = document.getElementById("toggleLabel");
-const sortSelect = document.getElementById("sortSelect"); // 並び替えプルダウン
-
-// ルーレット用の要素
+const sortSelect = document.getElementById("sortSelect");
 const rouletteBtn = document.getElementById("rouletteBtn");
 const modal = document.getElementById("rouletteModal");
 const modalResult = document.getElementById("rouletteResult");
 const closeModal = document.getElementById("closeModal");
 
-
-/* =========================================================
-   2. 初期化・便利機能
-   ========================================================= */
-
-// 検索エリアの開閉ボタンの動作
-toggle.addEventListener("click", () => {
-  const collapsed = controls.classList.toggle("collapsed");
-  toggleIcon.textContent = collapsed ? "▼" : "▲";
-  toggleLabel.textContent = collapsed ? "検索を開く" : "検索を閉じる";
-});
-
-// HTMLタグを無効化する関数（セキュリティ対策：文字として表示させる）
-function escape(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+// =========================================================
+// 2. 基本機能
+// =========================================================
+if(toggle){
+  toggle.addEventListener("click", () => {
+    const collapsed = controls.classList.toggle("collapsed");
+    toggleIcon.textContent = collapsed ? "▼" : "▲";
+    toggleLabel.textContent = collapsed ? "検索を開く" : "検索を閉じる";
+  });
 }
 
-// データの整形（メモに「弾き語り」があったらカテゴリを自動変更するなど）
+function escape(str) {
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function normalizeSongs(songs) {
   return songs.map(song => {
-    // すでに acoustic ならそのまま
     if (song.category === "acoustic") return song;
-    // メモに「弾き語り」が含まれていたらカテゴリを変更
-    if (song.memo && song.memo.includes("弾き語り")) {
-      return { ...song, category: "acoustic" };
-    }
+    if (song.memo && song.memo.includes("弾き語り")) return { ...song, category: "acoustic" };
     return song;
   });
 }
 
-// ★更新日時の表示機能（即時実行関数）
-// ファイルの最終保存日時を取得してヘッダーに表示します
 (function(){
-  const d = new Date(document.lastModified); // ファイルの保存日時
-  
-  // 見やすい形式 (例: 2023/10/27 12:40) に変換
-  const year = d.getFullYear();
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const date = d.getDate().toString().padStart(2, '0');
-  const hours = d.getHours().toString().padStart(2, '0');
-  const min = d.getMinutes().toString().padStart(2, '0');
-  const timeString = `${year}/${month}/${date} ${hours}:${min}`;
-
-  // ヘッダーに書き込み
-  const headerDate = document.getElementById("lastUpdateTime");
-  if(headerDate) headerDate.textContent = timeString;
-
-  // フッターに書き込み
-  const footerDate = document.getElementById("updatedDate");
-  if(footerDate) footerDate.textContent = timeString;
+  const d = new Date(document.lastModified);
+  const timeString = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const h = document.getElementById("lastUpdateTime"); if(h) h.textContent = timeString;
+  const f = document.getElementById("updatedDate"); if(f) f.textContent = timeString;
 })();
 
-
-/* =========================================================
-   3. メイン処理：曲データの読み込み
-   ========================================================= */
-
+// =========================================================
+// 3. データ読み込み
+// =========================================================
 async function loadSongs() {
   try {
-    console.log("読み込み開始: songs.json を探しています...");
-    
-    // 1. ファイルを取りに行く
     const res = await fetch("songs.json", { cache: "no-store" });
-    
-    // 2. ファイルが見つかったか確認
-    if (!res.ok) {
-      throw new Error(`ファイルが見つかりません (Status: ${res.status})`);
-    }
-
-    // 3. JSONとして解読する
+    if (!res.ok) throw new Error(res.status);
     const data = await res.json();
-    console.log("読み込み成功！データ数:", data.length);
-
-    // 4. データを整形して保存
     allSongs = normalizeSongs(data);
-
-    // 5. 画面を作る
-    buildFilterButtons(); // カテゴリボタン作成
-    render();             // リスト表示
-
+    buildFilterButtons();
+    render();
   } catch (e) {
-    // エラーが起きたらコンソールと画面に表示
-    console.error("【重大エラー発生】:", e); 
-    sectionsContainer.innerHTML = `
-      <div style='text-align:center; margin-top:20px;'>
-        <p>曲データ読み込みに失敗しました😢</p>
-        <p style='color:#f87171; font-size:0.8rem;'>${e.message}</p>
-      </div>
-    `;
+    console.error(e);
+    sectionsContainer.innerHTML = `<p style='text-align:center;margin-top:20px;'>読み込み失敗: ${e.message}</p>`;
   }
 }
 
-
-/* =========================================================
-   4. 画面表示（レンダリング）関連
-   ========================================================= */
-
-// カテゴリボタン（フィルタボタン）を作る関数
+// =========================================================
+// 4. 描画
+// =========================================================
 function buildFilterButtons() {
-  if (!filterRow) return; // エラー回避
-
-  // 各カテゴリに何曲あるか数える
+  if (!filterRow) return;
   const counts = allSongs.reduce((a,s)=>{
-    const c = s.category || "other";
-    a.all++;
-    a[c] = (a[c]||0)+1;
-    return a;
+    const c = s.category || "other"; a.all++; a[c] = (a[c]||0)+1; return a;
   },{all:0});
-
   filterRow.innerHTML = "";
-
-  // ボタンを生成して配置
   ["all",...CATEGORY_ORDER].forEach(cat=>{
     const btn = document.createElement("button");
     btn.className = "filter-btn"+(cat===filteredCategory?" active":"");
     btn.innerHTML = `${CATEGORY_LABELS[cat]} <span class="count">(${counts[cat]||0})</span>`;
-    
-    // クリック時の動作
     btn.onclick = ()=>{
       filteredCategory = cat;
-      // ボタンの見た目を切り替え
       document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
-      // リスト再描画
       render();
     };
     filterRow.appendChild(btn);
   });
 }
 
-// ★メインの描画関数（リストを表示する）
 function render() {
-  // 1. まず全曲リストをコピー
   let list = allSongs.slice();
-
-  // 2. カテゴリフィルタ
-  if (filteredCategory !== "all") {
-    list = list.filter(s => (s.category || "other") === filteredCategory);
-  }
-
-  // 3. キーワード検索
+  if (filteredCategory !== "all") list = list.filter(s => (s.category || "other") === filteredCategory);
   const kw = keyword.toLowerCase();
-  if (kw) {
-    list = list.filter(s =>
-      `${s.title||""} ${s.artist||""} ${s.memo||""}`.toLowerCase().includes(kw)
-    );
-  }
-
-  // 4. 並び替え処理
+  if (kw) list = list.filter(s => `${s.title||""} ${s.artist||""} ${s.memo||""}`.toLowerCase().includes(kw));
+  
   if (currentSort === "artist") {
-    list.sort((a, b) => {
-      const artA = (a.artist || "不明").toString();
-      const artB = (b.artist || "不明").toString();
-      return artA.localeCompare(artB, "ja"); // あいうえお順比較
-    });
+    list.sort((a,b)=> (a.artist||"").toString().localeCompare((b.artist||"").toString(),"ja"));
   } else if (currentSort === "title") {
-    list.sort((a, b) => {
-      const titleA = (a.title || "").toString();
-      const titleB = (b.title || "").toString();
-      return titleA.localeCompare(titleB, "ja");
-    });
+    list.sort((a,b)=> (a.title||"").toString().localeCompare((b.title||"").toString(),"ja"));
   }
 
-  // 該当なしの場合
-  if (!list.length) {
-    sectionsContainer.innerHTML = "<p style='text-align:center;margin-top:20px;'>該当する曲がありません</p>";
-    return;
-  }
+  if (!list.length) { sectionsContainer.innerHTML = "<p style='text-align:center;margin-top:20px;'>該当なし</p>"; return; }
 
-  // カテゴリごとにグループ分けする
   const groups = {};
-  list.forEach(s => {
-    const c = s.category || "other";
-    if (!groups[c]) groups[c] = [];
-    groups[c].push(s);
-  });
-
-  // グループごとにHTMLを作って結合
-  const html = CATEGORY_ORDER
-    .filter(c => groups[c]) // 曲があるカテゴリだけ
-    .map(cat => renderCategorySection(cat, groups[cat]))
-    .join("");
-
-  sectionsContainer.innerHTML = html;
-}
-
-// セクション（カテゴリごとの塊）のHTMLを作る
-function renderCategorySection(cat, list) {
-  return `
+  list.forEach(s => { const c = s.category || "other"; if (!groups[c]) groups[c] = []; groups[c].push(s); });
+  
+  sectionsContainer.innerHTML = CATEGORY_ORDER.filter(c=>groups[c]).map(cat=> `
     <h2 class="category-title">${CATEGORY_LABELS[cat]}</h2>
-    <div class="song-grid">
-      ${list.map((s,i)=>renderCard(s,i)).join("")}
-    </div>
-  `;
+    <div class="song-grid">${groups[cat].map((s,i)=>renderCard(s,i)).join("")}</div>
+  `).join("");
 }
-
-// カード1枚のHTMLを作る
 
 function renderCard(s, i) {
-  const title = escape(s.title);
-  const artist = escape(s.artist || "");
-  const memo = s.memo || "";
-  const url = s.url || ""; // ★JSONにURLがあれば取得
-
-  // メモからキー情報を抜き出す
+  const title = escape(s.title), artist = escape(s.artist||""), memo = s.memo||"", url = s.url||"";
   const keyMatch = memo.match(/[-+]\d+/);
-
   const pills = [];
   if (/二度と歌いたくない/.test(memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
   if (/練習中/.test(memo)) pills.push(`<span class="memo-pill memo-training">練習中</span>`);
   if (keyMatch) pills.push(`<span class="memo-pill memo-key">キー ${escape(keyMatch[0])}</span>`);
-
+  
   let memoForView = memo;
-  if (keyMatch) {
-    memoForView = memoForView.replace(keyMatch[0], "").trim().replace(/[\/｜|・:：、。-]+$/,"").trim();
-  }
-
+  if (keyMatch) memoForView = memoForView.replace(keyMatch[0], "").trim().replace(/[\/｜|・:：、。-]+$/,"").trim();
   const memoText = memoForView ? `<div class="memo-text">${escape(memoForView)}</div>` : "";
 
-  // ★ここから新機能：YouTubeボタンとコピーボタンの作成
-  let actionsHtml = `<div class="card-actions">`;
+  const copyString = `${title} / ${artist}`;
+  let actions = `<div class="card-actions">
+    <button class="btn-copy" onclick="copyText('${copyString.replace(/'/g, "\\'")}')">📋 コピー</button>`;
+  if(url) actions += `<a href="${escape(url)}" target="_blank" class="btn-youtube">▶ YouTube</a>`;
+  actions += `</div>`;
 
-  // コピーボタン（曲名 / アーティスト を引数に渡す）
-  const copyString = `${title} / ${artist}`; 
-  // ※注意: onclickの中で文字列を使うため、シングルクォートをエスケープする処理を入れています
-  actionsHtml += `
-    <button class="btn-copy" onclick="copyText('${copyString.replace(/'/g, "\\'")}')" title="曲名をコピー">
-      📋 コピー
-    </button>
-  `;
-
-  // URLがあればYouTubeボタンを表示
-  if (url) {
-    actionsHtml += `
-      <a href="${escape(url)}" target="_blank" rel="noopener noreferrer" class="btn-youtube">
-        ▶ YouTube
-      </a>
-    `;
-  }
-  actionsHtml += `</div>`;
-  // ★新機能ここまで
-
-  return `
-    <div class="song-card" style="--i:${i}">
-      <div class="song-title">${title}</div>
-      <div class="song-artist">${artist}</div>
-      <div class="song-pills">${pills.join(" ")}</div>
-      ${memoText}
-      ${actionsHtml} </div>
-  `;
+  return `<div class="song-card" style="--i:${i}">
+    <div class="song-title">${title}</div><div class="song-artist">${artist}</div>
+    <div class="song-pills">${pills.join(" ")}</div>${memoText}${actions}</div>`;
 }
 
-// クリップボードにコピーして通知を出す関数
 function copyText(text) {
   navigator.clipboard.writeText(text).then(() => {
-    const toast = document.getElementById("toast");
-    toast.classList.add("show");
-    // 2秒後に消す
-    setTimeout(() => {
-      toast.classList.remove("show");
-    }, 2000);
-  }).catch(err => {
-    console.error("コピー失敗:", err);
-    alert("コピーできませんでした");
-  });
+    const t = document.getElementById("toast");
+    t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2000);
+  }).catch(alert);
 }
 
+// =========================================================
+// 5. イベント
+// =========================================================
+if(searchInput) searchInput.addEventListener("input", e=>{ keyword=e.target.value; render(); });
+if(sortSelect) sortSelect.addEventListener("change", e=>{ currentSort=e.target.value; render(); });
 
-/* =========================================================
-   5. イベントリスナー（操作を受け付ける）
-   ========================================================= */
-
-// 検索ボックスに入力したとき
-searchInput.addEventListener("input", (e)=>{
-  keyword = e.target.value;
-  render();
-});
-
-// 並び替えプルダウンを変えたとき
-sortSelect.addEventListener("change", (e) => {
-  currentSort = e.target.value;
-  render();
-});
-
-
-/* =========================================================
-   6. ルーレット機能
-   ========================================================= */
-
-// 現在表示されているリスト（絞り込み後）を取得するヘルパー関数
-function getCurrentList() {
-  let list = allSongs.slice();
-  if (filteredCategory !== "all") {
-    list = list.filter(s => (s.category || "other") === filteredCategory);
-  }
-  const kw = keyword.toLowerCase();
-  if (kw) {
-    list = list.filter(s =>
-      `${s.title||""} ${s.artist||""} ${s.memo||""}`.toLowerCase().includes(kw)
-    );
-  }
-  return list;
-}
-
-// ルーレットボタンクリック時
 if (rouletteBtn) {
   rouletteBtn.addEventListener("click", () => {
-    const list = getCurrentList();
-    
-    if (list.length === 0) {
-      alert("選べる曲がありません！");
-      return;
-    }
+    let list = allSongs.slice();
+    if (filteredCategory !== "all") list = list.filter(s => (s.category || "other") === filteredCategory);
+    const kw = keyword.toLowerCase();
+    if (kw) list = list.filter(s => `${s.title} ${s.artist} ${s.memo}`.toLowerCase().includes(kw));
 
-    // モーダル表示
-    modal.classList.add("show");
-    modalResult.textContent = "抽選中...";
-
-    // ドラムロール演出
-    let count = 0;
-    const maxCount = 20; // パラパラする回数
+    if (!list.length) return alert("曲がありません");
+    modal.classList.add("show"); modalResult.textContent = "抽選中...";
+    let c=0;
     const interval = setInterval(() => {
-      // ランダムに仮表示
-      const randomTemp = list[Math.floor(Math.random() * list.length)];
-      modalResult.textContent = randomTemp.title;
-      count++;
-
-      if (count >= maxCount) {
+      modalResult.textContent = list[Math.floor(Math.random()*list.length)].title;
+      c++;
+      if(c>=20){
         clearInterval(interval);
-        // ★最終決定★
-        const winner = list[Math.floor(Math.random() * list.length)];
-        modalResult.innerHTML = `
-          <div style="font-size:0.8em; opacity:0.8;">${winner.artist}</div>
-          <div>${winner.title}</div>
-        `;
+        const w = list[Math.floor(Math.random()*list.length)];
+        modalResult.innerHTML = `<div style="font-size:0.8em;opacity:0.8;">${w.artist}</div><div>${w.title}</div>`;
       }
-    }, 80); // 0.08秒ごとに切り替え
+    }, 80);
   });
 }
+if(closeModal) closeModal.addEventListener("click", ()=> modal.classList.remove("show"));
 
-// モーダルを閉じるボタン
-if (closeModal) {
-  closeModal.addEventListener("click", () => {
-    modal.classList.remove("show");
-  });
-}
-/* --- カードの3D傾きエフェクト --- */
+// 3D Tilt
 document.addEventListener('mousemove', (e) => {
-  // パフォーマンスのため、画面内にあるカードだけに処理を絞る
   const cards = document.querySelectorAll('.song-card');
-  
   cards.forEach(card => {
     const rect = card.getBoundingClientRect();
-    const cardX = rect.left + rect.width / 2; // カードの中心X
-    const cardY = rect.top + rect.height / 2;  // カードの中心Y
-    
-    // マウスとカード中心の距離
-    const mouseX = e.clientX - cardX;
-    const mouseY = e.clientY - cardY;
-    
-    // 傾きの計算（数字をいじると傾き具合が変わります）
-    const rotateY = mouseX * 0.05; // 左右の傾き
-    const rotateX = mouseY * -0.05; // 上下の傾き
-    
-    // カードが画面外にあるときは計算しない（負荷軽減）
     if (rect.top > window.innerHeight || rect.bottom < 0) return;
-
-    // スタイルを適用
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+    const x = e.clientX - (rect.left + rect.width/2);
+    const y = e.clientY - (rect.top + rect.height/2);
+    card.style.transform = `perspective(1000px) rotateX(${y * -0.05}deg) rotateY(${x * 0.05}deg) scale(1.02)`;
   });
 });
-
-// マウスが画面外に出たらリセット
 document.addEventListener('mouseleave', () => {
-  document.querySelectorAll('.song-card').forEach(card => {
-    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
-  });
+  document.querySelectorAll('.song-card').forEach(c => c.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)');
 });
 
 
 /* =========================================================
-   7. 最後に実行
+   ★激変機能の実装（起動画面・パーティクル・ビジュアライザー）
    ========================================================= */
-loadSongs(); // 起動！
+
+// 1. システム起動演出 (Boot Screen)
+const bootScreen = document.getElementById("boot-screen");
+const bootLogs = [
+  "INITIALIZING SYSTEM...",
+  "CONNECTING TO DATABASE...",
+  "LOADING SONG_LIST.JSON...",
+  "OPTIMIZING VISUAL CORE...",
+  "ACCESS GRANTED."
+];
+
+async function runBootSequence() {
+  for (let i = 0; i < bootLogs.length; i++) {
+    const p = document.createElement("div");
+    p.className = "boot-log";
+    p.textContent = "> " + bootLogs[i];
+    bootScreen.appendChild(p);
+    // ランダムな待ち時間（それっぽくする）
+    await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
+  }
+  // 完了後フェードアウト
+  setTimeout(() => {
+    bootScreen.classList.add("fadeout");
+    // Bootが終わったら曲を読み込む
+    loadSongs();
+  }, 600);
+}
+// ページ読み込み時に実行
+window.addEventListener("DOMContentLoaded", runBootSequence);
+
+
+// 2. マウスのネオン軌跡 (Cursor Trail)
+const canvas = document.getElementById("cursor-canvas");
+const ctx = canvas.getContext("2d");
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+class Particle {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.size = Math.random() * 5 + 1;
+    this.speedX = Math.random() * 3 - 1.5;
+    this.speedY = Math.random() * 3 - 1.5;
+    this.color = `hsl(${Math.random() * 60 + 180}, 100%, 70%)`; // 青〜水色系
+    this.life = 1.0;
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.size *= 0.95;
+    this.life -= 0.02;
+  }
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = this.life;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// マウス移動時にパーティクル発生
+window.addEventListener("mousemove", (e) => {
+  for(let i=0; i<3; i++){
+    particles.push(new Particle(e.clientX, e.clientY));
+  }
+});
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < particles.length; i++) {
+    particles[i].update();
+    particles[i].draw();
+    if (particles[i].life <= 0 || particles[i].size <= 0.5) {
+      particles.splice(i, 1);
+      i--;
+    }
+  }
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+
+// 3. 背景ビジュアライザー (Visualizer)
+const vizContainer = document.getElementById("visualizer");
+const barCount = 30; // バーの本数
+
+for (let i = 0; i < barCount; i++) {
+  const bar = document.createElement("div");
+  bar.className = "viz-bar";
+  // アニメーションの時間をランダムにしてバラバラに動かす
+  bar.style.animationDuration = (0.5 + Math.random() * 0.5) + "s";
+  vizContainer.appendChild(bar);
+}
 
 </script>
-<div id="toast" class="toast-notification">✅ コピーしました！</div>
 </body>
 </html>
