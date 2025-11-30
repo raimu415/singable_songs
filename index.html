@@ -537,52 +537,75 @@ h1 {
 </footer>
 
 </div>
-
-<!-- ================= JS ================= -->
 <script>
+/* =========================================================
+   1. 定数・変数の定義
+   ========================================================= */
+
+// カテゴリごとの表示名（絵文字付き）
 const CATEGORY_LABELS = {
-  all: "すべて",
-  jpop: "J-POP / アーティスト系",
-  anime: "アニソン / ゲーソン",
-  vocaloid: "ボカロ",
-  other: "その他",
-  ng: "NG（歌いたくない）",
-  training: "練習中",
-  acoustic: "弾き語り"
+  all: "📂 すべて",
+  jpop: "🎤 J-POP / アーティスト",
+  anime: "📺 アニソン / ゲーソン",
+  vocaloid: "🤖 ボカロ",
+  other: "🎸 その他",
+  ng: "🙅 NG（歌いたくない）",
+  training: "🔰 練習中",
+  acoustic: "🎹 弾き語り"
 };
 
+// 表示する順番
 const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training", "acoustic"];
 
-let allSongs = [];
-let filteredCategory = "all";
-let keyword = "";
-let currentSort = "default";
+// データの入れ物（状態管理）
+let allSongs = [];           // 全曲データ
+let filteredCategory = "all"; // 現在選ばれているカテゴリ
+let keyword = "";            // 検索ボックスの文字
+let currentSort = "default"; // 現在の並び順
 
+// HTMLの要素を取得（操作するために必要）
 const sectionsContainer = document.getElementById("songSections");
 const searchInput = document.getElementById("searchInput");
 const filterRow = document.getElementById("filterRow");
-const controls = document.getElementById("controls");
-const toggle = document.getElementById("controlsToggle");
+const controls = document.getElementById("controls"); // 検索エリア全体
+const toggle = document.getElementById("controlsToggle"); // 開閉ボタン
 const toggleIcon = document.getElementById("toggleIcon");
 const toggleLabel = document.getElementById("toggleLabel");
-const sortSelect = document.getElementById("sortSelect");
+const sortSelect = document.getElementById("sortSelect"); // 並び替えプルダウン
 
+// ルーレット用の要素
+const rouletteBtn = document.getElementById("rouletteBtn");
+const modal = document.getElementById("rouletteModal");
+const modalResult = document.getElementById("rouletteResult");
+const closeModal = document.getElementById("closeModal");
+
+
+/* =========================================================
+   2. 初期化・便利機能
+   ========================================================= */
+
+// 検索エリアの開閉ボタンの動作
 toggle.addEventListener("click", () => {
   const collapsed = controls.classList.toggle("collapsed");
   toggleIcon.textContent = collapsed ? "▼" : "▲";
   toggleLabel.textContent = collapsed ? "検索を開く" : "検索を閉じる";
-  sortSelect.addEventListener("change", (e) => {
-  currentSort = e.target.value;
-  render();
-});
 });
 
-// 「弾き語り」がメモにある曲を acoustic にする共通処理
+// HTMLタグを無効化する関数（セキュリティ対策：文字として表示させる）
+function escape(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// データの整形（メモに「弾き語り」があったらカテゴリを自動変更するなど）
 function normalizeSongs(songs) {
   return songs.map(song => {
-    // すでに acoustic 指定されてるなら上書きしない
+    // すでに acoustic ならそのまま
     if (song.category === "acoustic") return song;
-
+    // メモに「弾き語り」が含まれていたらカテゴリを変更
     if (song.memo && song.memo.includes("弾き語り")) {
       return { ...song, category: "acoustic" };
     }
@@ -590,32 +613,78 @@ function normalizeSongs(songs) {
   });
 }
 
-
-/* 更新日 */
-
+// ★更新日時の表示機能（即時実行関数）
+// ファイルの最終保存日時を取得してヘッダーに表示します
 (function(){
-  // HTMLファイルの最終更新日時を取得
-  const d = new Date(document.lastModified);
+  const d = new Date(document.lastModified); // ファイルの保存日時
   
-  // 見やすい形式にする (例: 2023/10/27 12:40)
+  // 見やすい形式 (例: 2023/10/27 12:40) に変換
   const year = d.getFullYear();
   const month = (d.getMonth() + 1).toString().padStart(2, '0');
   const date = d.getDate().toString().padStart(2, '0');
   const hours = d.getHours().toString().padStart(2, '0');
   const min = d.getMinutes().toString().padStart(2, '0');
-
   const timeString = `${year}/${month}/${date} ${hours}:${min}`;
 
-  // ヘッダーの上に出す
+  // ヘッダーに書き込み
   const headerDate = document.getElementById("lastUpdateTime");
   if(headerDate) headerDate.textContent = timeString;
 
-  // フッターにも同じ時間を出す（もしフッターも合わせたいなら）
+  // フッターに書き込み
   const footerDate = document.getElementById("updatedDate");
   if(footerDate) footerDate.textContent = timeString;
 })();
-/* フィルタボタン */
+
+
+/* =========================================================
+   3. メイン処理：曲データの読み込み
+   ========================================================= */
+
+async function loadSongs() {
+  try {
+    console.log("読み込み開始: songs.json を探しています...");
+    
+    // 1. ファイルを取りに行く
+    const res = await fetch("songs.json", { cache: "no-store" });
+    
+    // 2. ファイルが見つかったか確認
+    if (!res.ok) {
+      throw new Error(`ファイルが見つかりません (Status: ${res.status})`);
+    }
+
+    // 3. JSONとして解読する
+    const data = await res.json();
+    console.log("読み込み成功！データ数:", data.length);
+
+    // 4. データを整形して保存
+    allSongs = normalizeSongs(data);
+
+    // 5. 画面を作る
+    buildFilterButtons(); // カテゴリボタン作成
+    render();             // リスト表示
+
+  } catch (e) {
+    // エラーが起きたらコンソールと画面に表示
+    console.error("【重大エラー発生】:", e); 
+    sectionsContainer.innerHTML = `
+      <div style='text-align:center; margin-top:20px;'>
+        <p>曲データ読み込みに失敗しました😢</p>
+        <p style='color:#f87171; font-size:0.8rem;'>${e.message}</p>
+      </div>
+    `;
+  }
+}
+
+
+/* =========================================================
+   4. 画面表示（レンダリング）関連
+   ========================================================= */
+
+// カテゴリボタン（フィルタボタン）を作る関数
 function buildFilterButtons() {
+  if (!filterRow) return; // エラー回避
+
+  // 各カテゴリに何曲あるか数える
   const counts = allSongs.reduce((a,s)=>{
     const c = s.category || "other";
     a.all++;
@@ -625,23 +694,26 @@ function buildFilterButtons() {
 
   filterRow.innerHTML = "";
 
+  // ボタンを生成して配置
   ["all",...CATEGORY_ORDER].forEach(cat=>{
     const btn = document.createElement("button");
     btn.className = "filter-btn"+(cat===filteredCategory?" active":"");
-    btn.dataset.category = cat;
     btn.innerHTML = `${CATEGORY_LABELS[cat]} <span class="count">(${counts[cat]||0})</span>`;
+    
+    // クリック時の動作
     btn.onclick = ()=>{
       filteredCategory = cat;
+      // ボタンの見た目を切り替え
       document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
+      // リスト再描画
       render();
     };
     filterRow.appendChild(btn);
   });
 }
 
-
-/* レンダリング */
+// ★メインの描画関数（リストを表示する）
 function render() {
   // 1. まず全曲リストをコピー
   let list = allSongs.slice();
@@ -659,33 +731,28 @@ function render() {
     );
   }
 
-  // ▼▼▼ 4. 並び替え処理 (ここを追加！) ▼▼▼
+  // 4. 並び替え処理
   if (currentSort === "artist") {
-    // アーティスト名でソート
     list.sort((a, b) => {
       const artA = (a.artist || "不明").toString();
       const artB = (b.artist || "不明").toString();
-      // 日本語対応の比較 (あいうえお順)
-      return artA.localeCompare(artB, "ja");
+      return artA.localeCompare(artB, "ja"); // あいうえお順比較
     });
   } else if (currentSort === "title") {
-    // 曲名でソート
     list.sort((a, b) => {
       const titleA = (a.title || "").toString();
       const titleB = (b.title || "").toString();
       return titleA.localeCompare(titleB, "ja");
     });
   }
-  // "default" の場合は何もしない（JSONの並び順のまま）
-  // ▲▲▲ 並び替え処理ここまで ▲▲▲
 
-
+  // 該当なしの場合
   if (!list.length) {
     sectionsContainer.innerHTML = "<p style='text-align:center;margin-top:20px;'>該当する曲がありません</p>";
     return;
   }
 
-  // 以降は元の render() と同じ、グループ化して表示
+  // カテゴリごとにグループ分けする
   const groups = {};
   list.forEach(s => {
     const c = s.category || "other";
@@ -693,19 +760,16 @@ function render() {
     groups[c].push(s);
   });
 
-  // 表示処理
-  // もし「すべて」表示時かつソートしている時は、カテゴリ分けせずにズラッと出した方が見やすいかもしれませんが、
-  // 一旦今の「カテゴリごとに分かれたまま、その中でソートされる」仕様にします。
+  // グループごとにHTMLを作って結合
   const html = CATEGORY_ORDER
-    .filter(c => groups[c])
+    .filter(c => groups[c]) // 曲があるカテゴリだけ
     .map(cat => renderCategorySection(cat, groups[cat]))
     .join("");
 
   sectionsContainer.innerHTML = html;
 }
 
-
-/* セクションの描画（カード版） */
+// セクション（カテゴリごとの塊）のHTMLを作る
 function renderCategorySection(cat, list) {
   return `
     <h2 class="category-title">${CATEGORY_LABELS[cat]}</h2>
@@ -715,16 +779,16 @@ function renderCategorySection(cat, list) {
   `;
 }
 
-/* カード1枚 */
+// カード1枚のHTMLを作る
 function renderCard(s, i) {
   const title = escape(s.title);
   const artist = escape(s.artist || "");
   const memo = s.memo || "";
-  //const link = escape() 曲のリンク先を張る
 
-  // メモからキー情報だけ抜き出す（例: -2, +3 など）
+  // メモからキー情報（+3, -2など）を抜き出す
   const keyMatch = memo.match(/[-+]\d+/);
 
+  // ピル（バッジ）を作る
   const pills = [];
   if (/二度と歌いたくない/.test(memo)) {
     pills.push(`<span class="memo-pill memo-ng">NG</span>`);
@@ -732,18 +796,14 @@ function renderCard(s, i) {
   if (/練習中/.test(memo)) {
     pills.push(`<span class="memo-pill memo-training">練習中</span>`);
   }
-  // ★ キーの横に値を表示
   if (keyMatch) {
-    pills.push(
-      `<span class="memo-pill memo-key">キー ${escape(keyMatch[0])}</span>`
-    );
+    pills.push(`<span class="memo-pill memo-key">キー ${escape(keyMatch[0])}</span>`);
   }
 
-  // メモ本文からキー値だけ消してあげる（下に重複して出さないように）
+  // 表示用にメモからキー情報を消す
   let memoForView = memo;
   if (keyMatch) {
     memoForView = memoForView.replace(keyMatch[0], "").trim();
-    // 末尾に「/」とかだけ残っちゃうのを軽くお掃除
     memoForView = memoForView.replace(/[\/｜|・:：、。-]+$/,"").trim();
   }
 
@@ -762,39 +822,33 @@ function renderCard(s, i) {
 }
 
 
-function escape(str) {
-  return String(str)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;");
-}
+/* =========================================================
+   5. イベントリスナー（操作を受け付ける）
+   ========================================================= */
 
-/* 入力イベント */
+// 検索ボックスに入力したとき
 searchInput.addEventListener("input", (e)=>{
   keyword = e.target.value;
   render();
 });
 
+// 並び替えプルダウンを変えたとき
 sortSelect.addEventListener("change", (e) => {
   currentSort = e.target.value;
   render();
 });
-/* --- <script> 内、loadSongs(); の直前に追加 --- */
 
-const rouletteBtn = document.getElementById("rouletteBtn");
-const modal = document.getElementById("rouletteModal");
-const modalResult = document.getElementById("rouletteResult");
-const closeModal = document.getElementById("closeModal");
 
-// 現在表示されているリストを取得する関数
+/* =========================================================
+   6. ルーレット機能
+   ========================================================= */
+
+// 現在表示されているリスト（絞り込み後）を取得するヘルパー関数
 function getCurrentList() {
   let list = allSongs.slice();
-  // カテゴリフィルタ
   if (filteredCategory !== "all") {
     list = list.filter(s => (s.category || "other") === filteredCategory);
   }
-  // キーワード検索
   const kw = keyword.toLowerCase();
   if (kw) {
     list = list.filter(s =>
@@ -804,84 +858,55 @@ function getCurrentList() {
   return list;
 }
 
-// ルーレット開始
-rouletteBtn.addEventListener("click", () => {
-  const list = getCurrentList();
-  
-  if (list.length === 0) {
-    alert("選べる曲がありません！");
-    return;
-  }
-
-  // モーダル表示
-  modal.classList.add("show");
-  modalResult.textContent = "抽選中...";
-
-  // ドラムロール演出
-  let count = 0;
-  const maxCount = 20; // パラパラする回数
-  const interval = setInterval(() => {
-    // ランダムに仮表示
-    const randomTemp = list[Math.floor(Math.random() * list.length)];
-    modalResult.textContent = randomTemp.title;
-    count++;
-
-    if (count >= maxCount) {
-      clearInterval(interval);
-      // ★最終決定★
-      const winner = list[Math.floor(Math.random() * list.length)];
-      modalResult.innerHTML = `
-        <div style="font-size:0.8em; opacity:0.8;">${winner.artist}</div>
-        <div>${winner.title}</div>
-      `;
-    }
-  }, 80); // 0.08秒ごとに切り替え
-});
-
-// モーダル閉じる
-closeModal.addEventListener("click", () => {
-  modal.classList.remove("show");
-});
-// ▼▼▼ このカタマリが消えていませんか？なければ貼り付けてください ▼▼▼
-
-async function loadSongs() {
-  try {
-    console.log("読み込み開始: songs.json を探しています...");
+// ルーレットボタンクリック時
+if (rouletteBtn) {
+  rouletteBtn.addEventListener("click", () => {
+    const list = getCurrentList();
     
-    // 1. ファイルを取りに行く
-    const res = await fetch("songs.json", { cache: "no-store" });
-    
-    // 2. ファイルが見つかったか確認
-    if (!res.ok) {
-      throw new Error(`ファイルが見つかりません (Status: ${res.status})`);
+    if (list.length === 0) {
+      alert("選べる曲がありません！");
+      return;
     }
 
-    // 3. JSONとして解読する
-    const data = await res.json();
-    console.log("読み込み成功！データ数:", data.length);
+    // モーダル表示
+    modal.classList.add("show");
+    modalResult.textContent = "抽選中...";
 
-    allSongs = normalizeSongs(data);
+    // ドラムロール演出
+    let count = 0;
+    const maxCount = 20; // パラパラする回数
+    const interval = setInterval(() => {
+      // ランダムに仮表示
+      const randomTemp = list[Math.floor(Math.random() * list.length)];
+      modalResult.textContent = randomTemp.title;
+      count++;
 
-    buildFilterButtons();
-    render();
-
-  } catch (e) {
-    console.error("【重大エラー発生】:", e); 
-    sectionsContainer.innerHTML = `
-      <div style='text-align:center; margin-top:20px;'>
-        <p>曲データ読み込みに失敗しました😢</p>
-        <p style='color:#f87171; font-size:0.8rem;'>${e.message}</p>
-      </div>
-    `;
-  }
+      if (count >= maxCount) {
+        clearInterval(interval);
+        // ★最終決定★
+        const winner = list[Math.floor(Math.random() * list.length)];
+        modalResult.innerHTML = `
+          <div style="font-size:0.8em; opacity:0.8;">${winner.artist}</div>
+          <div>${winner.title}</div>
+        `;
+      }
+    }, 80); // 0.08秒ごとに切り替え
+  });
 }
 
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+// モーダルを閉じるボタン
+if (closeModal) {
+  closeModal.addEventListener("click", () => {
+    modal.classList.remove("show");
+  });
+}
 
-loadSongs();
 
+/* =========================================================
+   7. 最後に実行
+   ========================================================= */
+loadSongs(); // 起動！
 
 </script>
-
 </body>
 </html>
