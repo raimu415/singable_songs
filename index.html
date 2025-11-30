@@ -270,6 +270,32 @@ h1 {
   z-index: 0;
 }
 
+/* カードの表面を走る光 */
+.song-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%; /* 最初は左枠外に隠す */
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg); /* 斜めにする */
+  pointer-events: none; /* クリックを邪魔しない */
+  z-index: 1;
+  transition: left 0.5s; /* 0.5秒で移動 */
+}
+
+/* ホバーした時に光を右へ移動 */
+.song-card:hover::after {
+  left: 150%; /* 右枠外まで突き抜ける */
+  transition: left 0.7s ease-in-out;
+}
+
 /* ホバーで浮き上がって光る */
 .song-card:hover {
   transform: translateY(-6px) scale(1.02);
@@ -548,11 +574,82 @@ h1 {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
+/* 背景の漂う光 */
+.background-lights {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  z-index: -1; /* 背景画像のさらに手前、コンテンツの奥 */
+  pointer-events: none;
+}
+
+.background-lights li {
+  position: absolute;
+  display: block;
+  list-style: none;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  bottom: -150px; /* 画面の下からスタート */
+  border-radius: 50%; /* 丸くする */
+  animation: floatUp 25s linear infinite; /* 25秒かけてゆっくり上がる */
+}
+
+/* 個別の設定（大きさ、場所、速度をランダムにする） */
+.background-lights li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
+.background-lights li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+.background-lights li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
+.background-lights li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+.background-lights li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
+.background-lights li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
+.background-lights li:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
+.background-lights li:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+.background-lights li:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+.background-lights li:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-1000px) rotate(720deg);
+    opacity: 0;
+  }
+}
+h1 {
+  /* ...もともとの設定はそのままで... */
+  
+  /* ▼▼▼ これを追加 ▼▼▼ */
+  animation: neonPulse 3s infinite alternate;
+}
+
+@keyframes neonPulse {
+  0% {
+    text-shadow:
+      0 0 6px rgba(75, 127, 255, 0.7),
+      0 0 15px rgba(56, 189, 248, 0.6);
+  }
+  100% {
+    text-shadow:
+      0 0 10px rgba(75, 127, 255, 1),
+      0 0 25px rgba(56, 189, 248, 1),
+      0 0 40px rgba(96, 165, 250, 0.8); /* 強く光る */
+  }
+}
 </style>
 
 </head>
 <body>
-
+<ul class="background-lights">
+  <li></li><li></li><li></li><li></li><li></li>
+  <li></li><li></li><li></li><li></li><li></li>
+</ul>
 <div class="container">
 
 <header>
@@ -1006,6 +1103,7 @@ if (closeModal) {
     modal.classList.remove("show");
   });
 }
+
 
 
 /* =========================================================
