@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>らいむの歌える曲リスト - SYSTEM OVERDRIVE</title>
+  <title>らいむの歌える曲リスト - SYSTEM ONLINE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
@@ -26,47 +26,6 @@ body {
   background: #000; /* 背景はCanvasで描画するので黒 */
   overflow-x: hidden;
 }
-
-/* 画面全体のグリッチ（不安定）演出用クラス */
-body.global-glitch {
-  animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
-}
-body.global-glitch::before,
-body.global-glitch::after {
-  content: "";
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: inherit; pointer-events: none; z-index: 9999; opacity: 0.5;
-}
-body.global-glitch::before {
-  animation: glitch-shift-red 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
-  background: rgba(255, 0, 0, 0.2);
-  mix-blend-mode: screen;
-}
-body.global-glitch::after {
-  animation: glitch-shift-blue 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
-  background: rgba(0, 0, 255, 0.2);
-  mix-blend-mode: screen;
-}
-
-@keyframes glitch-skew {
-  0% { transform: skew(0deg); }
-  20% { transform: skew(2deg); filter: blur(1px); }
-  40% { transform: skew(-2deg); filter: blur(2px); }
-  60% { transform: skew(1deg); }
-  80% { transform: skew(-1deg); }
-  100% { transform: skew(0deg); }
-}
-@keyframes glitch-shift-red {
-  0% { transform: translate(0, 0); }
-  50% { transform: translate(-5px, 2px); }
-  100% { transform: translate(0, 0); }
-}
-@keyframes glitch-shift-blue {
-  0% { transform: translate(0, 0); }
-  50% { transform: translate(5px, -2px); }
-  100% { transform: translate(0, 0); }
-}
-
 
 /* コンテナ */
 .container {
@@ -133,7 +92,7 @@ h1 {
   letter-spacing: 0.15em; color: #fff;
   text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue), 0 0 20px var(--neon-pink);
 }
-/* タイトルグリッチ(激しめ) */
+/* タイトルグリッチ(ここは残します：タイトルだけカッコよく揺れる) */
 h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alternate; }
 @keyframes textGlitch {
   0%, 100% { transform: translate(0); opacity: 1; }
@@ -211,7 +170,7 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .memo-training { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
 .memo-key { border-color: var(--neon-pink); color: var(--neon-pink); box-shadow: 0 0 5px var(--neon-pink); }
 
-/* その他モーダル、ボタン類は前回のスタイルを踏襲 */
+/* その他モーダル、ボタン類 */
 .roulette-btn {
   background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue)); border: none;
   padding: 10px 30px; border-radius: 999px; color: #fff; font-weight: bold; cursor: pointer;
@@ -392,7 +351,7 @@ document.addEventListener('mouseleave', () => document.querySelectorAll('.song-c
 
 
 // =========================================================
-// JS: 激しいエフェクト集（起動・マトリックス・軌跡・ビジュアライザー・グリッチ）
+// JS: エフェクト集（グリッチ削除済み）
 // =========================================================
 
 // 1. 起動シーケンス
@@ -443,14 +402,6 @@ animateParticles();
 
 // 4. 背景ビジュアライザー
 const viz=document.getElementById("visualizer"); for(let i=0;i<40;i++){ const b=document.createElement("div"); b.className="viz-bar"; b.style.animationDuration=(0.4+Math.random()*0.6)+"s"; viz.appendChild(b); }
-
-// 5. ランダム画面グリッチ
-setInterval(() => {
-  if(Math.random()>0.7) {
-    document.body.classList.add("global-glitch");
-    setTimeout(()=>document.body.classList.remove("global-glitch"), 200+Math.random()*300);
-  }
-}, 5000);
 
 </script>
 </body>
