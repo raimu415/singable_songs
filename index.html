@@ -466,6 +466,10 @@ toggle.addEventListener("click", () => {
   const collapsed = controls.classList.toggle("collapsed");
   toggleIcon.textContent = collapsed ? "▼" : "▲";
   toggleLabel.textContent = collapsed ? "検索を開く" : "検索を閉じる";
+  sortSelect.addEventListener("change", (e) => {
+  currentSort = e.target.value;
+  render();
+});
 });
 
 // 「弾き語り」がメモにある曲を acoustic にする共通処理
