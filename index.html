@@ -692,7 +692,13 @@ searchInput.addEventListener("input", (e)=>{
   render();
 });
 
+sortSelect.addEventListener("change", (e) => {
+  currentSort = e.target.value;
+  render();
+});
+
 loadSongs();
+
 
 </script>
 
