@@ -234,6 +234,10 @@
 
 
 <script>
+  // ==========================================
+  //  徹底デバッグモード (Diagnosis Version)
+  // ==========================================
+
   // 要素取得
   const els = {
     ghUser: document.getElementById("ghUser"),
@@ -263,18 +267,31 @@
   let currentSha = null;
   let tableSearchKeyword = "";
 
-  // ■ 初期化：トークンの読み込み
+  // ログ出力ヘルパー
+  function log(msg, isError = false) {
+    console.log(msg);
+    if (els.listStatus) {
+      els.listStatus.textContent = msg;
+      els.listStatus.className = isError ? "status err" : "status";
+      els.listStatus.style.color = isError ? "red" : "#4ade80";
+    }
+    if (isError) alert("【エラー検出】\n" + msg);
+  }
+
+  // 初期化
   window.addEventListener("DOMContentLoaded", () => {
+    console.log("画面読み込み完了");
     const savedToken = localStorage.getItem("ghToken_admin");
     if (savedToken) {
       els.ghToken.value = savedToken;
       els.saveTokenCheck.checked = true;
-      // トークンがある場合のみ自動読み込みを試みる
+      log("保存されたトークンを読み込みました。自動接続を試みます...");
       setTimeout(fetchSongsJson, 500);
+    } else {
+      log("トークンが保存されていません。入力してください。");
     }
   });
 
-  // 設定取得
   function getConfig() {
     return {
       user: els.ghUser.value.trim(),
@@ -284,148 +301,144 @@
     };
   }
 
-  // 文字コード処理
   function b64encodeUnicode(str) { return btoa(unescape(encodeURIComponent(str))); }
   function b64decodeUnicode(str) { return decodeURIComponent(escape(atob(str))); }
 
-  // ■ 曲リスト取得
+  // ■ 曲リスト取得（デバッグ版）
   async function fetchSongsJson() {
+    console.log("--- 読み込み開始 ---");
     const { user, repo, branch, token } = getConfig();
     
-    // トークンがない場合は警告
-    if(!token) {
-        els.listStatus.textContent = "トークンを入力してください";
-        els.listStatus.className = "status err";
-        return;
+    // 1. 設定チェック
+    if (!user || !repo || !branch) {
+      log("エラー: ユーザー名、リポジトリ名、ブランチのいずれかが空です", true);
+      return;
+    }
+    if (!token) {
+      log("エラー: トークン(ghp_...)が入力されていません", true);
+      return;
+    }
+    if (!token.startsWith("ghp_") && !token.startsWith("github_pat_")) {
+      // 最近のトークンは ghp_ じゃない場合もあるので警告のみ
+      console.warn("警告: トークンの形式が一般的ではありません");
     }
 
-    els.listStatus.textContent = "GitHubから読み込み中...";
-    els.listStatus.className = "status";
+    log(`GitHubへ接続中... (${user}/${repo})`);
     els.tableBody.innerHTML = "";
 
     try {
-      // キャッシュを回避するためにタイムスタンプをつける
-      const url = `https://api.github.com/repos/${user}/${repo}/contents/songs.json?ref=${branch}&_=${new Date().getTime()}`;
-      
+      const url = `https://api.github.com/repos/${user}/${repo}/contents/songs.json?ref=${branch}&_t=${Date.now()}`;
+      console.log("Accessing URL:", url);
+
+      // 2. Fetch実行
       const res = await fetch(url, {
-          headers: { 
-              "Authorization": `Bearer ${token}`,
-              "Accept": "application/vnd.github+json"
-          }
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/vnd.github+json"
+        }
       });
 
+      console.log("Response Status:", res.status);
+
+      // 3. エラーハンドリング
       if (!res.ok) {
-          if(res.status === 404) throw new Error("ファイルが見つかりません (404)。リポジトリ名を確認してください。");
-          if(res.status === 401) throw new Error("認証失敗 (401)。トークンが間違っています。");
-          throw new Error("読込エラー: " + res.status);
+        if (res.status === 404) throw new Error("404 Not Found: リポジトリ名かファイル名(songs.json)が間違っています。");
+        if (res.status === 401) throw new Error("401 Unauthorized: トークンが無効です。有効期限が切れているか、間違っています。");
+        if (res.status === 403) throw new Error("403 Forbidden: アクセス権限がありません（トークンの権限不足）。");
+        throw new Error(`HTTPエラー: ${res.status}`);
       }
 
+      // 4. データ解析
       const data = await res.json();
+      if (!data.content) throw new Error("データは取得できましたが、contentフィールドが空です。");
+      
       currentSha = data.sha;
-      
-      const jsonContent = b64decodeUnicode(data.content);
-      songsData = JSON.parse(jsonContent);
-      
-      // データが配列でない場合の対策
-      if(!Array.isArray(songsData)) songsData = [];
+      const rawContent = b64decodeUnicode(data.content);
+      console.log("Raw JSON Content:", rawContent.substring(0, 100) + "..."); // 最初の100文字だけログ
 
-      // データにURLがない古い形式の場合に備えて補完
+      try {
+        songsData = JSON.parse(rawContent);
+      } catch (jsonErr) {
+        throw new Error("JSONの解析に失敗しました。songs.jsonの記述ミスかもしれません。\n" + jsonErr.message);
+      }
+
+      if (!Array.isArray(songsData)) {
+        throw new Error("JSONは有効ですが、配列(リスト)形式ではありません。");
+      }
+
+      // データ補完
       songsData = songsData.map(s => ({ 
-          title: s.title || "",
-          artist: s.artist || "",
-          category: s.category || "other",
-          url: s.url || "",
-          memo: s.memo || ""
+        title: s.title || "",
+        artist: s.artist || "",
+        category: s.category || "other",
+        url: s.url || "",
+        memo: s.memo || ""
       }));
 
       renderSongsTable();
-      els.listStatus.textContent = `読み込み完了：${songsData.length} 曲`;
-      els.listStatus.className = "status ok";
+      log(`✅ 成功！ ${songsData.length} 件のデータを読み込みました。`);
 
     } catch (err) {
       console.error(err);
-      els.listStatus.textContent = "エラー: " + err.message;
-      els.listStatus.className = "status err";
+      log(err.message, true); // 画面にアラートを出す
     }
   }
 
   // ■ テーブル描画
   function renderSongsTable() {
     els.tableBody.innerHTML = "";
-
-    if(!songsData || songsData.length === 0) {
-        els.listStatus.textContent = "データが0件、または読み込めていません";
-        return;
+    if(!songsData.length) {
+      log("データは読み込めましたが、中身が0件です。");
+      return;
     }
 
-    // 検索フィルタ
     const filtered = songsData.map((song, index) => ({ song, index })).filter(({ song }) => {
       const text = `${song.title} ${song.artist} ${song.category} ${song.memo}`.toLowerCase();
       return text.includes(tableSearchKeyword.toLowerCase());
     });
 
-    // リストの生成
     filtered.forEach(({ song, index }) => {
       const tr = document.createElement("tr");
-      tr.dataset.id = index; // 元の配列のインデックスを保持
-
-      // セル生成ヘルパー
+      tr.dataset.id = index;
+      
       const createInput = (key) => {
         const td = document.createElement("td");
         const input = document.createElement("input");
-        input.type = "text";
-        input.value = song[key] || "";
-        input.className = "small-input";
+        input.type = "text"; input.value = song[key] || ""; input.className = "small-input";
         input.oninput = () => { songsData[index][key] = input.value; };
-        td.appendChild(input);
-        return td;
+        td.appendChild(input); return td;
       };
 
-      // タイトル・アーティスト
       tr.appendChild(createInput("title"));
       tr.appendChild(createInput("artist"));
 
-      // カテゴリ
       const tdCat = document.createElement("td");
       const sel = document.createElement("select");
       sel.className = "small-input";
       ["jpop","anime","vocaloid","other","ng","training","acoustic"].forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c; opt.textContent = c;
-        if(song.category === c) opt.selected = true;
-        sel.appendChild(opt);
+        const opt = document.createElement("option"); opt.value = c; opt.textContent = c;
+        if(song.category === c) opt.selected = true; sel.appendChild(opt);
       });
       sel.onchange = () => { songsData[index].category = sel.value; };
-      tdCat.appendChild(sel);
-      tr.appendChild(tdCat);
+      tdCat.appendChild(sel); tr.appendChild(tdCat);
 
-      // URL (追加！)
       tr.appendChild(createInput("url"));
 
-      // メモ
       const tdMemo = document.createElement("td");
       const area = document.createElement("textarea");
-      area.value = song.memo || "";
-      area.className = "small-input";
-      area.style.height = "34px"; 
-      area.onfocus = () => area.style.height = "80px"; 
-      area.onblur = () => area.style.height = "34px";
+      area.value = song.memo || ""; area.className = "small-input"; area.style.height = "34px"; 
+      area.onfocus = () => area.style.height = "80px"; area.onblur = () => area.style.height = "34px";
       area.oninput = () => { songsData[index].memo = area.value; };
-      tdMemo.appendChild(area);
-      tr.appendChild(tdMemo);
+      tdMemo.appendChild(area); tr.appendChild(tdMemo);
 
-      // 削除
-      const tdDel = document.createElement("td");
-      tdDel.className = "checkbox-center";
-      const chk = document.createElement("input");
-      chk.type = "checkbox";
+      const tdDel = document.createElement("td"); tdDel.className = "checkbox-center";
+      const chk = document.createElement("input"); chk.type = "checkbox";
       chk.onchange = () => {
         tr.style.opacity = chk.checked ? "0.3" : "1";
         tr.style.background = chk.checked ? "#450a0a" : "";
         tr.dataset.toDelete = chk.checked ? "1" : "";
       };
-      tdDel.appendChild(chk);
-      tr.appendChild(tdDel);
+      tdDel.appendChild(chk); tr.appendChild(tdDel);
 
       els.tableBody.appendChild(tr);
     });
@@ -434,29 +447,19 @@
   // ■ GitHubへ保存
   async function saveSongsJson() {
     const { user, repo, branch, token } = getConfig();
-    
-    // トークン保存処理
-    if (els.saveTokenCheck.checked) {
-      localStorage.setItem("ghToken_admin", token);
-    } else {
-      localStorage.removeItem("ghToken_admin");
-    }
+    if (els.saveTokenCheck.checked) localStorage.setItem("ghToken_admin", token);
+    else localStorage.removeItem("ghToken_admin");
 
-    if (!token) {
-      els.saveStatus.textContent = "トークンが入力されていません！";
-      els.saveStatus.className = "status err";
-      return;
-    }
+    if (!token) return log("トークン未入力のため保存できません", true);
 
-    els.saveStatus.textContent = "GitHubに書き込み中...";
+    els.saveStatus.textContent = "保存中...";
     els.saveStatus.className = "status";
 
-    // 削除フラグがついているものを除外
-    const rows = Array.from(els.tableBody.querySelectorAll("tr"));
     const newSongs = [];
+    const rows = Array.from(els.tableBody.querySelectorAll("tr"));
     songsData.forEach((s, i) => {
       const row = rows.find(r => Number(r.dataset.id) === i);
-      if (row && row.dataset.toDelete === "1") return; // 削除対象ならスキップ
+      if (row && row.dataset.toDelete === "1") return;
       newSongs.push(s);
     });
 
@@ -466,65 +469,45 @@
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json" },
         body: JSON.stringify({
-          message: "Update songs list (via admin)",
+          message: "Update via Admin Panel",
           content: contentB64,
           sha: currentSha,
           branch
         })
       });
 
-      if (!res.ok) throw new Error("保存エラー: " + res.status);
-      
+      if (!res.ok) throw new Error("保存失敗: " + res.status);
       const result = await res.json();
       currentSha = result.content.sha;
       songsData = newSongs;
       renderSongsTable();
-
-      els.saveStatus.textContent = "✅ 保存成功！サイトに反映されました。";
+      els.saveStatus.textContent = "✅ 保存成功！";
       els.saveStatus.className = "status ok";
+      alert("保存しました！");
     } catch (err) {
-      els.saveStatus.textContent = "保存失敗: " + err.message;
+      els.saveStatus.textContent = err.message;
       els.saveStatus.className = "status err";
+      alert("保存エラー: " + err.message);
     }
   }
 
-  // ■ リストに追加
+  // ■ 追加
   function addSongToList() {
     const title = els.newTitle.value.trim();
-    if (!title) {
-      els.addStatus.textContent = "曲名は必須です";
-      els.addStatus.className = "status err";
-      return;
-    }
-
+    if (!title) return alert("曲名を入れてください");
     songsData.push({
-      title,
-      artist: els.newArtist.value.trim(),
-      category: els.newCategory.value,
-      url: els.newUrl.value.trim(),
-      memo: els.newMemo.value.trim()
+      title, artist: els.newArtist.value.trim(), category: els.newCategory.value,
+      url: els.newUrl.value.trim(), memo: els.newMemo.value.trim()
     });
-
-    // フォームをリセット
-    els.newTitle.value = "";
-    els.newArtist.value = "";
-    els.newUrl.value = "";
-    els.newMemo.value = "";
-    els.newTitle.focus();
-
-    els.addStatus.textContent = `「${title}」を追加しました。（保存ボタンで確定）`;
-    els.addStatus.className = "status ok";
+    els.newTitle.value = ""; els.newArtist.value = ""; els.newUrl.value = ""; els.newMemo.value = ""; els.newTitle.focus();
     renderSongsTable();
-    
-    els.tableSearch.value = "";
-    tableSearchKeyword = "";
+    els.addStatus.textContent = "リストに追加しました(未保存)";
     setTimeout(() => {
         const tableWrap = document.querySelector(".table-wrap");
         if(tableWrap) tableWrap.scrollTop = tableWrap.scrollHeight;
     }, 100);
   }
 
-  // ■ イベントリスナー
   els.tableSearch.oninput = (e) => { tableSearchKeyword = e.target.value; renderSongsTable(); };
   els.btnReload.onclick = fetchSongsJson;
   els.btnSaveAll.onclick = saveSongsJson;
