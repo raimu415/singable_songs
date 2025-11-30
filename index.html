@@ -480,7 +480,9 @@ h1 {
 
 <header>
   <div class="header-inner">
-
+    <div style="text-align:center; font-size:0.7rem; color:var(--text-sub); margin-bottom:4px; opacity:0.8;">
+      Last Update: <span id="lastUpdateTime">--/-- --:--</span>
+    </div>
     <h1>らいむの歌える曲リスト 🎤</h1>
     <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
     <div class="note">曲名・アーティスト・メモで検索できます</div>
@@ -590,48 +592,28 @@ function normalizeSongs(songs) {
 
 
 /* 更新日 */
+
 (function(){
-  const el = document.getElementById("updatedDate");
-  const t = new Date();
-  el.textContent = `${t.getFullYear()}/${String(t.getMonth()+1).padStart(2,"0")}/${String(t.getDate()).padStart(2,"0")}`;
+  // HTMLファイルの最終更新日時を取得
+  const d = new Date(document.lastModified);
+  
+  // 見やすい形式にする (例: 2023/10/27 12:40)
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const date = d.getDate().toString().padStart(2, '0');
+  const hours = d.getHours().toString().padStart(2, '0');
+  const min = d.getMinutes().toString().padStart(2, '0');
+
+  const timeString = `${year}/${month}/${date} ${hours}:${min}`;
+
+  // ヘッダーの上に出す
+  const headerDate = document.getElementById("lastUpdateTime");
+  if(headerDate) headerDate.textContent = timeString;
+
+  // フッターにも同じ時間を出す（もしフッターも合わせたいなら）
+  const footerDate = document.getElementById("updatedDate");
+  if(footerDate) footerDate.textContent = timeString;
 })();
-
-async function loadSongs() {
-  try {
-    console.log("読み込み開始: songs.json を探しています...");
-    
-    // 1. ファイルを取りに行く
-    const res = await fetch("songs.json", { cache: "no-store" });
-    
-    // 2. ファイルが見つかったか確認 (404ならここでエラーにする)
-    if (!res.ok) {
-      throw new Error(`ファイルが見つかりません (Status: ${res.status})`);
-    }
-
-    // 3. JSONとして解読する
-    const data = await res.json();
-    console.log("読み込み成功！データ数:", data.length);
-
-    allSongs = normalizeSongs(data);
-
-    buildFilterButtons();
-    render();
-
-  } catch (e) {
-    // ▼▼▼ ここが重要！エラーの正体をコンソールに出す ▼▼▼
-    console.error("【重大エラー発生】:", e); 
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-    sectionsContainer.innerHTML = `
-      <div style='text-align:center; margin-top:20px;'>
-        <p>曲データ読み込みに失敗しました😢</p>
-        <p style='color:#f87171; font-size:0.8rem;'>${e.message}</p>
-      </div>
-    `;
-  }
-}
-
-
 /* フィルタボタン */
 function buildFilterButtons() {
   const counts = allSongs.reduce((a,s)=>{
