@@ -187,6 +187,96 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .toast-notification { position:fixed; bottom:30px; left:50%; transform:translate(-50%, 50px); background: var(--neon-blue); color:#fff; padding:8px 24px; border-radius:999px; box-shadow: 0 0 20px var(--neon-blue); opacity:0; transition:0.3s; z-index:200; }
 .toast-notification.show { transform:translate(-50%, 0); opacity:1; }
 
+/* =========================================================
+   📱 スマホ専用レスポンシブ設定 (PCには影響しません)
+   ========================================================= */
+@media screen and (max-width: 768px) {
+
+  /* --- 1. ヘッダーと検索エリアの省スペース化 --- */
+  .container {
+    padding: 10px 10px 80px; /* 余白を減らす */
+  }
+  
+  .header-inner {
+    padding: 12px; /* ヘッダーの内側を狭く */
+  }
+
+  h1 {
+    font-size: 1.3rem; /* タイトルを小さく */
+    letter-spacing: 0.05em;
+  }
+  
+  /* スマホではキャッチコピーなどを隠して場所を空ける */
+  .tagline, .note {
+    display: none; 
+  }
+
+  /* 検索ボックス周りをギュッと詰める */
+  .controls-toggle-row { margin-top: 4px; }
+  .controls { gap: 6px; }
+  
+  .search-box input,
+  .sort-select {
+    padding: 8px 12px;
+    font-size: 0.8rem; /* 文字サイズ調整 */
+  }
+
+  /* フィルタボタンを小さく */
+  .filter-btn {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+  }
+
+  /* --- 2. 曲リストを「2列表示」にする --- */
+  .song-grid {
+    /* 1列にならず、強制的に2列にする設定 */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 8px; /* カード間の隙間を狭く */
+  }
+
+  /* --- 3. カードをスマホ用に小さくする --- */
+  .song-card {
+    padding: 10px; /* カードの内側の余白を減らす */
+    border-radius: 12px;
+  }
+  
+  /* 3D回転はスマホだと操作しにくい＆重いのでOFFにする */
+  .song-card {
+    transform: none !important; 
+    perspective: none;
+  }
+  /* 文字サイズを調整 */
+  .song-title { font-size: 0.85rem; }
+  .song-artist { font-size: 0.7rem; }
+  
+  /* メモやボタン類も小さく */
+  .memo-text { font-size: 0.65rem; line-height: 1.2; }
+  .memo-pill { font-size: 0.6rem; padding: 1px 6px; }
+  
+  .btn-copy, .btn-youtube {
+    font-size: 0.6rem;
+    padding: 3px 6px;
+  }
+  
+  /* ボタンがはみ出さないように折り返す */
+  .card-actions {
+    flex-wrap: wrap;
+  }
+
+  /* --- 4. その他調整 --- */
+  /* ルーレットボタンを少し小さく */
+  .roulette-btn {
+    padding: 6px 16px;
+    font-size: 0.8rem;
+  }
+  
+  /* 起動演出の文字を小さく（はみ出し防止） */
+  #boot-screen {
+    padding: 20px;
+    font-size: 0.8rem;
+  }
+}
+
 </style>
 </head>
 <body>
