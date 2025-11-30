@@ -266,6 +266,8 @@ h1 {
   filter: blur(22px);
   transform: rotate(0deg);
   transition: opacity 0.3s ease, transform 4s linear;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ホバーで浮き上がって光る */
@@ -311,6 +313,15 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.song-title, 
+.song-artist, 
+.song-pills, 
+.memo-text, 
+.card-actions {
+  position: relative;
+  z-index: 2; /* 背景より手前に表示 */
 }
 
 /* メモピル共通 */
