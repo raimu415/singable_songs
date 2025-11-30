@@ -2,743 +2,455 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>らいむの歌える曲リスト</title>
+  <title>らいむの歌える曲リスト - SYSTEM OVERDRIVE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
 /* =========================================================
-   ベースカラー変数
+   ベースカラー & 設定
 ========================================================= */
 :root {
   --text-main: #e5e7eb;
   --text-sub: #9ca3af;
-  --card-bg: rgba(15, 23, 42, 0.72);
-  --card-border: rgba(56, 189, 248, 0.25);
   --accent: #60a5fa;
-  --radius: 16px;
-  --shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  --neon-pink: #ec4899;
+  --neon-blue: #60a5fa;
 }
 
-/* =========================================================
-   ベース設定
-========================================================= */
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: "Segoe UI", "Roboto", system-ui, sans-serif;
   color: var(--text-main);
-  background: #000;
-  overflow-x: hidden; /* 横スクロール防止 */
+  background: #000; /* 背景はCanvasで描画するので黒 */
+  overflow-x: hidden;
 }
 
-/* ぼやけ背景 */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url("bg.jpg") center/cover no-repeat;
-  filter: blur(12px) brightness(0.55);
-  transform: scale(1.06);
-  z-index: -5;
+/* 画面全体のグリッチ（不安定）演出用クラス */
+body.global-glitch {
+  animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
 }
-
-/* ネオンオーバーレイ */
-body::after {
+body.global-glitch::before,
+body.global-glitch::after {
   content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at top left, rgba(79, 70, 229, 0.65), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.5), transparent 55%),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95));
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: inherit; pointer-events: none; z-index: 9999; opacity: 0.5;
+}
+body.global-glitch::before {
+  animation: glitch-shift-red 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  background: rgba(255, 0, 0, 0.2);
   mix-blend-mode: screen;
-  z-index: -4;
-  pointer-events: none;
 }
+body.global-glitch::after {
+  animation: glitch-shift-blue 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  background: rgba(0, 0, 255, 0.2);
+  mix-blend-mode: screen;
+}
+
+@keyframes glitch-skew {
+  0% { transform: skew(0deg); }
+  20% { transform: skew(2deg); filter: blur(1px); }
+  40% { transform: skew(-2deg); filter: blur(2px); }
+  60% { transform: skew(1deg); }
+  80% { transform: skew(-1deg); }
+  100% { transform: skew(0deg); }
+}
+@keyframes glitch-shift-red {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-5px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes glitch-shift-blue {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(5px, -2px); }
+  100% { transform: translate(0, 0); }
+}
+
 
 /* コンテナ */
 .container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 16px 14px 40px;
-  position: relative;
-  z-index: 10;
+  max-width: 960px; margin: 0 auto; padding: 16px 14px 40px;
+  position: relative; z-index: 10;
 }
 
 /* =========================================================
-   ★激変機能1：システム起動画面（Boot Screen）
+   背景・エフェクトレイヤー
 ========================================================= */
-#boot-screen {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 99999; /* 最前面 */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px 40px;
-  font-family: "Courier New", monospace;
-  color: #0f0; /* ハッカーグリーン */
-  font-size: 1.2rem;
-  line-height: 1.5;
-  transition: opacity 0.8s ease;
-}
-#boot-screen.fadeout {
-  opacity: 0;
-  pointer-events: none;
-}
-.boot-log {
-  margin: 2px 0;
-  opacity: 0;
-  animation: fadeInLog 0.1s forwards;
-}
-@keyframes fadeInLog { to { opacity: 1; } }
-
-/* =========================================================
-   ★激変機能2：マウスの軌跡（Canvas）
-========================================================= */
-#cursor-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* クリックを邪魔しない */
-  z-index: 9999; /* サイトより手前、Bootより奥 */
+/* マトリックス背景 */
+#matrix-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: -10; opacity: 0.4; /* 文字が読めるように薄く */
 }
 
-/* =========================================================
-   ★激変機能3：背景ビジュアライザー
-========================================================= */
+/* 背景ビジュアライザー */
 .visualizer-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40vh; /* 画面下半分くらい */
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  z-index: -3; /* 背景の手前 */
-  pointer-events: none;
-  opacity: 0.3; /* うっすら表示 */
-  mask-image: linear-gradient(to top, black, transparent); /* 上の方をぼかす */
+  position: fixed; bottom: 0; left: 0; width: 100%; height: 50vh;
+  display: flex; align-items: flex-end; justify-content: space-around;
+  z-index: -5; pointer-events: none; opacity: 0.5;
+  mask-image: linear-gradient(to top, black, transparent 80%);
 }
 .viz-bar {
-  width: 10px;
-  background: linear-gradient(to top, #60a5fa, #ec4899);
-  border-radius: 5px 5px 0 0;
+  width: 8px; margin: 0 2px;
+  background: linear-gradient(to top, var(--neon-blue), var(--neon-pink));
+  box-shadow: 0 0 10px var(--neon-blue);
   animation: bounceBar infinite ease-in-out alternate;
 }
 @keyframes bounceBar {
-  0% { height: 5%; }
-  100% { height: 90%; }
+  0% { height: 2%; opacity: 0.3; }
+  100% { height: 80%; opacity: 1; filter: brightness(1.5); }
 }
 
+/* カーソル軌跡 */
+#cursor-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 9990; mix-blend-mode: screen;
+}
+
+/* 起動画面 */
+#boot-screen {
+  position: fixed; inset: 0; background: #000; z-index: 99999;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 40px; font-family: "Courier New", monospace; color: #0f0;
+  font-size: 1rem; line-height: 1.4; transition: opacity 0.5s ease;
+}
+#boot-screen.fadeout { opacity: 0; pointer-events: none; }
+.boot-log { animation: swiftUp 0.2s ease-out forwards; }
+@keyframes swiftUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
 /* =========================================================
-   既存スタイル（ヘッダー・カードなど）
+   UIコンポーネント
 ========================================================= */
-header {
-  position: sticky;
-  top: 0;
-  padding: 8px 0 10px;
-  z-index: 30;
-}
-
+header { position: sticky; top: 0; padding: 8px 0 10px; z-index: 30; }
 .header-inner {
-  padding: 16px;
-  background: rgba(15, 23, 42, 0.95);
-  border-radius: 20px;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  box-shadow: var(--shadow);
+  padding: 16px; background: rgba(15, 23, 42, 0.9);
+  border-radius: 20px; border: 1px solid rgba(96, 165, 250, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
 }
 
 h1 {
-  margin: 0;
-  font-size: 1.9rem;
-  text-align: center;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  /* ネオン呼吸アニメーション */
-  animation: neonPulse 3s infinite alternate;
+  margin: 0; font-size: 1.9rem; text-align: center; font-weight: 900;
+  letter-spacing: 0.15em; color: #fff;
+  text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue), 0 0 20px var(--neon-pink);
+}
+/* タイトルグリッチ(激しめ) */
+h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alternate; }
+@keyframes textGlitch {
+  0%, 100% { transform: translate(0); opacity: 1; }
+  92% { transform: translate(0); opacity: 1; }
+  94% { transform: translate(-3px, 2px) skew(10deg); opacity: 0.8; text-shadow: -2px 0 red, 2px 0 blue; }
+  96% { transform: translate(3px, -2px) skew(-10deg); opacity: 0.8; text-shadow: 2px 0 red, -2px 0 blue; }
+  98% { transform: translate(0); opacity: 1; }
 }
 
-@keyframes neonPulse {
-  0% { text-shadow: 0 0 6px rgba(75, 127, 255, 0.7), 0 0 15px rgba(56, 189, 248, 0.6); }
-  100% { text-shadow: 0 0 10px rgba(75, 127, 255, 1), 0 0 25px rgba(56, 189, 248, 1), 0 0 40px rgba(96, 165, 250, 0.8); }
-}
+.tagline, .note { text-align: center; color: var(--text-sub); font-size: 0.8rem; }
 
-/* グリッチ演出 */
-@keyframes glitch-anim {
-  0% { clip-path: inset(20% 0 50% 0); transform: translate(-2px, 3px); }
-  10% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -3px); }
-  20% { clip-path: inset(40% 0 30% 0); transform: translate(-2px, 1px); }
-  30% { clip-path: inset(80% 0 5% 0); transform: translate(2px, 2px); }
-  40% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, -2px); }
-  50% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 1px); }
-  100% { clip-path: inset(50% 0 30% 0); transform: translate(0, 0); }
-}
-
-h1.glitch-effect { position: relative; color: white; }
-h1.glitch-effect::before, h1.glitch-effect::after {
-  content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent;
-}
-h1.glitch-effect::before {
-  left: 2px; text-shadow: -1px 0 rgba(255,0,0,0.7); animation: glitch-anim 2s infinite linear alternate-reverse; clip-path: inset(0 0 0 0);
-}
-h1.glitch-effect::after {
-  left: -2px; text-shadow: 1px 0 rgba(0,0,255,0.7); animation: glitch-anim 2.5s infinite linear alternate; clip-path: inset(0 0 0 0);
-}
-
-.tagline { text-align: center; font-size: 0.9rem; color: var(--text-sub); margin-top: 3px; }
-.note { text-align: center; font-size: 0.75rem; margin-top: 2px; color: var(--text-sub); }
-
-/* 開閉ボタン */
+/* 検索・ボタン類 */
 .controls-toggle-row { margin-top: 8px; text-align: right; }
-.controls-toggle {
-  padding: 4px 12px; border-radius: 999px; font-size: 0.75rem;
-  background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148, 163, 184, 0.6);
-  color: var(--text-main); cursor: pointer;
-}
-
-/* 検索パネル */
-.controls {
-  margin-top: 12px; display: flex; flex-direction: column; gap: 10px;
-  max-height: 500px; opacity: 1; overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.2s ease;
-}
-.controls.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
-
-.search-box label { font-size: 0.78rem; margin-bottom: 4px; color: var(--text-sub); }
-.search-input-wrap { position: relative; }
-.search-box input {
-  width: 100%; padding: 10px 12px 10px 34px; border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7); background: rgba(15, 23, 42, 0.8); color: var(--text-main);
-}
-.search-icon { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); opacity: 0.6; }
-
-.sort-select {
-  padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.8); color: var(--text-main); font-size: 0.85rem; outline: none; cursor: pointer;
-}
-.sort-select:focus { border-color: var(--accent); box-shadow: 0 0 8px rgba(56, 189, 248, 0.5); }
-
-/* フィルタボタン */
-.filter-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-.filter-btn {
-  padding: 5px 10px; border-radius: 999px; background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.6); color: var(--text-sub); font-size: 0.75rem; cursor: pointer;
+.controls-toggle, .filter-btn, .sort-select, .search-box input {
+  background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.5);
+  color: var(--text-main); border-radius: 999px; transition: all 0.2s;
 }
 .filter-btn.active {
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9); color: #fff;
-  border-color: rgba(56, 189, 248, 0.9); box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+  background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+  border-color: transparent; color: #fff; box-shadow: 0 0 15px var(--neon-blue);
 }
+.controls { max-height: 500px; overflow: hidden; transition: 0.3s ease; }
+.controls.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
 
-/* カードグリッド */
-.song-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 14px; }
+/* =========================================================
+   カード（ホログラム進化版）
+========================================================= */
+.song-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
 
-/* カード */
 .song-card {
-  position: relative;
-  background: radial-gradient(circle at top left, rgba(96,165,250,0.25), transparent 55%),
-              radial-gradient(circle at bottom right, rgba(236,72,153,0.25), transparent 55%),
-              rgba(15, 23, 42, 0.9);
-  padding: 16px 20px; border-radius: 22px; border: 1px solid rgba(56, 189, 248, 0.7);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 0 0 1px rgba(15,23,42,0.8), 0 16px 35px rgba(0,0,0,0.6), 0 0 25px rgba(59,130,246,0.35);
-  overflow: hidden; opacity: 0; transform: translateY(20px) scale(0.97);
-  animation: fadeUp 0.6s ease forwards;
-  animation-delay: calc(var(--i) * 0.03s);
-  
-  /* 3D設定 */
+  position: relative; padding: 16px 20px; border-radius: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  backdrop-filter: blur(5px); overflow: hidden;
   perspective: 1000px; transform-style: preserve-3d;
+  transition: transform 0.1s ease-out, box-shadow 0.2s, border-color 0.2s;
+  animation: fadeUp 0.5s ease forwards;
+  animation-delay: calc(var(--i) * 0.03s); opacity: 0;
 }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
-.song-card > * { transform: translateZ(20px); }
+.song-card > * { transform: translateZ(20px); position: relative; z-index: 2; }
 
-/* カードの光エフェクト */
-.song-card::before {
-  content: ""; position: absolute; inset: -40%;
-  background: conic-gradient(from 180deg, rgba(59,130,246,0.0), rgba(59,130,246,0.5), rgba(236,72,153,0.5), rgba(56,189,248,0.8), rgba(59,130,246,0.0));
-  opacity: 0; mix-blend-mode: screen; filter: blur(22px);
-  transform: rotate(0deg); transition: opacity 0.3s ease, transform 4s linear;
-  pointer-events: none; z-index: 0;
+/* ホバー時の強力な発光とスキャンエフェクト */
+.song-card:hover {
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.6), inset 0 0 10px rgba(96, 165, 250, 0.3);
 }
+/* スキャンライン */
 .song-card::after {
-  content: ""; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0) 100%);
-  transform: skewX(-25deg); pointer-events: none; z-index: 1; transition: left 0.5s;
+  content: ""; position: absolute; top: -50%; left: 0; width: 100%; height: 20px;
+  background: linear-gradient(to bottom, transparent, var(--neon-blue), transparent);
+  opacity: 0; z-index: 1; pointer-events: none;
+  filter: blur(4px) brightness(2);
+}
+.song-card:hover::after {
+  opacity: 1;
+  animation: scanline 1.2s ease-in-out infinite;
+}
+@keyframes scanline {
+  0% { top: -20%; opacity: 0; }
+  10% { opacity: 1; }
+  100% { top: 120%; opacity: 0; }
 }
 
-.song-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 0 0 1px rgba(56,189,248,0.6), 0 22px 45px rgba(15,23,42,0.95), 0 0 40px rgba(96,165,250,0.8); }
-.song-card:hover::before { opacity: 0.95; transform: rotate(25deg); }
-.song-card:hover::after { left: 150%; transition: left 0.7s ease-in-out; }
-
-@keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(20px) scale(0.97); }
-  60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.song-title { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.04em; text-shadow: 0 0 10px rgba(59,130,246,0.9), 0 0 18px rgba(56,189,248,0.9); }
-.song-artist { opacity: 0.9; margin-top: 3px; font-size: 0.9rem; color: #cbd5f5; }
-.song-pills { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
-.song-title, .song-artist, .song-pills, .memo-text, .card-actions { position: relative; z-index: 2; }
-
+.song-title { font-size: 1.1rem; font-weight: 900; text-shadow: 0 0 10px var(--neon-blue); }
+.song-artist { font-size: 0.9rem; color: #cbd5f5; opacity: 0.9; }
 .memo-pill {
-  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px;
-  border-radius: 999px; font-size: 0.73rem; border: 1px solid rgba(255,255,255,0.35);
-  background: rgba(15,23,42,0.9); box-shadow: 0 0 10px rgba(148,163,184,0.4), 0 0 18px rgba(15,23,42,0.9);
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+  background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 0 5px rgba(255,255,255,0.2);
 }
-.memo-ng { background: radial-gradient(circle at top left, #fecaca, #b91c1c); color: #fff; border-color: rgba(254,202,202,0.9); box-shadow: 0 0 12px rgba(248,113,113,0.9); }
-.memo-training { background: radial-gradient(circle at top left, #bfdbfe, #1d4ed8); color: #e0f2fe; border-color: rgba(191,219,254,0.9); box-shadow: 0 0 12px rgba(96,165,250,0.9); }
-.memo-key { background: radial-gradient(circle at top left, #ddd6fe, #7c3aed); color: #f5f3ff; border-color: rgba(221,214,254,0.9); box-shadow: 0 0 12px rgba(129,140,248,0.9); }
+.memo-ng { border-color: #f87171; color: #f87171; box-shadow: 0 0 5px #f87171; }
+.memo-training { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
+.memo-key { border-color: var(--neon-pink); color: var(--neon-pink); box-shadow: 0 0 5px var(--neon-pink); }
 
-.memo-text { font-size: 0.8rem; margin-top: 8px; opacity: 0.95; color: #e5e7f5; }
-.category-title { margin: 22px 0 8px; padding-left: 12px; font-size: 1.15rem; border-left: 4px solid var(--accent); text-shadow: 0 0 10px rgba(59,130,246,0.9), 0 0 22px rgba(56,189,248,0.9); }
-
-/* ルーレットボタン */
+/* その他モーダル、ボタン類は前回のスタイルを踏襲 */
 .roulette-btn {
-  background: linear-gradient(45deg, #ff6b6b, #f06595); border: none; padding: 8px 24px;
-  border-radius: 999px; color: #fff; font-weight: bold; font-size: 0.9rem; cursor: pointer;
-  box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4); transition: transform 0.2s, box-shadow 0.2s;
+  background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue)); border: none;
+  padding: 10px 30px; border-radius: 999px; color: #fff; font-weight: bold; cursor: pointer;
+  box-shadow: 0 0 20px var(--neon-pink); transition: 0.2s;
 }
-.roulette-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(240, 101, 149, 0.6); }
-.roulette-btn:active { transform: scale(0.95); }
+.roulette-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px var(--neon-pink); filter: brightness(1.2); }
 
-/* モーダル */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-  z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0;
-  pointer-events: none; transition: opacity 0.3s;
-}
-.modal-overlay.show { opacity: 1; pointer-events: auto; }
-.modal-content {
-  background: #1e293b; border: 1px solid var(--accent); padding: 40px; border-radius: 20px;
-  text-align: center; max-width: 90%; width: 400px; box-shadow: 0 0 50px rgba(96, 165, 250, 0.5);
-  transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+.modal-overlay { position: fixed; inset:0; background: rgba(0,0,0,0.8); z-index: 100; display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition:0.3s; backdrop-filter:blur(5px); }
+.modal-overlay.show { opacity:1; pointer-events:auto; }
+.modal-content { background: #1e293b; border: 2px solid var(--neon-blue); padding: 30px; border-radius: 20px; text-align:center; width:90%; max-width:400px; box-shadow: 0 0 50px var(--neon-blue); transform: scale(0.8); transition: 0.3s; }
 .modal-overlay.show .modal-content { transform: scale(1); }
-.modal-title { color: var(--text-sub); font-size: 1rem; margin-bottom: 10px; }
-.modal-result { font-size: 1.8rem; font-weight: 900; margin: 20px 0; color: #fff; text-shadow: 0 0 15px var(--accent); min-height: 3rem; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
-.modal-close { background: transparent; border: 1px solid var(--text-sub); color: var(--text-main); padding: 8px 24px; border-radius: 999px; cursor: pointer; margin-top: 10px; }
-.modal-close:hover { background: rgba(255,255,255,0.1); }
+.modal-result { font-size: 2rem; font-weight:900; margin: 20px 0; text-shadow: 0 0 20px var(--neon-blue); }
 
-/* YouTube・コピーボタン */
-.card-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
-.btn-youtube { display: inline-flex; align-items: center; gap: 4px; background: rgba(220, 38, 38, 0.2); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.5); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; transition: 0.2s; }
-.btn-youtube:hover { background: rgba(220, 38, 38, 0.8); color: #fff; }
-.btn-copy { background: transparent; border: 1px solid rgba(148, 163, 184, 0.4); color: var(--text-sub); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
-.btn-copy:hover { border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1); }
-
-/* 通知 */
-.toast-notification {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
-  background: rgba(16, 185, 129, 0.9); color: #fff; padding: 8px 20px; border-radius: 999px;
-  font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0;
-  transition: transform 0.3s, opacity 0.3s; z-index: 200; pointer-events: none;
-}
-.toast-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-/* 背景粒子 */
-.background-lights { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0; z-index: -1; pointer-events: none; }
-.background-lights li { position: absolute; display: block; list-style: none; width: 20px; height: 20px; background: rgba(255, 255, 255, 0.15); bottom: -150px; border-radius: 50%; animation: floatUp 25s linear infinite; }
-.background-lights li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
-.background-lights li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
-.background-lights li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
-.background-lights li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
-.background-lights li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
-.background-lights li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
-.background-lights li:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
-.background-lights li:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
-.background-lights li:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
-.background-lights li:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
-@keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0.5; } 100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; } }
+.toast-notification { position:fixed; bottom:30px; left:50%; transform:translate(-50%, 50px); background: var(--neon-blue); color:#fff; padding:8px 24px; border-radius:999px; box-shadow: 0 0 20px var(--neon-blue); opacity:0; transition:0.3s; z-index:200; }
+.toast-notification.show { transform:translate(-50%, 0); opacity:1; }
 
 </style>
 </head>
 <body>
 
 <div id="boot-screen"></div>
-
+<canvas id="matrix-canvas"></canvas>
 <canvas id="cursor-canvas"></canvas>
-
 <div class="visualizer-container" id="visualizer"></div>
 
-<ul class="background-lights">
-  <li></li><li></li><li></li><li></li><li></li>
-  <li></li><li></li><li></li><li></li><li></li>
-</ul>
-
 <div class="container">
+  <header>
+    <div class="header-inner">
+      <div style="text-align:center; font-size:0.7rem; color:var(--text-sub); opacity:0.8;">Last Update: <span id="lastUpdateTime">--</span></div>
+      <h1 class="glitch-effect" data-text="らいむの歌える曲リスト 🎤">らいむの歌える曲リスト 🎤</h1>
+      <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
+      
+      <div style="text-align:center; margin: 15px 0;">
+        <button id="rouletteBtn" class="roulette-btn">🎲 サイバーおまかせ選曲</button>
+      </div>
 
-<header>
-  <div class="header-inner">
-    <div style="text-align:center; font-size:0.7rem; color:var(--text-sub); margin-bottom:4px; opacity:0.8;">
-      Last Update: <span id="lastUpdateTime">--/-- --:--</span>
-    </div>
-    <h1 class="glitch-effect" data-text="らいむの歌える曲リスト 🎤">
-     らいむの歌える曲リスト 🎤  
-    </h1>
-    <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
-    <div class="note">曲名・アーティスト・メモで検索できます</div>
-    
-    <div style="text-align:center; margin: 10px 0;">
-      <button id="rouletteBtn" class="roulette-btn">🎲 おまかせ選曲！</button>
-    </div>
-
-    <div class="controls-toggle-row">
-      <button id="controlsToggle" class="controls-toggle">
-        <span id="toggleIcon">▲</span> <span id="toggleLabel">検索を閉じる</span>
-      </button>
-    </div>
-
-    <div id="controls" class="controls">
-      <div class="search-box">
-        <label for="searchInput">検索キーワード</label>
-        <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="例：Ado / 練習中 など">
-        </div>
-        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-          <label for="sortSelect" style="font-size:0.75rem; color:var(--text-sub); margin:0;">並び替え:</label>
+      <div class="controls-toggle-row">
+        <button id="controlsToggle" class="controls-toggle">▲ 検索を閉じる</button>
+      </div>
+      <div id="controls" class="controls">
+        <div style="margin: 10px 0; display:flex; gap:10px; flex-wrap:wrap;">
+          <input type="text" id="searchInput" placeholder="🔍 検索キーワード..." style="flex:1; padding:8px 16px;">
           <select id="sortSelect" class="sort-select">
-            <option value="default">デフォルト（登録順）</option>
-            <option value="artist">アーティスト順 (あいうえお)</option>
-            <option value="title">曲名順 (あいうえお)</option>
+            <option value="default">登録順</option>
+            <option value="artist">アーティスト順</option>
+            <option value="title">曲名順</option>
           </select>
         </div>
+        <div class="filter-row" id="filterRow"></div>
       </div>
-      <div class="filter-row" id="filterRow" style="margin-top: 12px;"></div>
     </div>
-  </div>
-</header>
+  </header>
 
-<main id="songSections"></main>
+  <main id="songSections"></main>
 
-<footer style="text-align:center;margin-top:40px;color:#9ca3af;font-size:0.75rem;">
-  更新日: <span id="updatedDate"></span>
-</footer>
-
+  <footer style="text-align:center; margin-top:40px; color:var(--text-sub); font-size:0.75rem;">
+    更新日: <span id="updatedDate"></span>
+  </footer>
 </div>
 
 <div id="rouletteModal" class="modal-overlay">
   <div class="modal-content">
-    <div class="modal-title">🎵 次の曲は...</div>
+    <div class="modal-title">Target Acquired:</div>
     <div id="rouletteResult" class="modal-result">???</div>
-    <button id="closeModal" class="modal-close">閉じる</button>
+    <button id="closeModal" class="filter-btn" style="margin-top:20px;">閉じる</button>
   </div>
 </div>
-
-<div id="toast" class="toast-notification">✅ コピーしました！</div>
+<div id="toast" class="toast-notification">DATA COPIED TO CLIPBOARD</div>
 
 <script>
 // =========================================================
-// 1. 定数・変数
+// JS: 基本設定＆データ管理
 // =========================================================
-const CATEGORY_LABELS = {
-  all: "すべて",
-  jpop: "J-POP / アーティスト",
-  anime: "アニソン / ゲーソン",
-  vocaloid: "ボカロ",
-  other: "その他",
-  ng: "🙅 NG（歌いたくない）",
-  training: "🔰 練習中",
-  acoustic: "🎸 弾き語り"
-};
+const CATEGORY_LABELS = { all:"ALL", jpop:"J-POP", anime:"ANIME/GAME", vocaloid:"VOCALOID", other:"OTHER", ng:"NG", training:"TRAINING", acoustic:"ACOUSTIC" };
 const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training", "acoustic"];
-let allSongs = [];
-let filteredCategory = "all";
-let keyword = "";
-let currentSort = "default";
+let allSongs=[], filteredCategory="all", keyword="", currentSort="default";
 
-const sectionsContainer = document.getElementById("songSections");
-const searchInput = document.getElementById("searchInput");
-const filterRow = document.getElementById("filterRow");
-const controls = document.getElementById("controls");
-const toggle = document.getElementById("controlsToggle");
-const toggleIcon = document.getElementById("toggleIcon");
-const toggleLabel = document.getElementById("toggleLabel");
-const sortSelect = document.getElementById("sortSelect");
-const rouletteBtn = document.getElementById("rouletteBtn");
-const modal = document.getElementById("rouletteModal");
-const modalResult = document.getElementById("rouletteResult");
-const closeModal = document.getElementById("closeModal");
+// 要素取得
+const els = {
+  sections: document.getElementById("songSections"), search: document.getElementById("searchInput"),
+  filter: document.getElementById("filterRow"), controls: document.getElementById("controls"),
+  toggle: document.getElementById("controlsToggle"), sort: document.getElementById("sortSelect"),
+  roulette: document.getElementById("rouletteBtn"), modal: document.getElementById("rouletteModal"),
+  result: document.getElementById("rouletteResult"), close: document.getElementById("closeModal"),
+  toast: document.getElementById("toast")
+};
 
-// =========================================================
-// 2. 基本機能
-// =========================================================
-if(toggle){
-  toggle.addEventListener("click", () => {
-    const collapsed = controls.classList.toggle("collapsed");
-    toggleIcon.textContent = collapsed ? "▼" : "▲";
-    toggleLabel.textContent = collapsed ? "検索を開く" : "検索を閉じる";
-  });
-}
+// イベントリスナー
+if(els.toggle) els.toggle.onclick = () => els.controls.classList.toggle("collapsed");
+if(els.search) els.search.oninput = e => { keyword=e.target.value; render(); };
+if(els.sort) els.sort.onchange = e => { currentSort=e.target.value; render(); };
+if(els.close) els.close.onclick = () => els.modal.classList.remove("show");
 
-function escape(str) {
-  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
+// データ処理系
+const escape = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+const normalize = songs => songs.map(s => (s.memo&&s.memo.includes("弾き語り")&&s.category!=="acoustic") ? {...s, category:"acoustic"} : s);
 
-function normalizeSongs(songs) {
-  return songs.map(song => {
-    if (song.category === "acoustic") return song;
-    if (song.memo && song.memo.includes("弾き語り")) return { ...song, category: "acoustic" };
-    return song;
-  });
-}
-
+// 更新日時
 (function(){
-  const d = new Date(document.lastModified);
-  const timeString = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  const h = document.getElementById("lastUpdateTime"); if(h) h.textContent = timeString;
-  const f = document.getElementById("updatedDate"); if(f) f.textContent = timeString;
+  const d=new Date(document.lastModified), t=`${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  ["lastUpdateTime","updatedDate"].forEach(id=>{ const e=document.getElementById(id); if(e)e.textContent=t; });
 })();
 
-// =========================================================
-// 3. データ読み込み
-// =========================================================
+// 読み込み＆描画
 async function loadSongs() {
   try {
-    const res = await fetch("songs.json", { cache: "no-store" });
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    allSongs = normalizeSongs(data);
-    buildFilterButtons();
-    render();
-  } catch (e) {
-    console.error(e);
-    sectionsContainer.innerHTML = `<p style='text-align:center;margin-top:20px;'>読み込み失敗: ${e.message}</p>`;
-  }
+    const res = await fetch("songs.json", { cache:"no-store" }); if(!res.ok) throw new Error(res.status);
+    allSongs = normalize(await res.json());
+    buildFilters(); render();
+  } catch(e) { els.sections.innerHTML = `<p style='text-align:center;margin-top:20px;color:red;'>SYSTEM ERROR: ${e.message}</p>`; }
 }
 
-// =========================================================
-// 4. 描画
-// =========================================================
-function buildFilterButtons() {
-  if (!filterRow) return;
-  const counts = allSongs.reduce((a,s)=>{
-    const c = s.category || "other"; a.all++; a[c] = (a[c]||0)+1; return a;
-  },{all:0});
-  filterRow.innerHTML = "";
-  ["all",...CATEGORY_ORDER].forEach(cat=>{
-    const btn = document.createElement("button");
-    btn.className = "filter-btn"+(cat===filteredCategory?" active":"");
-    btn.innerHTML = `${CATEGORY_LABELS[cat]} <span class="count">(${counts[cat]||0})</span>`;
-    btn.onclick = ()=>{
-      filteredCategory = cat;
-      document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      render();
-    };
-    filterRow.appendChild(btn);
-  });
+function buildFilters() {
+  if(!els.filter) return;
+  const counts = allSongs.reduce((a,s)=>{ a.all++; a[s.category||"other"]=(a[s.category||"other"]||0)+1; return a; },{all:0});
+  els.filter.innerHTML = ["all",...CATEGORY_ORDER].map(cat => 
+    `<button class="filter-btn ${cat===filteredCategory?'active':''}" onclick="setCat('${cat}')">${CATEGORY_LABELS[cat]} (${counts[cat]||0})</button>`
+  ).join("");
 }
+window.setCat = cat => { filteredCategory=cat; buildFilters(); render(); };
 
 function render() {
-  let list = allSongs.slice();
-  if (filteredCategory !== "all") list = list.filter(s => (s.category || "other") === filteredCategory);
-  const kw = keyword.toLowerCase();
-  if (kw) list = list.filter(s => `${s.title||""} ${s.artist||""} ${s.memo||""}`.toLowerCase().includes(kw));
+  let list = allSongs.filter(s => (filteredCategory==="all" || (s.category||"other")===filteredCategory) && `${s.title} ${s.artist} ${s.memo}`.toLowerCase().includes(keyword.toLowerCase()));
+  if(currentSort!=="default") list.sort((a,b) => (a[currentSort]||"").toString().localeCompare((b[currentSort]||"").toString(),"ja"));
   
-  if (currentSort === "artist") {
-    list.sort((a,b)=> (a.artist||"").toString().localeCompare((b.artist||"").toString(),"ja"));
-  } else if (currentSort === "title") {
-    list.sort((a,b)=> (a.title||"").toString().localeCompare((b.title||"").toString(),"ja"));
-  }
-
-  if (!list.length) { sectionsContainer.innerHTML = "<p style='text-align:center;margin-top:20px;'>該当なし</p>"; return; }
-
-  const groups = {};
-  list.forEach(s => { const c = s.category || "other"; if (!groups[c]) groups[c] = []; groups[c].push(s); });
+  if(!list.length) { els.sections.innerHTML = "<p style='text-align:center;opacity:0.6;'>NO DATA FOUND</p>"; return; }
   
-  sectionsContainer.innerHTML = CATEGORY_ORDER.filter(c=>groups[c]).map(cat=> `
-    <h2 class="category-title">${CATEGORY_LABELS[cat]}</h2>
+  const groups = list.reduce((g,s)=>{ (g[s.category||"other"]||=[]).push(s); return g; }, {});
+  els.sections.innerHTML = CATEGORY_ORDER.filter(c=>groups[c]).map(cat => `
+    <h2 style="color:var(--neon-blue); border-left:4px solid var(--neon-blue); padding-left:10px; margin:20px 0 10px;">${CATEGORY_LABELS[cat]}</h2>
     <div class="song-grid">${groups[cat].map((s,i)=>renderCard(s,i)).join("")}</div>
   `).join("");
 }
 
 function renderCard(s, i) {
-  const title = escape(s.title), artist = escape(s.artist||""), memo = s.memo||"", url = s.url||"";
-  const keyMatch = memo.match(/[-+]\d+/);
-  const pills = [];
-  if (/二度と歌いたくない/.test(memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
-  if (/練習中/.test(memo)) pills.push(`<span class="memo-pill memo-training">練習中</span>`);
-  if (keyMatch) pills.push(`<span class="memo-pill memo-key">キー ${escape(keyMatch[0])}</span>`);
+  const key = s.memo ? (s.memo.match(/[-+]\d+/) || [""])[0] : "";
+  const memoView = s.memo ? escape(s.memo.replace(key,"").trim().replace(/[\/｜|・:：、。-]+$/,"")) : "";
+  const copyText = escape(`${s.title} / ${s.artist||""}`);
   
-  let memoForView = memo;
-  if (keyMatch) memoForView = memoForView.replace(keyMatch[0], "").trim().replace(/[\/｜|・:：、。-]+$/,"").trim();
-  const memoText = memoForView ? `<div class="memo-text">${escape(memoForView)}</div>` : "";
-
-  const copyString = `${title} / ${artist}`;
-  let actions = `<div class="card-actions">
-    <button class="btn-copy" onclick="copyText('${copyString.replace(/'/g, "\\'")}')">📋 コピー</button>`;
-  if(url) actions += `<a href="${escape(url)}" target="_blank" class="btn-youtube">▶ YouTube</a>`;
-  actions += `</div>`;
+  let pills = [];
+  if(/ng/i.test(s.memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
+  if(/練習中/.test(s.memo)) pills.push(`<span class="memo-pill memo-training">TRAINING</span>`);
+  if(key) pills.push(`<span class="memo-pill memo-key">KEY ${key}</span>`);
 
   return `<div class="song-card" style="--i:${i}">
-    <div class="song-title">${title}</div><div class="song-artist">${artist}</div>
-    <div class="song-pills">${pills.join(" ")}</div>${memoText}${actions}</div>`;
+    <div class="song-title">${escape(s.title)}</div>
+    <div class="song-artist">${escape(s.artist||"")}</div>
+    <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${pills.join("")}</div>
+    ${memoView ? `<div style="margin-top:8px; font-size:0.8rem; opacity:0.8;">${memoView}</div>` : ""}
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn-copy" onclick="doCopy('${copyText}')" style="padding:4px 10px; border-radius:4px; cursor:pointer;">📋 COPY</button>
+      ${s.url ? `<a href="${escape(s.url)}" target="_blank" style="color:var(--neon-pink); text-decoration:none; padding:4px 10px; border:1px solid var(--neon-pink); border-radius:4px;">▶ YOUTUBE</a>` : ""}
+    </div>
+  </div>`;
 }
 
-function copyText(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    const t = document.getElementById("toast");
-    t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2000);
-  }).catch(alert);
-}
+window.doCopy = t => navigator.clipboard.writeText(t).then(()=>{ els.toast.classList.add("show"); setTimeout(()=>els.toast.classList.remove("show"),2000); });
 
-// =========================================================
-// 5. イベント
-// =========================================================
-if(searchInput) searchInput.addEventListener("input", e=>{ keyword=e.target.value; render(); });
-if(sortSelect) sortSelect.addEventListener("change", e=>{ currentSort=e.target.value; render(); });
+// ルーレット
+if(els.roulette) els.roulette.onclick = () => {
+  let list = allSongs.filter(s => (filteredCategory==="all" || (s.category||"other")===filteredCategory) && `${s.title} ${s.artist}`.toLowerCase().includes(keyword.toLowerCase()));
+  if(!list.length) return alert("NO DATA FOR ROULETTE");
+  els.modal.classList.add("show"); els.result.innerHTML = "SCANNING...";
+  let c=0, interval=setInterval(()=>{
+    els.result.textContent = list[Math.floor(Math.random()*list.length)].title;
+    if(++c>20) { clearInterval(interval); const w=list[Math.floor(Math.random()*list.length)]; els.result.innerHTML=`<div style="font-size:0.8em;opacity:0.7">${w.artist}</div><div>${w.title}</div>`; }
+  }, 70);
+};
 
-if (rouletteBtn) {
-  rouletteBtn.addEventListener("click", () => {
-    let list = allSongs.slice();
-    if (filteredCategory !== "all") list = list.filter(s => (s.category || "other") === filteredCategory);
-    const kw = keyword.toLowerCase();
-    if (kw) list = list.filter(s => `${s.title} ${s.artist} ${s.memo}`.toLowerCase().includes(kw));
-
-    if (!list.length) return alert("曲がありません");
-    modal.classList.add("show"); modalResult.textContent = "抽選中...";
-    let c=0;
-    const interval = setInterval(() => {
-      modalResult.textContent = list[Math.floor(Math.random()*list.length)].title;
-      c++;
-      if(c>=20){
-        clearInterval(interval);
-        const w = list[Math.floor(Math.random()*list.length)];
-        modalResult.innerHTML = `<div style="font-size:0.8em;opacity:0.8;">${w.artist}</div><div>${w.title}</div>`;
-      }
-    }, 80);
-  });
-}
-if(closeModal) closeModal.addEventListener("click", ()=> modal.classList.remove("show"));
-
-// 3D Tilt
-document.addEventListener('mousemove', (e) => {
-  const cards = document.querySelectorAll('.song-card');
-  cards.forEach(card => {
-    const rect = card.getBoundingClientRect();
-    if (rect.top > window.innerHeight || rect.bottom < 0) return;
-    const x = e.clientX - (rect.left + rect.width/2);
-    const y = e.clientY - (rect.top + rect.height/2);
-    card.style.transform = `perspective(1000px) rotateX(${y * -0.05}deg) rotateY(${x * 0.05}deg) scale(1.02)`;
+// 3D Tilt Effect
+document.addEventListener('mousemove', e => {
+  document.querySelectorAll('.song-card').forEach(c => {
+    const r = c.getBoundingClientRect(); if(r.top>innerHeight||r.bottom<0)return;
+    c.style.transform = `perspective(1000px) rotateX(${(e.clientY-(r.top+r.height/2))*-0.04}deg) rotateY(${(e.clientX-(r.left+r.width/2))*0.04}deg) scale(1.02)`;
   });
 });
-document.addEventListener('mouseleave', () => {
-  document.querySelectorAll('.song-card').forEach(c => c.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)');
-});
+document.addEventListener('mouseleave', () => document.querySelectorAll('.song-card').forEach(c=>c.style.transform='perspective(1000px) rotateX(0) rotateY(0) scale(1)'));
 
 
-/* =========================================================
-   ★激変機能の実装（起動画面・パーティクル・ビジュアライザー）
-   ========================================================= */
+// =========================================================
+// JS: 激しいエフェクト集（起動・マトリックス・軌跡・ビジュアライザー・グリッチ）
+// =========================================================
 
-// 1. システム起動演出 (Boot Screen)
-const bootScreen = document.getElementById("boot-screen");
-const bootLogs = [
-  "INITIALIZING SYSTEM...",
-  "CONNECTING TO DATABASE...",
-  "LOADING SONG_LIST.JSON...",
-  "OPTIMIZING VISUAL CORE...",
-  "ACCESS GRANTED."
-];
-
-async function runBootSequence() {
-  for (let i = 0; i < bootLogs.length; i++) {
-    const p = document.createElement("div");
-    p.className = "boot-log";
-    p.textContent = "> " + bootLogs[i];
-    bootScreen.appendChild(p);
-    // ランダムな待ち時間（それっぽくする）
-    await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
+// 1. 起動シーケンス
+const boot=document.getElementById("boot-screen"), logs=["INITIALIZING KERNEL...", "LOADING NEON_INTERFACE_V4...", "CONNECTING TO CYBER_SONG_DB...", "BYPASSING SECURITY...", "SYSTEM READY."];
+window.onload = async () => {
+  for(const log of logs) {
+    const p=document.createElement("div"); p.textContent="> "+log; boot.appendChild(p);
+    await new Promise(r=>setTimeout(r, 250+Math.random()*300));
   }
-  // 完了後フェードアウト
-  setTimeout(() => {
-    bootScreen.classList.add("fadeout");
-    // Bootが終わったら曲を読み込む
-    loadSongs();
-  }, 600);
+  boot.style.opacity=0; setTimeout(()=>{ boot.style.display="none"; loadSongs(); }, 500);
+};
+
+// 2. マトリックス背景
+const mCanvas=document.getElementById("matrix-canvas"), mCtx=mCanvas.getContext("2d");
+let mCols, mDrops;
+function initMatrix(){
+  mCanvas.width=innerWidth; mCanvas.height=innerHeight;
+  mCols=Math.floor(innerWidth/20); mDrops=Array(mCols).fill(1);
 }
-// ページ読み込み時に実行
-window.addEventListener("DOMContentLoaded", runBootSequence);
-
-
-// 2. マウスのネオン軌跡 (Cursor Trail)
-const canvas = document.getElementById("cursor-canvas");
-const ctx = canvas.getContext("2d");
-let particles = [];
-
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+function drawMatrix(){
+  mCtx.fillStyle="rgba(0,0,0,0.05)"; mCtx.fillRect(0,0,innerWidth,innerHeight);
+  mCtx.fillStyle="#0f0"; mCtx.font="15px monospace";
+  for(let i=0; i<mDrops.length; i++){
+    mCtx.fillText(String.fromCharCode(0x30A0+Math.random()*96), i*20, mDrops[i]*20);
+    if(mDrops[i]*20>innerHeight && Math.random()>0.975) mDrops[i]=0;
+    mDrops[i]++;
+  }
+  requestAnimationFrame(drawMatrix);
 }
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
+window.onresize=initMatrix; initMatrix(); drawMatrix();
 
-class Particle {
-  constructor(x, y) {
-    this.x = x; this.y = y;
-    this.size = Math.random() * 5 + 1;
-    this.speedX = Math.random() * 3 - 1.5;
-    this.speedY = Math.random() * 3 - 1.5;
-    this.color = `hsl(${Math.random() * 60 + 180}, 100%, 70%)`; // 青〜水色系
-    this.life = 1.0;
-  }
-  update() {
-    this.x += this.speedX;
-    this.y += this.speedY;
-    this.size *= 0.95;
-    this.life -= 0.02;
-  }
-  draw() {
-    ctx.fillStyle = this.color;
-    ctx.globalAlpha = this.life;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-// マウス移動時にパーティクル発生
-window.addEventListener("mousemove", (e) => {
-  for(let i=0; i<3; i++){
-    particles.push(new Particle(e.clientX, e.clientY));
-  }
-});
-
-function animateParticles() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < particles.length; i++) {
-    particles[i].update();
-    particles[i].draw();
-    if (particles[i].life <= 0 || particles[i].size <= 0.5) {
-      particles.splice(i, 1);
-      i--;
-    }
-  }
+// 3. カーソル軌跡（火花）
+const cCanvas=document.getElementById("cursor-canvas"), cCtx=cCanvas.getContext("2d");
+let particles=[];
+window.addEventListener("resize", ()=>{ cCanvas.width=innerWidth; cCanvas.height=innerHeight; });
+window.dispatchEvent(new Event("resize"));
+window.onmousemove = e => { for(let i=0;i<4;i++) particles.push({x:e.clientX, y:e.clientY, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:1, color:`hsl(${Math.random()*60+180},100%,70%)`}); };
+function animateParticles(){
+  cCtx.clearRect(0,0,innerWidth,innerHeight);
+  particles.forEach((p,i)=>{
+    p.x+=p.vx; p.y+=p.vy; p.life-=0.02;
+    cCtx.fillStyle=p.color; cCtx.globalAlpha=p.life; cCtx.beginPath(); cCtx.arc(p.x,p.y,Math.random()*3+1,0,Math.PI*2); cCtx.fill();
+    if(p.life<=0) particles.splice(i,1);
+  });
   requestAnimationFrame(animateParticles);
 }
 animateParticles();
 
+// 4. 背景ビジュアライザー
+const viz=document.getElementById("visualizer"); for(let i=0;i<40;i++){ const b=document.createElement("div"); b.className="viz-bar"; b.style.animationDuration=(0.4+Math.random()*0.6)+"s"; viz.appendChild(b); }
 
-// 3. 背景ビジュアライザー (Visualizer)
-const vizContainer = document.getElementById("visualizer");
-const barCount = 30; // バーの本数
-
-for (let i = 0; i < barCount; i++) {
-  const bar = document.createElement("div");
-  bar.className = "viz-bar";
-  // アニメーションの時間をランダムにしてバラバラに動かす
-  bar.style.animationDuration = (0.5 + Math.random() * 0.5) + "s";
-  vizContainer.appendChild(bar);
-}
+// 5. ランダム画面グリッチ
+setInterval(() => {
+  if(Math.random()>0.7) {
+    document.body.classList.add("global-glitch");
+    setTimeout(()=>document.body.classList.remove("global-glitch"), 200+Math.random()*300);
+  }
+}, 5000);
 
 </script>
 </body>
