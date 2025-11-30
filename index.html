@@ -726,29 +726,30 @@ h1.glitch-effect::after {
     
 
     <!-- 開閉ボタン -->
-    <div class="controls-toggle-row">
+ <div class="controls-toggle-row">
       <button id="controlsToggle" class="controls-toggle">
         <span id="toggleIcon">▲</span> <span id="toggleLabel">検索を閉じる</span>
       </button>
     </div>
 
-    <!-- 検索パネル -->
-    <div class="search-box">
-      <label for="searchInput">検索キーワード</label>
-      <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="例：Ado / 練習中 など">
+    <div id="controls" class="controls">
+    
+      <div class="search-box">
+        <label for="searchInput">検索キーワード</label>
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="例：Ado / 練習中 など">
+        </div>
+    
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+          <label for="sortSelect" style="font-size:0.75rem; color:var(--text-sub); margin:0;">並び替え:</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="default">デフォルト（登録順）</option>
+            <option value="artist">アーティスト順 (あいうえお)</option>
+            <option value="title">曲名順 (あいうえお)</option>
+          </select>
+        </div>
       </div>
-  
-      <div style="margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-        <label for="sortSelect" style="font-size:0.75rem; color:var(--text-sub); margin:0;">並び替え:</label>
-        <select id="sortSelect" class="sort-select">
-          <option value="default">デフォルト（登録順）</option>
-          <option value="artist">アーティスト順 (あいうえお)</option>
-          <option value="title">曲名順 (あいうえお)</option>
-        </select>
-      </div>
-    </div>
 
     <div class="filter-row" id="filterRow" style="margin-top: 12px;"></div>
     </div>
