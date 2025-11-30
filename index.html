@@ -242,11 +242,17 @@ h1 {
   opacity: 0;
   transform: translateY(20px) scale(0.97);
   animation: fadeUp 0.6s ease forwards;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 /* アニメーション個別ディレイ */
 .song-card {
   animation-delay: calc(var(--i) * 0.03s);
+}
+/* カードの中身が浮き出るようにする */
+.song-card > * {
+  transform: translateZ(20px); /* 文字などを少し手前に浮かせる */
 }
 /* カードの内側でうっすら光が動く */
 .song-card::before {
@@ -623,9 +629,6 @@ h1 {
   }
 }
 h1 {
-  /* ...もともとの設定はそのままで... */
-  
-  /* ▼▼▼ これを追加 ▼▼▼ */
   animation: neonPulse 3s infinite alternate;
 }
 
@@ -642,6 +645,76 @@ h1 {
       0 0 40px rgba(96, 165, 250, 0.8); /* 強く光る */
   }
 }
+
+/* グリッチのアニメーション定義 */
+@keyframes glitch-anim {
+  0% { clip-path: inset(20% 0 50% 0); transform: translate(-2px, 3px); }
+  10% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -3px); }
+  20% { clip-path: inset(40% 0 30% 0); transform: translate(-2px, 1px); }
+  30% { clip-path: inset(80% 0 5% 0); transform: translate(2px, 2px); }
+  40% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, -2px); }
+  50% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 1px); }
+  100% { clip-path: inset(50% 0 30% 0); transform: translate(0, 0); }
+}
+
+/* タイトルに適用するクラス */
+h1.glitch-effect {
+  position: relative;
+  color: white; /* ベースの色 */
+}
+
+/* 色ズレの影（赤と青）を作る */
+h1.glitch-effect::before,
+h1.glitch-effect::after {
+  content: attr(data-text); /* 元のテキストをコピー */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent; /* 背景は透明 */
+}
+
+/* 赤い影 */
+h1.glitch-effect::before {
+  left: 2px;
+  text-shadow: -1px 0 rgba(255,0,0,0.7);
+  clip-path: inset(0 0 0 0);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+/* 青い影 */
+h1.glitch-effect::after {
+  left: -2px;
+  text-shadow: 1px 0 rgba(0,0,255,0.7);
+  clip-path: inset(0 0 0 0);
+  animation: glitch-anim 2.5s infinite linear alternate;
+}
+
+/* 画面全体に走査線をかぶせる */
+body::after {
+  /* 既存のbody::after（ネオンオーバーレイ）の設定を上書きします */
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: 
+    /* 細い横線の繰り返しパターン */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.2) 3px, /* 線の色と太さ */
+      rgba(0, 0, 0, 0.2) 4px
+    ),
+    /* 元々のネオングラデーションも維持 */
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.4), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.3), transparent 55%);
+  
+  mix-blend-mode: overlay; /* 重ね合わせモードを変更 */
+  z-index: 9999; /* 最前面に */
+  pointer-events: none; /* クリックを邪魔しない */
+  opacity: 0.7; /* 線の濃さ */
+}
 </style>
 
 </head>
@@ -657,7 +730,9 @@ h1 {
     <div style="text-align:center; font-size:0.7rem; color:var(--text-sub); margin-bottom:4px; opacity:0.8;">
       Last Update: <span id="lastUpdateTime">--/-- --:--</span>
     </div>
-    <h1>らいむの歌える曲リスト 🎤</h1>
+    <h1 class="glitch-effect" data-text="らいむの歌える曲リスト 🎤">
+     らいむの歌える曲リスト 🎤  
+    </h1>
     <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
     <div class="note">曲名・アーティスト・メモで検索できます</div>
     <div style="text-align:center; margin: 10px 0;">
@@ -1103,7 +1178,38 @@ if (closeModal) {
     modal.classList.remove("show");
   });
 }
+/* --- カードの3D傾きエフェクト --- */
+document.addEventListener('mousemove', (e) => {
+  // パフォーマンスのため、画面内にあるカードだけに処理を絞る
+  const cards = document.querySelectorAll('.song-card');
+  
+  cards.forEach(card => {
+    const rect = card.getBoundingClientRect();
+    const cardX = rect.left + rect.width / 2; // カードの中心X
+    const cardY = rect.top + rect.height / 2;  // カードの中心Y
+    
+    // マウスとカード中心の距離
+    const mouseX = e.clientX - cardX;
+    const mouseY = e.clientY - cardY;
+    
+    // 傾きの計算（数字をいじると傾き具合が変わります）
+    const rotateY = mouseX * 0.05; // 左右の傾き
+    const rotateX = mouseY * -0.05; // 上下の傾き
+    
+    // カードが画面外にあるときは計算しない（負荷軽減）
+    if (rect.top > window.innerHeight || rect.bottom < 0) return;
 
+    // スタイルを適用
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+  });
+});
+
+// マウスが画面外に出たらリセット
+document.addEventListener('mouseleave', () => {
+  document.querySelectorAll('.song-card').forEach(card => {
+    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+  });
+});
 
 
 /* =========================================================
