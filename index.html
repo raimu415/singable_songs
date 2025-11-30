@@ -842,7 +842,41 @@ rouletteBtn.addEventListener("click", () => {
 closeModal.addEventListener("click", () => {
   modal.classList.remove("show");
 });
+// ▼▼▼ このカタマリが消えていませんか？なければ貼り付けてください ▼▼▼
 
+async function loadSongs() {
+  try {
+    console.log("読み込み開始: songs.json を探しています...");
+    
+    // 1. ファイルを取りに行く
+    const res = await fetch("songs.json", { cache: "no-store" });
+    
+    // 2. ファイルが見つかったか確認
+    if (!res.ok) {
+      throw new Error(`ファイルが見つかりません (Status: ${res.status})`);
+    }
+
+    // 3. JSONとして解読する
+    const data = await res.json();
+    console.log("読み込み成功！データ数:", data.length);
+
+    allSongs = normalizeSongs(data);
+
+    buildFilterButtons();
+    render();
+
+  } catch (e) {
+    console.error("【重大エラー発生】:", e); 
+    sectionsContainer.innerHTML = `
+      <div style='text-align:center; margin-top:20px;'>
+        <p>曲データ読み込みに失敗しました😢</p>
+        <p style='color:#f87171; font-size:0.8rem;'>${e.message}</p>
+      </div>
+    `;
+  }
+}
+
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 loadSongs();
 
