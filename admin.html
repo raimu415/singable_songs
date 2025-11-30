@@ -1,3 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>らいむ管理画面 - 歌える曲リスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    .container {
+      max-width: 1200px; /* 横幅を少し広げました */
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1 { font-size: 1.5rem; margin: 0 0 8px; color: #60a5fa; }
+    .note { font-size: 0.8rem; color: #9ca3af; margin-bottom: 12px; }
+
+    .card {
+      background: #0b1120;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    label { font-size: 0.75rem; display: block; margin: 0 0 4px; color: #94a3b8; }
+
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #f1f5f9;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: #60a5fa; background: #0f172a;
+    }
+
+    textarea { min-height: 60px; resize: vertical; }
+
+    button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      background: #334155;
+      color: #e5e7eb;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #475569; }
+
+    button.primary {
+      background: linear-gradient(135deg,#3b82f6,#06b6d4);
+      color: white;
+    }
+    button.primary:hover { opacity: 0.9; }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .row > div { flex: 1; min-width: 140px; }
+
+    .status { font-size: 0.85rem; margin-top: 8px; font-weight: bold; min-height: 1.2em;}
+    .status.ok { color: #4ade80; }
+    .status.err { color: #f87171; }
+
+    /* テーブルまわり */
+    .table-wrap {
+      margin-top: 10px;
+      overflow-x: auto; /* 横スクロール */
+      border: 1px solid #334155;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      min-width: 800px; /* スマホでも崩れないように最小幅を設定 */
+    }
+    th, td {
+      border-bottom: 1px solid #1e293b;
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background: #0f172a;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      color: #94a3b8;
+      font-weight: 600;
+      text-align: left;
+    }
+    /* 偶数行の色を変える */
+    tbody tr:nth-child(even) { background: rgba(30, 41, 59, 0.3); }
+    tbody tr:hover { background: rgba(59, 130, 246, 0.1); }
+
+    .small-input {
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 4px;
+      font-size: 0.85rem;
+    }
+    .small-input:focus {
+      background: #0f172a;
+      border-color: #60a5fa;
+    }
+    
+    .checkbox-center { text-align: center; vertical-align: middle; }
+    input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>らいむ管理画面 🎧</h1>
+  
+  <div class="card">
+    <h2 style="font-size:1rem;margin:0 0 10px; border-bottom:1px solid #334155; padding-bottom:5px;">1. GitHub設定</h2>
+    <div class="row">
+      <div>
+        <label>ユーザー名</label>
+        <input type="text" id="ghUser" value="raimu415" />
+      </div>
+      <div>
+        <label>リポジトリ名</label>
+        <input type="text" id="ghRepo" value="singable_songs" />
+      </div>
+      <div>
+        <label>ブランチ</label>
+        <input type="text" id="ghBranch" value="main" />
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label>Personal Access Token (PAT)</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
+      <div style="margin-top:6px;">
+        <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="checkbox" id="saveTokenCheck"> トークンをブラウザに保存する（次回から入力不要）
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:1rem;margin:0 0 10px; border-bottom:1px solid #334155; padding-bottom:5px;">2. 新しい曲を追加</h2>
+    <div class="row">
+      <div style="flex: 2;">
+        <label>曲名 <span style="color:#f87171">*</span></label>
+        <input type="text" id="newTitle" placeholder="曲名を入力" />
+      </div>
+      <div style="flex: 2;">
+        <label>アーティスト</label>
+        <input type="text" id="newArtist" placeholder="歌手名" />
+      </div>
+      <div style="flex: 1;">
+        <label>カテゴリ</label>
+        <select id="newCategory">
+          <option value="jpop">J-POP</option>
+          <option value="anime">アニソン/ゲーソン</option>
+          <option value="vocaloid">ボカロ</option>
+          <option value="other">その他</option>
+          <option value="ng">NG</option>
+          <option value="training">練習中</option>
+          <option value="acoustic">弾き語り</option>
+        </select>
+      </div>
+    </div>
+    
+    <div style="margin-top:10px;">
+      <label>YouTube URL (任意)</label>
+      <input type="text" id="newUrl" placeholder="https://www.youtube.com/watch?v=..." />
+    </div>
+
+    <div style="margin-top:10px;">
+      <label>メモ (キー情報、練習中、NGなど)</label>
+      <textarea id="newMemo" placeholder="例：キー+2、練習中、二度と歌いたくない"></textarea>
+    </div>
+
+    <div class="flex-between" style="margin-top:12px;">
+      <div id="addStatus" class="status"></div>
+      <button class="primary" id="btnAdd">リストに追加</button>
+    </div>
+  </div>
+
+
+  <div class="card">
+    <div class="flex-between">
+      <h2 style="font-size:1rem;margin:0;">3. 編集・保存</h2>
+      <button id="btnReload">再読み込み</button>
+    </div>
+
+    <div style="margin-top:10px;">
+      <input type="text" id="tableSearch" placeholder="🔍 リスト内を検索..." style="padding:10px;" />
+    </div>
+
+    <div id="listStatus" class="status"></div>
+
+    <div class="table-wrap">
+      <table id="songsTable">
+        <thead>
+          <tr>
+            <th style="width:20%">曲名</th>
+            <th style="width:15%">アーティスト</th>
+            <th style="width:10%">カテゴリ</th>
+            <th style="width:20%">URL (YouTube)</th>
+            <th style="width:25%">メモ</th>
+            <th style="width:5%;text-align:center;">削除</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="flex-between" style="margin-top:16px; padding-top:10px; border-top:1px solid #334155;">
+      <div id="saveStatus" class="status"></div>
+      <button class="primary" id="btnSaveAll" style="padding:10px 24px; font-size:1rem;">変更をGitHubに保存</button>
+    </div>
+  </div>
+</div>
+
+
 <script>
   // 要素取得
   const els = {
@@ -296,3 +531,6 @@
   els.btnAdd.onclick = addSongToList;
 
 </script>
+
+</body>
+</html>
