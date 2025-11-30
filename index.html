@@ -384,8 +384,6 @@ h1 {
     0 0 22px rgba(56,189,248,0.9);
 }
 
-/* --- <style> の一番下に追加 --- */
-
 /* ルーレットボタン */
 .roulette-btn {
   background: linear-gradient(45deg, #ff6b6b, #f06595);
@@ -470,6 +468,74 @@ h1 {
 }
 .modal-close:hover {
   background: rgba(255,255,255,0.1);
+}
+
+/* --- <style> の一番下に追加 --- */
+
+/* YouTubeボタンなどのアクションエリア */
+.card-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* YouTubeリンクボタン */
+.btn-youtube {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.btn-youtube:hover {
+  background: rgba(220, 38, 38, 0.8);
+  color: #fff;
+}
+
+/* コピーボタン */
+.btn-copy {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: var(--text-sub);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+/* コピー完了時のトースト通知（画面下にふわっと出るやつ） */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(16, 185, 129, 0.9); /* 緑色 */
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+  z-index: 200;
+  pointer-events: none;
+}
+.toast-notification.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }
 </style>
 
@@ -780,36 +846,50 @@ function renderCategorySection(cat, list) {
 }
 
 // カード1枚のHTMLを作る
+
 function renderCard(s, i) {
   const title = escape(s.title);
   const artist = escape(s.artist || "");
   const memo = s.memo || "";
+  const url = s.url || ""; // ★JSONにURLがあれば取得
 
-  // メモからキー情報（+3, -2など）を抜き出す
+  // メモからキー情報を抜き出す
   const keyMatch = memo.match(/[-+]\d+/);
 
-  // ピル（バッジ）を作る
   const pills = [];
-  if (/二度と歌いたくない/.test(memo)) {
-    pills.push(`<span class="memo-pill memo-ng">NG</span>`);
-  }
-  if (/練習中/.test(memo)) {
-    pills.push(`<span class="memo-pill memo-training">練習中</span>`);
-  }
-  if (keyMatch) {
-    pills.push(`<span class="memo-pill memo-key">キー ${escape(keyMatch[0])}</span>`);
-  }
+  if (/二度と歌いたくない/.test(memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
+  if (/練習中/.test(memo)) pills.push(`<span class="memo-pill memo-training">練習中</span>`);
+  if (keyMatch) pills.push(`<span class="memo-pill memo-key">キー ${escape(keyMatch[0])}</span>`);
 
-  // 表示用にメモからキー情報を消す
   let memoForView = memo;
   if (keyMatch) {
-    memoForView = memoForView.replace(keyMatch[0], "").trim();
-    memoForView = memoForView.replace(/[\/｜|・:：、。-]+$/,"").trim();
+    memoForView = memoForView.replace(keyMatch[0], "").trim().replace(/[\/｜|・:：、。-]+$/,"").trim();
   }
 
-  const memoText = memoForView
-    ? `<div class="memo-text">${escape(memoForView)}</div>`
-    : "";
+  const memoText = memoForView ? `<div class="memo-text">${escape(memoForView)}</div>` : "";
+
+  // ★ここから新機能：YouTubeボタンとコピーボタンの作成
+  let actionsHtml = `<div class="card-actions">`;
+
+  // コピーボタン（曲名 / アーティスト を引数に渡す）
+  const copyString = `${title} / ${artist}`; 
+  // ※注意: onclickの中で文字列を使うため、シングルクォートをエスケープする処理を入れています
+  actionsHtml += `
+    <button class="btn-copy" onclick="copyText('${copyString.replace(/'/g, "\\'")}')" title="曲名をコピー">
+      📋 コピー
+    </button>
+  `;
+
+  // URLがあればYouTubeボタンを表示
+  if (url) {
+    actionsHtml += `
+      <a href="${escape(url)}" target="_blank" rel="noopener noreferrer" class="btn-youtube">
+        ▶ YouTube
+      </a>
+    `;
+  }
+  actionsHtml += `</div>`;
+  // ★新機能ここまで
 
   return `
     <div class="song-card" style="--i:${i}">
@@ -817,8 +897,23 @@ function renderCard(s, i) {
       <div class="song-artist">${artist}</div>
       <div class="song-pills">${pills.join(" ")}</div>
       ${memoText}
-    </div>
+      ${actionsHtml} </div>
   `;
+}
+
+// クリップボードにコピーして通知を出す関数
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById("toast");
+    toast.classList.add("show");
+    // 2秒後に消す
+    setTimeout(() => {
+      toast.classList.remove("show");
+    }, 2000);
+  }).catch(err => {
+    console.error("コピー失敗:", err);
+    alert("コピーできませんでした");
+  });
 }
 
 
@@ -908,5 +1003,6 @@ if (closeModal) {
 loadSongs(); // 起動！
 
 </script>
+<div id="toast" class="toast-notification">✅ コピーしました！</div>
 </body>
 </html>
