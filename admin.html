@@ -10,10 +10,11 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #020617;
       color: #e5e7eb;
+      padding-top: 60px; /* 上部に固定ボタン用の余白を作る */
     }
 
     .container {
-      max-width: 1200px; /* 横幅を少し広げました */
+      max-width: 1200px;
       margin: 0 auto;
       padding: 16px;
     }
@@ -28,6 +29,27 @@
       border: 1px solid rgba(148, 163, 184, 0.2);
       margin-bottom: 16px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* === ★常に右上に固定する保存パネル === */
+    .floating-save-panel {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.85); /* 半透明 */
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid #3b82f6;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s;
+    }
+    .floating-save-panel:hover {
+      transform: translateY(2px);
     }
 
     label { font-size: 0.75rem; display: block; margin: 0 0 4px; color: #94a3b8; }
@@ -61,23 +83,33 @@
     }
     button:hover { background: #475569; }
 
+    /* 保存ボタン（目立つように） */
+    button.save-btn {
+      background: linear-gradient(135deg,#2563eb,#06b6d4);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 999px;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+      font-size: 0.95rem;
+    }
+    button.save-btn:hover { opacity: 0.9; box-shadow: 0 0 15px rgba(37, 99, 235, 0.8); }
+
     button.primary {
       background: linear-gradient(135deg,#3b82f6,#06b6d4);
       color: white;
     }
-    button.primary:hover { opacity: 0.9; }
 
     .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
     .row > div { flex: 1; min-width: 140px; }
 
-    .status { font-size: 0.85rem; margin-top: 8px; font-weight: bold; min-height: 1.2em;}
+    .status { font-size: 0.85rem; font-weight: bold; }
     .status.ok { color: #4ade80; }
     .status.err { color: #f87171; }
 
     /* テーブルまわり */
     .table-wrap {
       margin-top: 10px;
-      overflow-x: auto; /* 横スクロール */
+      overflow-x: auto;
       border: 1px solid #334155;
       border-radius: 8px;
     }
@@ -85,7 +117,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.85rem;
-      min-width: 800px; /* スマホでも崩れないように最小幅を設定 */
+      min-width: 800px;
     }
     th, td {
       border-bottom: 1px solid #1e293b;
@@ -101,7 +133,6 @@
       font-weight: 600;
       text-align: left;
     }
-    /* 偶数行の色を変える */
     tbody tr:nth-child(even) { background: rgba(30, 41, 59, 0.3); }
     tbody tr:hover { background: rgba(59, 130, 246, 0.1); }
 
@@ -121,9 +152,21 @@
 
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
 
+    /* スマホ対応 */
+    @media screen and (max-width: 768px) {
+      .floating-save-panel {
+        top: auto; bottom: 20px; right: 20px; /* スマホなら右下の方が押しやすいかも？一旦右上維持ならここはいらない */
+      }
+    }
+
   </style>
 </head>
 <body>
+
+<div class="floating-save-panel">
+  <div id="saveStatus" class="status"></div>
+  <button class="save-btn" id="btnSaveAll">💾 変更をGitHubに保存</button>
+</div>
 
 <div class="container">
   <h1>らいむ管理画面 🎧</h1>
@@ -199,7 +242,7 @@
 
   <div class="card">
     <div class="flex-between">
-      <h2 style="font-size:1rem;margin:0;">3. 編集・保存</h2>
+      <h2 style="font-size:1rem;margin:0;">3. 編集リスト</h2>
       <button id="btnReload">再読み込み</button>
     </div>
 
@@ -224,18 +267,13 @@
         <tbody></tbody>
       </table>
     </div>
-
-    <div class="flex-between" style="margin-top:16px; padding-top:10px; border-top:1px solid #334155;">
-      <div id="saveStatus" class="status"></div>
-      <button class="primary" id="btnSaveAll" style="padding:10px 24px; font-size:1rem;">変更をGitHubに保存</button>
-    </div>
   </div>
 </div>
 
 
 <script>
   // ==========================================
-  //  徹底デバッグモード (Diagnosis Version)
+  //  管理画面ロジック
   // ==========================================
 
   // 要素取得
@@ -256,39 +294,33 @@
     tableSearch: document.getElementById("tableSearch"),
     tableBody: document.querySelector("#songsTable tbody"),
     btnReload: document.getElementById("btnReload"),
-    btnSaveAll: document.getElementById("btnSaveAll"),
+    btnSaveAll: document.getElementById("btnSaveAll"), // 右上ボタン
     
     listStatus: document.getElementById("listStatus"),
     addStatus: document.getElementById("addStatus"),
-    saveStatus: document.getElementById("saveStatus"),
+    saveStatus: document.getElementById("saveStatus"), // 右上のステータス
   };
 
   let songsData = [];
   let currentSha = null;
   let tableSearchKeyword = "";
 
-  // ログ出力ヘルパー
+  // ログ出力
   function log(msg, isError = false) {
     console.log(msg);
     if (els.listStatus) {
       els.listStatus.textContent = msg;
       els.listStatus.className = isError ? "status err" : "status";
-      els.listStatus.style.color = isError ? "red" : "#4ade80";
     }
-    if (isError) alert("【エラー検出】\n" + msg);
   }
 
   // 初期化
   window.addEventListener("DOMContentLoaded", () => {
-    console.log("画面読み込み完了");
     const savedToken = localStorage.getItem("ghToken_admin");
     if (savedToken) {
       els.ghToken.value = savedToken;
       els.saveTokenCheck.checked = true;
-      log("保存されたトークンを読み込みました。自動接続を試みます...");
       setTimeout(fetchSongsJson, 500);
-    } else {
-      log("トークンが保存されていません。入力してください。");
     }
   });
 
@@ -304,67 +336,31 @@
   function b64encodeUnicode(str) { return btoa(unescape(encodeURIComponent(str))); }
   function b64decodeUnicode(str) { return decodeURIComponent(escape(atob(str))); }
 
-  // ■ 曲リスト取得（デバッグ版）
+  // ■ 曲リスト取得
   async function fetchSongsJson() {
-    console.log("--- 読み込み開始 ---");
     const { user, repo, branch, token } = getConfig();
-    
-    // 1. 設定チェック
-    if (!user || !repo || !branch) {
-      log("エラー: ユーザー名、リポジトリ名、ブランチのいずれかが空です", true);
-      return;
-    }
-    if (!token) {
-      log("エラー: トークン(ghp_...)が入力されていません", true);
-      return;
-    }
-    if (!token.startsWith("ghp_") && !token.startsWith("github_pat_")) {
-      // 最近のトークンは ghp_ じゃない場合もあるので警告のみ
-      console.warn("警告: トークンの形式が一般的ではありません");
-    }
+    if (!token) return log("トークンを入力してください", true);
 
-    log(`GitHubへ接続中... (${user}/${repo})`);
+    log(`読み込み中...`);
     els.tableBody.innerHTML = "";
 
     try {
       const url = `https://api.github.com/repos/${user}/${repo}/contents/songs.json?ref=${branch}&_t=${Date.now()}`;
-      console.log("Accessing URL:", url);
-
-      // 2. Fetch実行
       const res = await fetch(url, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Accept": "application/vnd.github+json"
-        }
+        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json" }
       });
 
-      console.log("Response Status:", res.status);
+      if (!res.ok) throw new Error(`読込エラー: ${res.status}`);
 
-      // 3. エラーハンドリング
-      if (!res.ok) {
-        if (res.status === 404) throw new Error("404 Not Found: リポジトリ名かファイル名(songs.json)が間違っています。");
-        if (res.status === 401) throw new Error("401 Unauthorized: トークンが無効です。有効期限が切れているか、間違っています。");
-        if (res.status === 403) throw new Error("403 Forbidden: アクセス権限がありません（トークンの権限不足）。");
-        throw new Error(`HTTPエラー: ${res.status}`);
-      }
-
-      // 4. データ解析
       const data = await res.json();
-      if (!data.content) throw new Error("データは取得できましたが、contentフィールドが空です。");
-      
       currentSha = data.sha;
       const rawContent = b64decodeUnicode(data.content);
-      console.log("Raw JSON Content:", rawContent.substring(0, 100) + "..."); // 最初の100文字だけログ
-
+      
       try {
         songsData = JSON.parse(rawContent);
-      } catch (jsonErr) {
-        throw new Error("JSONの解析に失敗しました。songs.jsonの記述ミスかもしれません。\n" + jsonErr.message);
-      }
+      } catch (e) { throw new Error("JSON形式エラー"); }
 
-      if (!Array.isArray(songsData)) {
-        throw new Error("JSONは有効ですが、配列(リスト)形式ではありません。");
-      }
+      if (!Array.isArray(songsData)) songsData = [];
 
       // データ補完
       songsData = songsData.map(s => ({ 
@@ -376,21 +372,17 @@
       }));
 
       renderSongsTable();
-      log(`✅ 成功！ ${songsData.length} 件のデータを読み込みました。`);
+      log(`完了：${songsData.length} 件`);
+      els.listStatus.className = "status ok";
 
     } catch (err) {
-      console.error(err);
-      log(err.message, true); // 画面にアラートを出す
+      log(err.message, true);
     }
   }
 
   // ■ テーブル描画
   function renderSongsTable() {
     els.tableBody.innerHTML = "";
-    if(!songsData.length) {
-      log("データは読み込めましたが、中身が0件です。");
-      return;
-    }
 
     const filtered = songsData.map((song, index) => ({ song, index })).filter(({ song }) => {
       const text = `${song.title} ${song.artist} ${song.category} ${song.memo}`.toLowerCase();
@@ -450,10 +442,11 @@
     if (els.saveTokenCheck.checked) localStorage.setItem("ghToken_admin", token);
     else localStorage.removeItem("ghToken_admin");
 
-    if (!token) return log("トークン未入力のため保存できません", true);
+    if (!token) return alert("トークンがありません");
 
     els.saveStatus.textContent = "保存中...";
     els.saveStatus.className = "status";
+    els.saveStatus.style.color = "#fff";
 
     const newSongs = [];
     const rows = Array.from(els.tableBody.querySelectorAll("tr"));
@@ -476,18 +469,20 @@
         })
       });
 
-      if (!res.ok) throw new Error("保存失敗: " + res.status);
+      if (!res.ok) throw new Error(`保存失敗: ${res.status}`);
       const result = await res.json();
       currentSha = result.content.sha;
       songsData = newSongs;
       renderSongsTable();
-      els.saveStatus.textContent = "✅ 保存成功！";
+      
+      els.saveStatus.textContent = "保存しました！";
       els.saveStatus.className = "status ok";
-      alert("保存しました！");
+      setTimeout(() => els.saveStatus.textContent = "", 3000); // 3秒後に消す
+
     } catch (err) {
-      els.saveStatus.textContent = err.message;
+      els.saveStatus.textContent = "エラー！";
       els.saveStatus.className = "status err";
-      alert("保存エラー: " + err.message);
+      alert(err.message);
     }
   }
 
@@ -501,7 +496,9 @@
     });
     els.newTitle.value = ""; els.newArtist.value = ""; els.newUrl.value = ""; els.newMemo.value = ""; els.newTitle.focus();
     renderSongsTable();
-    els.addStatus.textContent = "リストに追加しました(未保存)";
+    
+    // スクロール
+    els.addStatus.textContent = "リストに追加(未保存)";
     setTimeout(() => {
         const tableWrap = document.querySelector(".table-wrap");
         if(tableWrap) tableWrap.scrollTop = tableWrap.scrollHeight;
