@@ -2,8 +2,37 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>らいむの歌える曲リスト - SYSTEM ONLINE</title>
+  <title>らいむの歌える曲リスト - LIVE SYSTEM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    // ここにさっきコピーした「firebaseConfig」を貼り付けてください！
+    // （元の記述を消して上書きしてください）
+    const firebaseConfig = {
+      apiKey: "AIzaSyD...", 
+      authDomain: "...",
+      databaseURL: "https://...",
+      projectId: "...",
+      storageBucket: "...",
+      messagingSenderId: "...",
+      appId: "..."
+    };
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+    // Firebase初期化
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // グローバル変数として使えるようにwindowに登録
+    window.db = db;
+    window.dbRef = ref;
+    window.dbOnValue = onValue;
+    window.dbRunTransaction = runTransaction;
+  </script>
 
 <style>
 /* =========================================================
@@ -15,6 +44,7 @@
   --accent: #60a5fa;
   --neon-pink: #ec4899;
   --neon-blue: #60a5fa;
+  --like-color: #f43f5e;
 }
 
 * { box-sizing: border-box; }
@@ -23,7 +53,7 @@ body {
   margin: 0;
   font-family: "Segoe UI", "Roboto", system-ui, sans-serif;
   color: var(--text-main);
-  background: #000; /* 背景はCanvasで描画するので黒 */
+  background: #000;
   overflow-x: hidden;
 }
 
@@ -33,16 +63,8 @@ body {
   position: relative; z-index: 10;
 }
 
-/* =========================================================
-   背景・エフェクトレイヤー
-========================================================= */
-/* マトリックス背景 */
-#matrix-canvas {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  z-index: -10; opacity: 0.4; /* 文字が読めるように薄く */
-}
-
-/* 背景ビジュアライザー */
+/* 背景・エフェクト */
+#matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -10; opacity: 0.4; }
 .visualizer-container {
   position: fixed; bottom: 0; left: 0; width: 100%; height: 50vh;
   display: flex; align-items: flex-end; justify-content: space-around;
@@ -60,11 +82,7 @@ body {
   100% { height: 80%; opacity: 1; filter: brightness(1.5); }
 }
 
-/* カーソル軌跡 */
-#cursor-canvas {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  pointer-events: none; z-index: 9990; mix-blend-mode: screen;
-}
+#cursor-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9990; mix-blend-mode: screen; }
 
 /* 起動画面 */
 #boot-screen {
@@ -77,9 +95,7 @@ body {
 .boot-log { animation: swiftUp 0.2s ease-out forwards; }
 @keyframes swiftUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
-/* =========================================================
-   UIコンポーネント
-========================================================= */
+/* UIコンポーネント */
 header { position: sticky; top: 0; padding: 8px 0 10px; z-index: 30; }
 .header-inner {
   padding: 16px; background: rgba(15, 23, 42, 0.9);
@@ -92,11 +108,9 @@ h1 {
   letter-spacing: 0.15em; color: #fff;
   text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue), 0 0 20px var(--neon-pink);
 }
-/* タイトルグリッチ(ここは残します：タイトルだけカッコよく揺れる) */
 h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alternate; }
 @keyframes textGlitch {
   0%, 100% { transform: translate(0); opacity: 1; }
-  92% { transform: translate(0); opacity: 1; }
   94% { transform: translate(-3px, 2px) skew(10deg); opacity: 0.8; text-shadow: -2px 0 red, 2px 0 blue; }
   96% { transform: translate(3px, -2px) skew(-10deg); opacity: 0.8; text-shadow: 2px 0 red, -2px 0 blue; }
   98% { transform: translate(0); opacity: 1; }
@@ -117,9 +131,7 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .controls { max-height: 500px; overflow: hidden; transition: 0.3s ease; }
 .controls.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
 
-/* =========================================================
-   カード（ホログラム進化版）
-========================================================= */
+/* カード */
 .song-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
 
 .song-card {
@@ -137,30 +149,22 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 
 .song-card > * { transform: translateZ(20px); position: relative; z-index: 2; }
 
-/* ホバー時の強力な発光とスキャンエフェクト */
+/* ホバー時のスキャンエフェクト */
 .song-card:hover {
   border-color: var(--neon-blue);
   box-shadow: 0 0 20px rgba(96, 165, 250, 0.6), inset 0 0 10px rgba(96, 165, 250, 0.3);
 }
-/* スキャンライン */
 .song-card::after {
   content: ""; position: absolute; top: -50%; left: 0; width: 100%; height: 20px;
   background: linear-gradient(to bottom, transparent, var(--neon-blue), transparent);
-  opacity: 0; z-index: 1; pointer-events: none;
-  filter: blur(4px) brightness(2);
+  opacity: 0; z-index: 1; pointer-events: none; filter: blur(4px) brightness(2);
 }
-.song-card:hover::after {
-  opacity: 1;
-  animation: scanline 1.2s ease-in-out infinite;
-}
-@keyframes scanline {
-  0% { top: -20%; opacity: 0; }
-  10% { opacity: 1; }
-  100% { top: 120%; opacity: 0; }
-}
+.song-card:hover::after { opacity: 1; animation: scanline 1.2s ease-in-out infinite; }
+@keyframes scanline { 0% { top: -20%; opacity: 0; } 10% { opacity: 1; } 100% { top: 120%; opacity: 0; } }
 
 .song-title { font-size: 1.1rem; font-weight: 900; text-shadow: 0 0 10px var(--neon-blue); }
 .song-artist { font-size: 0.9rem; color: #cbd5f5; opacity: 0.9; }
+
 .memo-pill {
   font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
   background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3);
@@ -170,7 +174,32 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .memo-training { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
 .memo-key { border-color: var(--neon-pink); color: var(--neon-pink); box-shadow: 0 0 5px var(--neon-pink); }
 
-/* その他モーダル、ボタン類 */
+/* アクションボタン（いいねボタン追加） */
+.card-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.btn-like {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(244, 63, 94, 0.15); color: #fda4af;
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  padding: 5px 12px; border-radius: 999px; font-size: 0.8rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-like:hover {
+  background: rgba(244, 63, 94, 0.8); color: #fff;
+  box-shadow: 0 0 15px var(--like-color); transform: scale(1.05);
+}
+.btn-like:active { transform: scale(0.95); }
+.like-count { font-weight: bold; font-family: monospace; }
+/* 押したときのアニメーション */
+.btn-like.liked { animation: popHeart 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes popHeart { 0%{ transform:scale(1); } 50%{ transform:scale(1.4); } 100%{ transform:scale(1); } }
+
+.btn-youtube { display: inline-flex; align-items: center; gap: 4px; background: rgba(220, 38, 38, 0.2); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.5); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; transition: 0.2s; }
+.btn-youtube:hover { background: rgba(220, 38, 38, 0.8); color: #fff; }
+.btn-copy { background: transparent; border: 1px solid rgba(148, 163, 184, 0.4); color: var(--text-sub); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
+.btn-copy:hover { border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1); }
+
+/* 通知など */
 .roulette-btn {
   background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue)); border: none;
   padding: 10px 30px; border-radius: 999px; color: #fff; font-weight: bold; cursor: pointer;
@@ -187,94 +216,26 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .toast-notification { position:fixed; bottom:30px; left:50%; transform:translate(-50%, 50px); background: var(--neon-blue); color:#fff; padding:8px 24px; border-radius:999px; box-shadow: 0 0 20px var(--neon-blue); opacity:0; transition:0.3s; z-index:200; }
 .toast-notification.show { transform:translate(-50%, 0); opacity:1; }
 
-/* =========================================================
-   📱 スマホ専用レスポンシブ設定 (PCには影響しません)
-   ========================================================= */
+/* スマホ対応 */
 @media screen and (max-width: 768px) {
-
-  /* --- 1. ヘッダーと検索エリアの省スペース化 --- */
-  .container {
-    padding: 10px 10px 80px; /* 余白を減らす */
-  }
-  
-  .header-inner {
-    padding: 12px; /* ヘッダーの内側を狭く */
-  }
-
-  h1 {
-    font-size: 1.3rem; /* タイトルを小さく */
-    letter-spacing: 0.05em;
-  }
-  
-  /* スマホではキャッチコピーなどを隠して場所を空ける */
-  .tagline, .note {
-    display: none; 
-  }
-
-  /* 検索ボックス周りをギュッと詰める */
+  .container { padding: 10px 10px 80px; }
+  .header-inner { padding: 12px; }
+  h1 { font-size: 1.3rem; letter-spacing: 0.05em; }
+  .tagline, .note { display: none; }
   .controls-toggle-row { margin-top: 4px; }
   .controls { gap: 6px; }
-  
-  .search-box input,
-  .sort-select {
-    padding: 8px 12px;
-    font-size: 0.8rem; /* 文字サイズ調整 */
-  }
-
-  /* フィルタボタンを小さく */
-  .filter-btn {
-    padding: 4px 8px;
-    font-size: 0.65rem;
-  }
-
-  /* --- 2. 曲リストを「2列表示」にする --- */
-  .song-grid {
-    /* 1列にならず、強制的に2列にする設定 */
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 8px; /* カード間の隙間を狭く */
-  }
-
-  /* --- 3. カードをスマホ用に小さくする --- */
-  .song-card {
-    padding: 10px; /* カードの内側の余白を減らす */
-    border-radius: 12px;
-  }
-  
-  /* 3D回転はスマホだと操作しにくい＆重いのでOFFにする */
-  .song-card {
-    transform: none !important; 
-    perspective: none;
-  }
-  /* 文字サイズを調整 */
+  .search-box input, .sort-select { padding: 8px 12px; font-size: 0.8rem; }
+  .filter-btn { padding: 4px 8px; font-size: 0.65rem; }
+  .song-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .song-card { padding: 10px; border-radius: 12px; transform: none !important; perspective: none; }
   .song-title { font-size: 0.85rem; }
   .song-artist { font-size: 0.7rem; }
-  
-  /* メモやボタン類も小さく */
   .memo-text { font-size: 0.65rem; line-height: 1.2; }
   .memo-pill { font-size: 0.6rem; padding: 1px 6px; }
-  
-  .btn-copy, .btn-youtube {
-    font-size: 0.6rem;
-    padding: 3px 6px;
-  }
-  
-  /* ボタンがはみ出さないように折り返す */
-  .card-actions {
-    flex-wrap: wrap;
-  }
-
-  /* --- 4. その他調整 --- */
-  /* ルーレットボタンを少し小さく */
-  .roulette-btn {
-    padding: 6px 16px;
-    font-size: 0.8rem;
-  }
-  
-  /* 起動演出の文字を小さく（はみ出し防止） */
-  #boot-screen {
-    padding: 20px;
-    font-size: 0.8rem;
-  }
+  .btn-copy, .btn-youtube, .btn-like { font-size: 0.6rem; padding: 3px 6px; }
+  .card-actions { flex-wrap: wrap; }
+  .roulette-btn { padding: 6px 16px; font-size: 0.8rem; }
+  #boot-screen { padding: 20px; font-size: 0.8rem; }
 }
 
 </style>
@@ -307,6 +268,7 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
             <option value="default">登録順</option>
             <option value="artist">アーティスト順</option>
             <option value="title">曲名順</option>
+            <option value="likes">いいね順 ❤️</option>
           </select>
         </div>
         <div class="filter-row" id="filterRow"></div>
@@ -337,6 +299,8 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 const CATEGORY_LABELS = { all:"ALL", jpop:"J-POP", anime:"ANIME/GAME", vocaloid:"VOCALOID", other:"OTHER", ng:"NG", training:"TRAINING", acoustic:"ACOUSTIC" };
 const CATEGORY_ORDER = ["jpop", "anime", "vocaloid", "other", "ng", "training", "acoustic"];
 let allSongs=[], filteredCategory="all", keyword="", currentSort="default";
+// いいねデータを格納するオブジェクト
+let likesData = {};
 
 // 要素取得
 const els = {
@@ -354,22 +318,51 @@ if(els.search) els.search.oninput = e => { keyword=e.target.value; render(); };
 if(els.sort) els.sort.onchange = e => { currentSort=e.target.value; render(); };
 if(els.close) els.close.onclick = () => els.modal.classList.remove("show");
 
-// データ処理系
 const escape = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
 const normalize = songs => songs.map(s => (s.memo&&s.memo.includes("弾き語り")&&s.category!=="acoustic") ? {...s, category:"acoustic"} : s);
 
-// 更新日時
 (function(){
   const d=new Date(document.lastModified), t=`${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
   ["lastUpdateTime","updatedDate"].forEach(id=>{ const e=document.getElementById(id); if(e)e.textContent=t; });
 })();
+
+// ★Firebase: いいねデータの同期開始
+function startLikesSync() {
+  if (!window.db) return; // Firebaseが無効なら何もしない
+  const likesRef = window.dbRef(window.db, 'likes');
+  
+  // データが変更されるたびに実行
+  window.dbOnValue(likesRef, (snapshot) => {
+    likesData = snapshot.val() || {};
+    // すでに描画されているカードの数字だけ更新する（画面全体の再描画はしない）
+    updateAllLikeCounts();
+    // もし「いいね順」でソート中なら、順番が変わる可能性があるので再描画
+    if (currentSort === 'likes') {
+      render();
+    }
+  });
+}
+
+function updateAllLikeCounts() {
+  const btns = document.querySelectorAll('.btn-like');
+  btns.forEach(btn => {
+    const title = btn.dataset.title;
+    // タイトルの「.」などはFirebaseのキーに使えないので置換されている前提で取得
+    const safeTitle = title.replace(/[.#$/[\]]/g, "_");
+    const count = likesData[safeTitle] || 0;
+    btn.querySelector('.count').textContent = count;
+  });
+}
 
 // 読み込み＆描画
 async function loadSongs() {
   try {
     const res = await fetch("songs.json", { cache:"no-store" }); if(!res.ok) throw new Error(res.status);
     allSongs = normalize(await res.json());
-    buildFilters(); render();
+    buildFilters();
+    render();
+    // 曲データ読み込み完了後にいいね同期開始
+    startLikesSync();
   } catch(e) { els.sections.innerHTML = `<p style='text-align:center;margin-top:20px;color:red;'>SYSTEM ERROR: ${e.message}</p>`; }
 }
 
@@ -384,21 +377,42 @@ window.setCat = cat => { filteredCategory=cat; buildFilters(); render(); };
 
 function render() {
   let list = allSongs.filter(s => (filteredCategory==="all" || (s.category||"other")===filteredCategory) && `${s.title} ${s.artist} ${s.memo}`.toLowerCase().includes(keyword.toLowerCase()));
-  if(currentSort!=="default") list.sort((a,b) => (a[currentSort]||"").toString().localeCompare((b[currentSort]||"").toString(),"ja"));
+  
+  // ソート処理
+  if(currentSort === "likes") {
+    // いいね数順
+    list.sort((a,b) => {
+      const countA = likesData[a.title.replace(/[.#$/[\]]/g, "_")] || 0;
+      const countB = likesData[b.title.replace(/[.#$/[\]]/g, "_")] || 0;
+      return countB - countA; // 多い順
+    });
+  } else if(currentSort!=="default") {
+    list.sort((a,b) => (a[currentSort]||"").toString().localeCompare((b[currentSort]||"").toString(),"ja"));
+  }
   
   if(!list.length) { els.sections.innerHTML = "<p style='text-align:center;opacity:0.6;'>NO DATA FOUND</p>"; return; }
   
   const groups = list.reduce((g,s)=>{ (g[s.category||"other"]||=[]).push(s); return g; }, {});
-  els.sections.innerHTML = CATEGORY_ORDER.filter(c=>groups[c]).map(cat => `
-    <h2 style="color:var(--neon-blue); border-left:4px solid var(--neon-blue); padding-left:10px; margin:20px 0 10px;">${CATEGORY_LABELS[cat]}</h2>
-    <div class="song-grid">${groups[cat].map((s,i)=>renderCard(s,i)).join("")}</div>
-  `).join("");
+  // 「いいね順」のときはカテゴリ分けせずにズラッと出す
+  if (currentSort === "likes") {
+     els.sections.innerHTML = `<h2 style="color:var(--neon-pink); text-align:center; margin-bottom:20px;">❤️ いいねランキング</h2>
+     <div class="song-grid">${list.map((s,i)=>renderCard(s,i)).join("")}</div>`;
+  } else {
+    els.sections.innerHTML = CATEGORY_ORDER.filter(c=>groups[c]).map(cat => `
+      <h2 style="color:var(--neon-blue); border-left:4px solid var(--neon-blue); padding-left:10px; margin:20px 0 10px;">${CATEGORY_LABELS[cat]}</h2>
+      <div class="song-grid">${groups[cat].map((s,i)=>renderCard(s,i)).join("")}</div>
+    `).join("");
+  }
+  // 描画後にカウントを反映
+  updateAllLikeCounts();
 }
 
 function renderCard(s, i) {
   const key = s.memo ? (s.memo.match(/[-+]\d+/) || [""])[0] : "";
   const memoView = s.memo ? escape(s.memo.replace(key,"").trim().replace(/[\/｜|・:：、。-]+$/,"")) : "";
   const copyText = escape(`${s.title} / ${s.artist||""}`);
+  // Firebaseのキーに使えない文字を置換
+  const safeTitle = s.title.replace(/[.#$/[\]]/g, "_");
   
   let pills = [];
   if(/ng/i.test(s.memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
@@ -410,12 +424,30 @@ function renderCard(s, i) {
     <div class="song-artist">${escape(s.artist||"")}</div>
     <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${pills.join("")}</div>
     ${memoView ? `<div style="margin-top:8px; font-size:0.8rem; opacity:0.8;">${memoView}</div>` : ""}
-    <div style="margin-top:12px; display:flex; gap:8px;">
-      <button class="btn-copy" onclick="doCopy('${copyText}')" style="padding:4px 10px; border-radius:4px; cursor:pointer;">📋 COPY</button>
-      ${s.url ? `<a href="${escape(s.url)}" target="_blank" style="color:var(--neon-pink); text-decoration:none; padding:4px 10px; border:1px solid var(--neon-pink); border-radius:4px;">▶ YOUTUBE</a>` : ""}
+    <div class="card-actions">
+      <button class="btn-like" data-title="${escape(s.title)}" onclick="addLike('${escape(safeTitle)}', this)">
+        ❤️ <span class="count">0</span>
+      </button>
+      <button class="btn-copy" onclick="doCopy('${copyText}')">📋 COPY</button>
+      ${s.url ? `<a href="${escape(s.url)}" target="_blank" class="btn-youtube">▶ YOUTUBE</a>` : ""}
     </div>
   </div>`;
 }
+
+// ★いいねを追加する関数
+window.addLike = (safeTitle, btn) => {
+  if (!window.db) { alert("Firebaseが設定されていません"); return; }
+  
+  // アニメーション用クラス付与
+  btn.classList.add('liked');
+  setTimeout(()=>btn.classList.remove('liked'), 300);
+
+  // トランザクションで安全にカウントアップ
+  const likeRef = window.dbRef(window.db, 'likes/' + safeTitle);
+  window.dbRunTransaction(likeRef, (currentLikes) => {
+    return (currentLikes || 0) + 1;
+  });
+};
 
 window.doCopy = t => navigator.clipboard.writeText(t).then(()=>{ els.toast.classList.add("show"); setTimeout(()=>els.toast.classList.remove("show"),2000); });
 
@@ -431,20 +463,18 @@ if(els.roulette) els.roulette.onclick = () => {
 };
 
 // 3D Tilt Effect
-document.addEventListener('mousemove', e => {
-  document.querySelectorAll('.song-card').forEach(c => {
-    const r = c.getBoundingClientRect(); if(r.top>innerHeight||r.bottom<0)return;
-    c.style.transform = `perspective(1000px) rotateX(${(e.clientY-(r.top+r.height/2))*-0.04}deg) rotateY(${(e.clientX-(r.left+r.width/2))*0.04}deg) scale(1.02)`;
+if(window.innerWidth > 768) { // スマホ以外のみ
+  document.addEventListener('mousemove', e => {
+    document.querySelectorAll('.song-card').forEach(c => {
+      const r = c.getBoundingClientRect(); if(r.top>innerHeight||r.bottom<0)return;
+      c.style.transform = `perspective(1000px) rotateX(${(e.clientY-(r.top+r.height/2))*-0.04}deg) rotateY(${(e.clientX-(r.left+r.width/2))*0.04}deg) scale(1.02)`;
+    });
   });
-});
-document.addEventListener('mouseleave', () => document.querySelectorAll('.song-card').forEach(c=>c.style.transform='perspective(1000px) rotateX(0) rotateY(0) scale(1)'));
+  document.addEventListener('mouseleave', () => document.querySelectorAll('.song-card').forEach(c=>c.style.transform='perspective(1000px) rotateX(0) rotateY(0) scale(1)'));
+}
 
 
-// =========================================================
-// JS: エフェクト集（グリッチ削除済み）
-// =========================================================
-
-// 1. 起動シーケンス
+// エフェクト集
 const boot=document.getElementById("boot-screen"), logs=["INITIALIZING KERNEL...", "LOADING NEON_INTERFACE_V4...", "CONNECTING TO CYBER_SONG_DB...", "BYPASSING SECURITY...", "SYSTEM READY."];
 window.onload = async () => {
   for(const log of logs) {
@@ -454,26 +484,16 @@ window.onload = async () => {
   boot.style.opacity=0; setTimeout(()=>{ boot.style.display="none"; loadSongs(); }, 500);
 };
 
-// 2. マトリックス背景
 const mCanvas=document.getElementById("matrix-canvas"), mCtx=mCanvas.getContext("2d");
 let mCols, mDrops;
-function initMatrix(){
-  mCanvas.width=innerWidth; mCanvas.height=innerHeight;
-  mCols=Math.floor(innerWidth/20); mDrops=Array(mCols).fill(1);
-}
+function initMatrix(){ mCanvas.width=innerWidth; mCanvas.height=innerHeight; mCols=Math.floor(innerWidth/20); mDrops=Array(mCols).fill(1); }
 function drawMatrix(){
-  mCtx.fillStyle="rgba(0,0,0,0.05)"; mCtx.fillRect(0,0,innerWidth,innerHeight);
-  mCtx.fillStyle="#0f0"; mCtx.font="15px monospace";
-  for(let i=0; i<mDrops.length; i++){
-    mCtx.fillText(String.fromCharCode(0x30A0+Math.random()*96), i*20, mDrops[i]*20);
-    if(mDrops[i]*20>innerHeight && Math.random()>0.975) mDrops[i]=0;
-    mDrops[i]++;
-  }
+  mCtx.fillStyle="rgba(0,0,0,0.05)"; mCtx.fillRect(0,0,innerWidth,innerHeight); mCtx.fillStyle="#0f0"; mCtx.font="15px monospace";
+  for(let i=0; i<mDrops.length; i++){ mCtx.fillText(String.fromCharCode(0x30A0+Math.random()*96), i*20, mDrops[i]*20); if(mDrops[i]*20>innerHeight && Math.random()>0.975) mDrops[i]=0; mDrops[i]++; }
   requestAnimationFrame(drawMatrix);
 }
 window.onresize=initMatrix; initMatrix(); drawMatrix();
 
-// 3. カーソル軌跡（火花）
 const cCanvas=document.getElementById("cursor-canvas"), cCtx=cCanvas.getContext("2d");
 let particles=[];
 window.addEventListener("resize", ()=>{ cCanvas.width=innerWidth; cCanvas.height=innerHeight; });
@@ -482,15 +502,13 @@ window.onmousemove = e => { for(let i=0;i<4;i++) particles.push({x:e.clientX, y:
 function animateParticles(){
   cCtx.clearRect(0,0,innerWidth,innerHeight);
   particles.forEach((p,i)=>{
-    p.x+=p.vx; p.y+=p.vy; p.life-=0.02;
-    cCtx.fillStyle=p.color; cCtx.globalAlpha=p.life; cCtx.beginPath(); cCtx.arc(p.x,p.y,Math.random()*3+1,0,Math.PI*2); cCtx.fill();
+    p.x+=p.vx; p.y+=p.vy; p.life-=0.02; cCtx.fillStyle=p.color; cCtx.globalAlpha=p.life; cCtx.beginPath(); cCtx.arc(p.x,p.y,Math.random()*3+1,0,Math.PI*2); cCtx.fill();
     if(p.life<=0) particles.splice(i,1);
   });
   requestAnimationFrame(animateParticles);
 }
 animateParticles();
 
-// 4. 背景ビジュアライザー
 const viz=document.getElementById("visualizer"); for(let i=0;i<40;i++){ const b=document.createElement("div"); b.className="viz-bar"; b.style.animationDuration=(0.4+Math.random()*0.6)+"s"; viz.appendChild(b); }
 
 </script>
