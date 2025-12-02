@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>らいむの歌える曲リスト - GALAXY SYSTEM</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -39,8 +39,8 @@
   --text-main: #e5e7eb; --text-sub: #9ca3af;
   --accent: #60a5fa; --neon-pink: #ec4899; --neon-blue: #60a5fa; --like-color: #f43f5e;
 }
-* { box-sizing: border-box; }
-body { margin: 0; font-family: "Segoe UI", sans-serif; color: var(--text-main); background: #000; overflow-x: hidden; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: "Segoe UI", sans-serif; color: var(--text-main); background: #000; overflow-x: hidden; user-select: none; }
 
 /* 宇宙空間コンテナ */
 #galaxy-container {
@@ -56,11 +56,12 @@ body { margin: 0; font-family: "Segoe UI", sans-serif; color: var(--text-main); 
 }
 .galaxy-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
 
-/* 星ツールチップ */
+/* 星ツールチップ（PC用） */
 #star-tooltip {
   position: absolute; top: 0; left: 0; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--neon-pink);
   padding: 10px 15px; border-radius: 8px; color: #fff; pointer-events: none; opacity: 0; transition: opacity 0.2s;
   transform: translate(15px, 15px); box-shadow: 0 0 15px var(--neon-pink); z-index: 100001;
+  white-space: nowrap;
 }
 #star-tooltip .tt-title { font-weight: bold; font-size: 1rem; }
 #star-tooltip .tt-artist { font-size: 0.8rem; color: #ccc; }
@@ -146,6 +147,7 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
 @keyframes alertFlash { 0% { opacity: 0; } 50% { opacity: 0.3; } 100% { opacity: 0; } }
 @keyframes warningPulse { from { transform: translate(-50%, -50%) scale(1); opacity: 0.1; } to { transform: translate(-50%, -50%) scale(1.2); opacity: 0.4; } }
 
+/* ★スマホ最適化 */
 @media screen and (max-width: 768px) {
   .container { padding: 10px 10px 80px; }
   .header-inner { padding: 12px; }
@@ -155,6 +157,7 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
   .controls { gap: 6px; }
   .search-box input, .sort-select { padding: 8px 12px; font-size: 0.8rem; }
   .filter-btn { padding: 4px 8px; font-size: 0.65rem; }
+  
   .song-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .song-card { padding: 10px; border-radius: 12px; transform: none !important; perspective: none; }
   .song-title { font-size: 0.85rem; }
@@ -165,6 +168,15 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
   .card-actions { flex-wrap: wrap; }
   .roulette-btn { padding: 6px 16px; font-size: 0.8rem; }
   #boot-screen { padding: 20px; font-size: 0.8rem; }
+
+  /* Galaxyモードのスマホ調整 */
+  #galaxy-ui { top: auto; bottom: 20px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; }
+  #star-tooltip {
+    /* ツールチップを上部に固定 */
+    top: 60px !important; left: 50% !important; transform: translateX(-50%) !important;
+    width: 80%; text-align: center; font-size: 1.2rem;
+    pointer-events: none;
+  }
 }
 </style>
 </head>
@@ -414,20 +426,29 @@ if(els.roulette) els.roulette.addEventListener("click", () => {
 // =========================================================
 const GalaxySys = {
   active: false, scene: null, camera: null, renderer: null, controls: null, stars: [], raycaster: null, mouse: null, container: document.getElementById('galaxy-container'), tooltip: document.getElementById('star-tooltip'), animationId: null,
+  
   init: function() {
     this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x000000, 0.002);
     this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000); this.camera.position.z = 1; this.camera.rotation.x = Math.PI/2;
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(window.devicePixelRatio); this.renderer.setSize(window.innerWidth, window.innerHeight); this.container.appendChild(this.renderer.domElement);
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement); this.controls.enableDamping = true; this.controls.dampingFactor = 0.05; this.controls.autoRotate = true; this.controls.autoRotateSpeed = 0.5;
     this.raycaster = new THREE.Raycaster(); this.mouse = new THREE.Vector2();
-    window.addEventListener('resize', () => this.onResize()); this.container.addEventListener('mousemove', (e) => this.onMouseMove(e)); this.container.addEventListener('click', () => this.onClick());
+    window.addEventListener('resize', () => this.onResize());
+    
+    // ★タッチイベント対応（スマホ）
+    this.container.addEventListener('mousemove', (e) => this.onMouseMove(e));
+    this.container.addEventListener('click', (e) => this.onClick(e));
+    this.container.addEventListener('touchstart', (e) => this.onTouchStart(e), {passive: false});
   },
+
   createStars: function() {
-    // データ読み込み前なら待機
     if(!allSongs.length) return;
-    // リセット
     this.stars.forEach(s=>this.scene.remove(s)); this.stars=[];
     
+    const isMobile = window.innerWidth < 768; // スマホ判定
+    const starScale = isMobile ? 12 : 8; // スマホなら星をデカく
+    const bgCount = isMobile ? 300 : 1000; // スマホなら背景星を減らす
+
     const getStarMaterial = (color) => {
       const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d');
       const grad = ctx.createRadialGradient(16,16,0, 16,16,16); grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.2, color); grad.addColorStop(0.5, 'rgba(0,0,0,1)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -438,40 +459,83 @@ const GalaxySys = {
       const sprite = new THREE.Sprite((i % 2 === 0) ? matBlue : matPink);
       const r = 200 + Math.random() * 300; const theta = Math.random() * Math.PI * 2; const phi = Math.acos((Math.random() * 2) - 1);
       sprite.position.set(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
-      sprite.scale.set(8, 8, 1); sprite.userData = { song: song };
+      sprite.scale.set(starScale, starScale, 1); sprite.userData = { song: song };
       this.scene.add(sprite); this.stars.push(sprite);
     });
-    // 背景星
     const geo = new THREE.BufferGeometry(); const vert = [];
-    for (let i = 0; i < 1000; i++) vert.push((Math.random()-0.5)*2000, (Math.random()-0.5)*2000, (Math.random()-0.5)*2000);
+    for (let i = 0; i < bgCount; i++) vert.push((Math.random()-0.5)*2000, (Math.random()-0.5)*2000, (Math.random()-0.5)*2000);
     geo.setAttribute('position', new THREE.Float32BufferAttribute(vert, 3)); this.scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x888888, size: 2 })));
   },
+
   animate: function() {
     if (!this.active) return;
     this.animationId = requestAnimationFrame(() => this.animate()); this.controls.update();
-    this.raycaster.setFromCamera(this.mouse, this.camera); const intersects = this.raycaster.intersectObjects(this.stars);
-    if (intersects.length > 0) {
-      const target = intersects[0].object; const song = target.userData.song;
-      this.tooltip.style.opacity = 1; this.tooltip.querySelector('.tt-title').textContent = song.title; this.tooltip.querySelector('.tt-artist').textContent = song.artist;
-      document.body.style.cursor = 'pointer'; target.scale.set(15, 15, 1);
-    } else { this.tooltip.style.opacity = 0; document.body.style.cursor = 'default'; this.stars.forEach(s => s.scale.set(8, 8, 1)); }
+    
+    // PCのみホバーでツールチップ表示（スマホはクリック時のみ）
+    if(window.innerWidth > 768) {
+      this.raycaster.setFromCamera(this.mouse, this.camera); const intersects = this.raycaster.intersectObjects(this.stars);
+      if (intersects.length > 0) {
+        const target = intersects[0].object; const song = target.userData.song;
+        this.tooltip.style.opacity = 1; this.tooltip.querySelector('.tt-title').textContent = song.title; this.tooltip.querySelector('.tt-artist').textContent = song.artist;
+        document.body.style.cursor = 'pointer'; target.scale.set(15, 15, 1);
+      } else { this.tooltip.style.opacity = 0; document.body.style.cursor = 'default'; this.stars.forEach(s => s.scale.set(8, 8, 1)); }
+    }
     this.renderer.render(this.scene, this.camera);
   },
+
   onResize: function() { if (!this.camera) return; this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); },
   onMouseMove: function(event) { this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1; this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1; this.tooltip.style.left = (event.clientX + 15) + 'px'; this.tooltip.style.top = (event.clientY + 15) + 'px'; },
-  onClick: function() {
-    this.raycaster.setFromCamera(this.mouse, this.camera); const intersects = this.raycaster.intersectObjects(this.stars);
+  
+  // ★タップ/クリック時の処理
+  onClick: function(event) {
+    // タップ位置を正規化
+    let cx = event.clientX; let cy = event.clientY;
+    if(event.changedTouches && event.changedTouches.length > 0) {
+       cx = event.changedTouches[0].clientX; cy = event.changedTouches[0].clientY;
+    }
+    this.mouse.x = (cx / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(cy / window.innerHeight) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera); 
+    const intersects = this.raycaster.intersectObjects(this.stars);
+    
     if (intersects.length > 0) {
       const song = intersects[0].object.userData.song;
-      AudioSys.play("like");
-      const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult");
-      modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
+      
+      // スマホの場合：1回目はツールチップ表示、2回目(またはツールチップ表示中)は詳細へ
+      if(window.innerWidth <= 768) {
+         // ツールチップを表示
+         this.tooltip.style.opacity = 1;
+         this.tooltip.querySelector('.tt-title').textContent = song.title;
+         this.tooltip.querySelector('.tt-artist').textContent = song.artist;
+         // すぐ開く
+         setTimeout(() => {
+            AudioSys.play("like");
+            const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult");
+            modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
+         }, 300);
+      } else {
+         // PC
+         AudioSys.play("like");
+         const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult");
+         modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
+      }
     }
   },
+  
+  onTouchStart: function(e) {
+     // タッチでも座標更新（クリック判定用）
+     if(e.touches.length > 0) {
+        this.mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+     }
+     // OrbitControlsと競合しないようにClickイベントへ任せる
+  },
+
   open: function() {
     this.active = true; this.container.classList.add('active');
     if (!this.scene) this.init();
-    this.createStars(); // 開くたびに最新の曲リストで再生成
+    this.createStars(); 
     this.animate(); AudioSys.play("active");
   },
   close: function() { this.active = false; this.container.classList.remove('active'); cancelAnimationFrame(this.animationId); }
@@ -479,7 +543,7 @@ const GalaxySys = {
 document.getElementById('enterGalaxyBtn').addEventListener('click', () => GalaxySys.open());
 document.getElementById('exitGalaxyBtn').addEventListener('click', () => GalaxySys.close());
 
-// Effects & Hidden Features
+// Effects
 const secretCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']; let inputSequence = [];
 document.addEventListener('keydown', (e) => {
   inputSequence.push(e.key); if (inputSequence.length > secretCode.length) inputSequence.shift();
