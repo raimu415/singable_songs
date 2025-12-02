@@ -12,7 +12,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-  // ▼▼▼ あなた専用の鍵です（これをコピペしてください） ▼▼▼
     const firebaseConfig = {
       apiKey: "AIzaSyD8ZxrKxhL3HXmX6yXiFEAd91kzb5YX_lw",
       authDomain: "raimu-song-list-79b52.firebaseapp.com",
@@ -22,7 +21,6 @@
       messagingSenderId: "242038202194",
       appId: "1:242038202194:web:81cd18eb19e8c91084648b"
     };
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -116,6 +114,17 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .btn-like:hover { background: rgba(244, 63, 94, 0.8); color: #fff; box-shadow: 0 0 15px var(--like-color); transform: scale(1.05); }
 .btn-like:active { transform: scale(0.95); }
 .btn-like.liked { animation: popHeart 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+/* ★すでにいいね済みの場合のスタイル */
+.btn-like.liked-done {
+  background: var(--like-color);
+  color: #fff;
+  border-color: var(--like-color);
+  box-shadow: 0 0 10px var(--like-color);
+  cursor: default;
+  opacity: 0.8;
+  pointer-events: none; /* 押せなくする */
+}
+
 @keyframes popHeart { 0%{ transform:scale(1); } 50%{ transform:scale(1.4); } 100%{ transform:scale(1); } }
 .btn-youtube { display: inline-flex; align-items: center; gap: 4px; background: rgba(220, 38, 38, 0.2); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.5); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; transition: 0.2s; }
 .btn-youtube:hover { background: rgba(220, 38, 38, 0.8); color: #fff; }
@@ -171,7 +180,6 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
   /* Galaxyモードのスマホ調整 */
   #galaxy-ui { top: auto; bottom: 20px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; }
   #star-tooltip {
-    /* ツールチップを上部に固定 */
     top: 60px !important; left: 50% !important; transform: translateX(-50%) !important;
     width: 80%; text-align: center; font-size: 1.2rem;
     pointer-events: none;
@@ -381,6 +389,12 @@ function renderCard(s, i) {
   const copyText = escape(`${s.title} / ${s.artist||""}`);
   const safeTitle = s.title.replace(/[.#$/[\]]/g, "_");
   
+  // 以前いいねしたかチェック
+  const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
+  const isLiked = likedSongs[safeTitle];
+  const likeClass = isLiked ? 'btn-like liked-done' : 'btn-like';
+  const disabledAttr = isLiked ? 'disabled' : '';
+
   let pills = [];
   if(/ng/i.test(s.memo)) pills.push(`<span class="memo-pill memo-ng">NG</span>`);
   if(/練習中/.test(s.memo)) pills.push(`<span class="memo-pill memo-training">TRAINING</span>`);
@@ -392,7 +406,7 @@ function renderCard(s, i) {
     <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${pills.join("")}</div>
     ${memoView ? `<div style="margin-top:8px; font-size:0.8rem; opacity:0.8;">${memoView}</div>` : ""}
     <div class="card-actions">
-      <button class="btn-like" data-title="${escape(s.title)}" onclick="addLike('${escape(safeTitle)}', this)">❤️ <span class="count">0</span></button>
+      <button class="${likeClass}" ${disabledAttr} data-title="${escape(s.title)}" onclick="addLike('${escape(safeTitle)}', this)">❤️ <span class="count">0</span></button>
       <button class="btn-copy" onclick="doCopy('${copyText}')">📋 COPY</button>
       ${s.url ? `<a href="${escape(s.url)}" target="_blank" class="btn-youtube">▶ YOUTUBE</a>` : ""}
     </div>
@@ -401,8 +415,22 @@ function renderCard(s, i) {
 
 window.addLike = (safeTitle, btn) => {
   if (!window.db) { alert("Firebase未設定"); return; }
+  
+  // いいね済みチェック（二重防止）
+  const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
+  if (likedSongs[safeTitle]) { return; }
+
   AudioSys.play("like");
-  btn.classList.add('liked'); setTimeout(()=>btn.classList.remove('liked'), 300);
+  
+  // UI即時反映
+  btn.classList.add('liked-done');
+  btn.disabled = true;
+  
+  // ローカル保存
+  likedSongs[safeTitle] = true;
+  localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
+
+  // Firebase送信
   const likeRef = window.dbRef(window.db, 'likes/' + safeTitle);
   window.dbRunTransaction(likeRef, (currentLikes) => (currentLikes || 0) + 1);
 };
