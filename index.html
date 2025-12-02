@@ -321,7 +321,7 @@ const els = {
 // イベントリスナー
 if(els.toggle) els.toggle.onclick = () => els.controls.classList.toggle("collapsed");
 if(els.search) els.search.oninput = e => { keyword=e.target.value; render(); };
-if(els.sort) els.sort.onchange = e => { currentSort=e.target.value; render(); };
+if(els.sort) els.sort.onchange = e => { currentSort = e.target.value; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 if(els.close) els.close.onclick = () => els.modal.classList.remove("show");
 
 const escape = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
@@ -379,7 +379,13 @@ function buildFilters() {
     `<button class="filter-btn ${cat===filteredCategory?'active':''}" onclick="setCat('${cat}')">${CATEGORY_LABELS[cat]} (${counts[cat]||0})</button>`
   ).join("");
 }
-window.setCat = cat => { filteredCategory=cat; buildFilters(); render(); };
+// ▼▼▼ 最後に「window.scrollTo...」を追加しました ▼▼▼
+window.setCat = cat => { 
+  filteredCategory = cat; 
+  buildFilters(); 
+  render(); 
+  window.scrollTo({ top: 0, behavior: 'smooth' }); // 上に戻る！
+};
 
 function render() {
   let list = allSongs.filter(s => (filteredCategory==="all" || (s.category||"other")===filteredCategory) && `${s.title} ${s.artist} ${s.memo}`.toLowerCase().includes(keyword.toLowerCase()));
