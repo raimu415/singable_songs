@@ -195,6 +195,16 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .btn-copy { background: transparent; border: 1px solid rgba(148, 163, 184, 0.4); color: var(--text-sub); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
 .btn-copy:hover { border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1); }
 
+/* ミュートボタン */
+.mute-btn {
+  position: fixed; top: 15px; right: 15px; z-index: 10000;
+  background: rgba(15, 23, 42, 0.8); border: 1px solid var(--text-sub);
+  color: var(--text-sub); padding: 6px 12px; border-radius: 4px;
+  font-size: 0.75rem; cursor: pointer; transition: 0.2s;
+  font-family: monospace;
+}
+.mute-btn:hover { border-color: var(--accent); color: var(--accent); }
+.mute-btn.active { color: var(--neon-blue); border-color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
 /* 通知など */
 .roulette-btn {
   background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue)); border: none;
@@ -237,7 +247,7 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 </style>
 </head>
 <body>
-
+<button id="muteBtn" class="mute-btn">🔇 MUTE</button>
 <div id="boot-screen"></div>
 <canvas id="matrix-canvas"></canvas>
 <canvas id="cursor-canvas"></canvas>
@@ -506,7 +516,162 @@ function animateParticles(){
 animateParticles();
 
 const viz=document.getElementById("visualizer"); for(let i=0;i<40;i++){ const b=document.createElement("div"); b.className="viz-bar"; b.style.animationDuration=(0.4+Math.random()*0.6)+"s"; viz.appendChild(b); }
+// =========================================================
+// ★ サイバーシステムサウンド (Audio System)
+// =========================================================
+const AudioSys = {
+  ctx: null,
+  isMuted: true, // 最初はミュート（ブラウザ制限対策）
 
+  init: function() {
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AudioContext();
+    this.setupEvents();
+  },
+
+  toggle: function() {
+    this.isMuted = !this.isMuted;
+    const btn = document.getElementById("muteBtn");
+    if (this.isMuted) {
+      btn.textContent = "🔇 MUTE";
+      btn.classList.remove("active");
+    } else {
+      // ブラウザはユーザー操作がないと音を出せないので、ここでResumeする
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      btn.textContent = "🔊 SOUND ON";
+      btn.classList.add("active");
+      this.play("active"); // 起動音
+    }
+  },
+
+  // 音生成エンジン
+  play: function(type) {
+    if (this.isMuted || !this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    const now = this.ctx.currentTime;
+
+    if (type === "hover") {
+      // ピッ (高音)
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } 
+    else if (type === "click") {
+      // カッ (メカ音)
+      osc.type = "square";
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    }
+    else if (type === "like") {
+      // キュイン！ (コイン音)
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(1000, now);
+      osc.frequency.linearRampToValueAtTime(2000, now + 0.1);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+    else if (type === "roulette") {
+      // トトトト... (低い音)
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(100, now);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    }
+    else if (type === "win") {
+      // ジャーン！ (和音風)
+      this.playTone(440, "triangle", 0.5);
+      this.playTone(554, "triangle", 0.5); // C#
+      this.playTone(659, "triangle", 0.5); // E
+    }
+    else if (type === "active") {
+      // ブォン (起動音)
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(100, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.5);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    }
+  },
+
+  playTone: function(freq, type, dur) {
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+    osc.start();
+    osc.stop(this.ctx.currentTime + dur);
+  },
+
+  // 自動でイベントを設定
+  setupEvents: function() {
+    // ボタンのホバー音
+    document.body.addEventListener("mouseover", (e) => {
+      if (e.target.closest("button, a, .song-card")) {
+        this.play("hover");
+      }
+    });
+    // クリック音
+    document.body.addEventListener("mousedown", (e) => {
+      if (e.target.closest("button, a, .song-card")) {
+        this.play("click");
+      }
+    });
+  }
+};
+
+// 初期化実行
+AudioSys.init();
+document.getElementById("muteBtn").onclick = () => AudioSys.toggle();
+
+// ★既存機能への割り込み（いいね音とルーレット音）
+// 元の関数を上書きせずにフックするのは難しいので、
+// 簡易的に既存のクリックイベントで音を鳴らすように調整済み（setupEvents内）
+// ただし「いいね」だけは特別に鳴らしたいので、既存の addLike 関数を少し改造します
+const originalAddLike = window.addLike;
+window.addLike = function(safeTitle, btn) {
+  AudioSys.play("like"); // 音を鳴らす
+  if(originalAddLike) originalAddLike(safeTitle, btn);
+};
+
+// ルーレットの音も改造
+if(els.roulette) {
+  // 元のイベントリスナーを削除できないので、音用のリスナーを追加
+  els.roulette.addEventListener("click", () => {
+    if(!AudioSys.isMuted) {
+      let count = 0;
+      const interval = setInterval(() => {
+        AudioSys.play("roulette");
+        count++;
+        if (count >= 20) {
+          clearInterval(interval);
+          setTimeout(() => AudioSys.play("win"), 100);
+        }
+      }, 70); // 元のルーレットと同じ速度
+    }
+  });
+}
 </script>
 </body>
 </html>
