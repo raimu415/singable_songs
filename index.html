@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>らいむの歌える曲リスト - GALAXY SYSTEM</title>
+  <title>らいむの歌える曲リスト - UTILITY SYSTEM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -12,15 +12,18 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    // ここにあなたの「firebaseConfig」を貼り付けてください！
     const firebaseConfig = {
-      apiKey: "AIzaSyD8ZxrKxhL3HXmX6yXiFEAd91kzb5YX_lw",
-      authDomain: "raimu-song-list-79b52.firebaseapp.com",
-      databaseURL: "https://raimu-song-list-79b52-default-rtdb.firebaseio.com",
-      projectId: "raimu-song-list-79b52",
-      storageBucket: "raimu-song-list-79b52.firebasestorage.app",
-      messagingSenderId: "242038202194",
-      appId: "1:242038202194:web:81cd18eb19e8c91084648b"
+      apiKey: "AIzaSyD...", 
+      authDomain: "...",
+      databaseURL: "https://...",
+      projectId: "...",
+      storageBucket: "...",
+      messagingSenderId: "...",
+      appId: "..."
     };
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -114,18 +117,13 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .btn-like:hover { background: rgba(244, 63, 94, 0.8); color: #fff; box-shadow: 0 0 15px var(--like-color); transform: scale(1.05); }
 .btn-like:active { transform: scale(0.95); }
 .btn-like.liked { animation: popHeart 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-/* ★すでにいいね済みの場合のスタイル */
-.btn-like.liked-done {
-  background: var(--like-color);
-  color: #fff;
-  border-color: var(--like-color);
-  box-shadow: 0 0 10px var(--like-color);
-  cursor: default;
-  opacity: 0.8;
-  pointer-events: none; /* 押せなくする */
-}
-
+.btn-like.liked-done { background: var(--like-color); color: #fff; border-color: var(--like-color); box-shadow: 0 0 10px var(--like-color); cursor: default; opacity: 0.8; pointer-events: none; }
 @keyframes popHeart { 0%{ transform:scale(1); } 50%{ transform:scale(1.4); } 100%{ transform:scale(1); } }
+
+/* ★追加: 歌詞検索ボタン */
+.btn-lyrics { display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 255, 255, 0.1); color: #e5e7eb; border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; transition: 0.2s; cursor: pointer;}
+.btn-lyrics:hover { background: rgba(255, 255, 255, 0.3); color: #fff; border-color: #fff; }
+
 .btn-youtube { display: inline-flex; align-items: center; gap: 4px; background: rgba(220, 38, 38, 0.2); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.5); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; transition: 0.2s; }
 .btn-youtube:hover { background: rgba(220, 38, 38, 0.8); color: #fff; }
 .btn-copy { background: transparent; border: 1px solid rgba(148, 163, 184, 0.4); color: var(--text-sub); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
@@ -147,6 +145,9 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
 .mute-btn:hover { border-color: var(--accent); color: var(--accent); }
 .mute-btn.active { color: var(--neon-blue); border-color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
 
+/* ★追加: ヒット件数表示 */
+.hit-count { font-size: 0.75rem; color: var(--accent); margin-left: auto; white-space: nowrap; align-self: center; }
+
 /* 隠し要素：RED ALERT */
 body.red-alert { animation: none; }
 body.red-alert::before { content: "⚠️ SYSTEM CORRUPTED ⚠️"; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 5rem; font-weight: 900; color: rgba(255, 0, 0, 0.2); white-space: nowrap; pointer-events: none; z-index: 0; animation: warningPulse 0.5s infinite alternate; }
@@ -155,7 +156,6 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
 @keyframes alertFlash { 0% { opacity: 0; } 50% { opacity: 0.3; } 100% { opacity: 0; } }
 @keyframes warningPulse { from { transform: translate(-50%, -50%) scale(1); opacity: 0.1; } to { transform: translate(-50%, -50%) scale(1.2); opacity: 0.4; } }
 
-/* ★スマホ最適化 */
 @media screen and (max-width: 768px) {
   .container { padding: 10px 10px 80px; }
   .header-inner { padding: 12px; }
@@ -165,25 +165,18 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
   .controls { gap: 6px; }
   .search-box input, .sort-select { padding: 8px 12px; font-size: 0.8rem; }
   .filter-btn { padding: 4px 8px; font-size: 0.65rem; }
-  
   .song-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .song-card { padding: 10px; border-radius: 12px; transform: none !important; perspective: none; }
   .song-title { font-size: 0.85rem; }
   .song-artist { font-size: 0.7rem; }
   .memo-text { font-size: 0.65rem; line-height: 1.2; }
   .memo-pill { font-size: 0.6rem; padding: 1px 6px; }
-  .btn-copy, .btn-youtube, .btn-like { font-size: 0.6rem; padding: 3px 6px; }
+  .btn-copy, .btn-youtube, .btn-like, .btn-lyrics { font-size: 0.6rem; padding: 3px 6px; }
   .card-actions { flex-wrap: wrap; }
   .roulette-btn { padding: 6px 16px; font-size: 0.8rem; }
   #boot-screen { padding: 20px; font-size: 0.8rem; }
-
-  /* Galaxyモードのスマホ調整 */
   #galaxy-ui { top: auto; bottom: 20px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; }
-  #star-tooltip {
-    top: 60px !important; left: 50% !important; transform: translateX(-50%) !important;
-    width: 80%; text-align: center; font-size: 1.2rem;
-    pointer-events: none;
-  }
+  #star-tooltip { top: 60px !important; left: 50% !important; transform: translateX(-50%) !important; width: 80%; text-align: center; font-size: 1.2rem; pointer-events: none; }
 }
 </style>
 </head>
@@ -213,7 +206,7 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
       <div class="tagline">配信で歌える（歌いたい）曲をまとめたページ</div>
       
       <div style="text-align:center; margin: 15px 0;">
-        <button id="rouletteBtn" class="roulette-btn">🎲 サイバーおまかせ選曲</button>
+        <button id="rouletteBtn" class="roulette-btn">🎲 おまかせ選曲</button>
       </div>
       <div style="text-align:center; margin-bottom: 10px;">
         <button id="enterGalaxyBtn" class="galaxy-btn" style="border-color:var(--neon-pink); color:var(--neon-pink);">🌌 GALAXY MODE</button>
@@ -232,7 +225,10 @@ body.red-alert * { --neon-blue: #ff0000 !important; --neon-pink: #ff4444 !import
             <option value="likes">いいね順 ❤️</option>
           </select>
         </div>
-        <div class="filter-row" id="filterRow"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:5px;">
+           <div id="filterRow" style="display:flex; flex-wrap:wrap; gap:4px;"></div>
+           <div id="hitCount" class="hit-count"></div>
+        </div>
       </div>
     </div>
   </header>
@@ -268,7 +264,8 @@ const els = {
   toggle: document.getElementById("controlsToggle"), sort: document.getElementById("sortSelect"),
   roulette: document.getElementById("rouletteBtn"), modal: document.getElementById("rouletteModal"),
   result: document.getElementById("rouletteResult"), close: document.getElementById("closeModal"),
-  toast: document.getElementById("toast")
+  toast: document.getElementById("toast"),
+  hitCount: document.getElementById("hitCount") // 追加
 };
 
 // =========================================================
@@ -324,7 +321,6 @@ const normalize = songs => songs.map(s => (s.memo&&s.memo.includes("弾き語り
   ["lastUpdateTime","updatedDate"].forEach(id=>{ const e=document.getElementById(id); if(e)e.textContent=t; });
 })();
 
-// Firebase Sync
 function startLikesSync() {
   if (!window.db) return;
   const likesRef = window.dbRef(window.db, 'likes');
@@ -342,7 +338,6 @@ function updateAllLikeCounts() {
   });
 }
 
-// Load & Render
 async function loadSongs() {
   try {
     const res = await fetch("songs.json", { cache:"no-store" }); if(!res.ok) throw new Error(res.status);
@@ -368,6 +363,16 @@ function render() {
     list.sort((a,b) => (a[currentSort]||"").toString().localeCompare((b[currentSort]||"").toString(),"ja"));
   }
   
+  // ★追加: 曲数カウント表示
+  if(els.hitCount) {
+     els.hitCount.textContent = `${list.length} Songs`;
+  }
+  // ★追加: ルーレットボタンのラベルを更新（今何の中から選ぶか分かるように）
+  if(els.roulette) {
+     const modeText = filteredCategory === 'all' ? '全曲' : CATEGORY_LABELS[filteredCategory];
+     els.roulette.textContent = `🎲 ${modeText}から選曲`;
+  }
+
   if(!list.length) { els.sections.innerHTML = "<p style='text-align:center;opacity:0.6;'>NO DATA FOUND</p>"; return; }
   
   const groups = list.reduce((g,s)=>{ (g[s.category||"other"]||=[]).push(s); return g; }, {});
@@ -389,7 +394,6 @@ function renderCard(s, i) {
   const copyText = escape(`${s.title} / ${s.artist||""}`);
   const safeTitle = s.title.replace(/[.#$/[\]]/g, "_");
   
-  // 以前いいねしたかチェック
   const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
   const isLiked = likedSongs[safeTitle];
   const likeClass = isLiked ? 'btn-like liked-done' : 'btn-like';
@@ -409,36 +413,28 @@ function renderCard(s, i) {
       <button class="${likeClass}" ${disabledAttr} data-title="${escape(s.title)}" onclick="addLike('${escape(safeTitle)}', this)">❤️ <span class="count">0</span></button>
       <button class="btn-copy" onclick="doCopy('${copyText}')">📋 COPY</button>
       ${s.url ? `<a href="${escape(s.url)}" target="_blank" class="btn-youtube">▶ YOUTUBE</a>` : ""}
+      <a href="https://www.google.com/search?q=${encodeURIComponent(s.title + ' 歌詞')}" target="_blank" class="btn-lyrics">📖 歌詞</a>
     </div>
   </div>`;
 }
 
 window.addLike = (safeTitle, btn) => {
   if (!window.db) { alert("Firebase未設定"); return; }
-  
-  // いいね済みチェック（二重防止）
   const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
   if (likedSongs[safeTitle]) { return; }
-
   AudioSys.play("like");
-  
-  // UI即時反映
-  btn.classList.add('liked-done');
-  btn.disabled = true;
-  
-  // ローカル保存
-  likedSongs[safeTitle] = true;
-  localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
-
-  // Firebase送信
+  btn.classList.add('liked-done'); btn.disabled = true;
+  likedSongs[safeTitle] = true; localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
   const likeRef = window.dbRef(window.db, 'likes/' + safeTitle);
   window.dbRunTransaction(likeRef, (currentLikes) => (currentLikes || 0) + 1);
 };
 window.doCopy = t => navigator.clipboard.writeText(t).then(()=>{ els.toast.classList.add("show"); setTimeout(()=>els.toast.classList.remove("show"),2000); });
 
 if(els.roulette) els.roulette.addEventListener("click", () => {
+  // ★変更: フィルタリングされたリストから選ぶ（カテゴリ別ルーレット）
   let list = allSongs.filter(s => (filteredCategory==="all" || (s.category||"other")===filteredCategory) && `${s.title} ${s.artist}`.toLowerCase().includes(keyword.toLowerCase()));
-  if(!list.length) return alert("NO DATA");
+  if(!list.length) return alert("この条件では曲がありません");
+  
   els.modal.classList.add("show"); els.result.innerHTML = "SCANNING...";
   let c=0;
   const interval = setInterval(() => {
@@ -449,13 +445,10 @@ if(els.roulette) els.roulette.addEventListener("click", () => {
 });
 
 // =========================================================
-// 3D GALAXY SYSTEM (スマホ対応強化版)
+// 3D GALAXY SYSTEM
 // =========================================================
 const GalaxySys = {
-  active: false, scene: null, camera: null, renderer: null, controls: null, stars: [], raycaster: null, mouse: null,
-  container: document.getElementById('galaxy-container'), tooltip: document.getElementById('star-tooltip'), animationId: null,
-  touchStartTime: 0, touchStartX: 0, touchStartY: 0, // スマホ用変数
-
+  active: false, scene: null, camera: null, renderer: null, controls: null, stars: [], raycaster: null, mouse: null, container: document.getElementById('galaxy-container'), tooltip: document.getElementById('star-tooltip'), animationId: null, touchStartTime: 0, touchStartX: 0, touchStartY: 0,
   init: function() {
     this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x000000, 0.002);
     this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000); this.camera.position.z = 1; this.camera.rotation.x = Math.PI/2;
@@ -463,23 +456,14 @@ const GalaxySys = {
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement); this.controls.enableDamping = true; this.controls.dampingFactor = 0.05; this.controls.autoRotate = true; this.controls.autoRotateSpeed = 0.5;
     this.raycaster = new THREE.Raycaster(); this.mouse = new THREE.Vector2();
     window.addEventListener('resize', () => this.onResize());
-    
-    // イベント登録（PC・スマホ両対応）
     this.container.addEventListener('mousemove', (e) => this.onMouseMove(e));
     this.container.addEventListener('click', (e) => this.onClick(e));
-    // ★スマホ用タッチ判定を追加
     this.container.addEventListener('touchstart', (e) => this.onTouchStart(e), {passive: false});
     this.container.addEventListener('touchend', (e) => this.onTouchEnd(e), {passive: false});
   },
-
   createStars: function() {
-    if(!allSongs.length) return;
-    this.stars.forEach(s=>this.scene.remove(s)); this.stars=[];
-    
-    const isMobile = window.innerWidth < 768; // スマホ判定
-    const starScale = isMobile ? 12 : 8; // スマホなら星をデカく
-    const bgCount = isMobile ? 300 : 1000; // スマホなら背景星を減らす
-
+    if(!allSongs.length) return; this.stars.forEach(s=>this.scene.remove(s)); this.stars=[];
+    const isMobile = window.innerWidth < 768; const starScale = isMobile ? 12 : 8; const bgCount = isMobile ? 300 : 1000;
     const getStarMaterial = (color) => {
       const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d');
       const grad = ctx.createRadialGradient(16,16,0, 16,16,16); grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.2, color); grad.addColorStop(0.5, 'rgba(0,0,0,1)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -493,16 +477,12 @@ const GalaxySys = {
       sprite.scale.set(starScale, starScale, 1); sprite.userData = { song: song };
       this.scene.add(sprite); this.stars.push(sprite);
     });
-    const geo = new THREE.BufferGeometry(); const vert = [];
-    for (let i = 0; i < bgCount; i++) vert.push((Math.random()-0.5)*2000, (Math.random()-0.5)*2000, (Math.random()-0.5)*2000);
+    const geo = new THREE.BufferGeometry(); const vert = []; for (let i = 0; i < bgCount; i++) vert.push((Math.random()-0.5)*2000, (Math.random()-0.5)*2000, (Math.random()-0.5)*2000);
     geo.setAttribute('position', new THREE.Float32BufferAttribute(vert, 3)); this.scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x888888, size: 2 })));
   },
-
   animate: function() {
     if (!this.active) return;
     this.animationId = requestAnimationFrame(() => this.animate()); this.controls.update();
-    
-    // PCのみホバーでツールチップ表示
     if(window.innerWidth > 768) {
       this.raycaster.setFromCamera(this.mouse, this.camera); const intersects = this.raycaster.intersectObjects(this.stars);
       if (intersects.length > 0) {
@@ -513,66 +493,29 @@ const GalaxySys = {
     }
     this.renderer.render(this.scene, this.camera);
   },
-
   onResize: function() { if (!this.camera) return; this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); },
   onMouseMove: function(event) { this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1; this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1; this.tooltip.style.left = (event.clientX + 15) + 'px'; this.tooltip.style.top = (event.clientY + 15) + 'px'; },
-  
-  // ★ PC用クリック
   onClick: function(event) {
-    if(event.type === 'touchstart' || event.type === 'touchend') return; // タッチは別処理
-    this.raycaster.setFromCamera(this.mouse, this.camera); 
-    const intersects = this.raycaster.intersectObjects(this.stars);
-    if (intersects.length > 0) {
-      this.showDetail(intersects[0].object.userData.song);
-    }
+    if(event.type === 'touchstart' || event.type === 'touchend') return;
+    this.raycaster.setFromCamera(this.mouse, this.camera); const intersects = this.raycaster.intersectObjects(this.stars);
+    if (intersects.length > 0) this.showDetail(intersects[0].object.userData.song);
   },
-
-  // ★ スマホ用タッチ処理（グリグリとタップを判別）
-  onTouchStart: function(e) {
-    if (e.touches.length === 1) {
-      this.touchStartTime = Date.now();
-      this.touchStartX = e.touches[0].clientX;
-      this.touchStartY = e.touches[0].clientY;
-    }
-  },
+  onTouchStart: function(e) { if (e.touches.length === 1) { this.touchStartTime = Date.now(); this.touchStartX = e.touches[0].clientX; this.touchStartY = e.touches[0].clientY; } },
   onTouchEnd: function(e) {
     if (e.changedTouches.length === 1) {
-      const timeDiff = Date.now() - this.touchStartTime;
-      const xDiff = Math.abs(e.changedTouches[0].clientX - this.touchStartX);
-      const yDiff = Math.abs(e.changedTouches[0].clientY - this.touchStartY);
-
-      // 短い時間で、指があまり動いていなければ「タップ」とみなす
-      if (timeDiff < 300 && xDiff < 10 && yDiff < 10) {
-        // 座標をセット
-        this.mouse.x = (e.changedTouches[0].clientX / window.innerWidth) * 2 - 1;
-        this.mouse.y = -(e.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
-        
-        this.raycaster.setFromCamera(this.mouse, this.camera); 
-        const intersects = this.raycaster.intersectObjects(this.stars);
+      if ((Date.now() - this.touchStartTime) < 300 && Math.abs(e.changedTouches[0].clientX - this.touchStartX) < 10 && Math.abs(e.changedTouches[0].clientY - this.touchStartY) < 10) {
+        this.mouse.x = (e.changedTouches[0].clientX / window.innerWidth) * 2 - 1; this.mouse.y = -(e.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
+        this.raycaster.setFromCamera(this.mouse, this.camera); const intersects = this.raycaster.intersectObjects(this.stars);
         if (intersects.length > 0) {
           const song = intersects[0].object.userData.song;
-          // スマホはツールチップを一瞬出して、すぐ詳細へ
-          this.tooltip.style.opacity = 1;
-          this.tooltip.querySelector('.tt-title').textContent = song.title;
-          this.tooltip.querySelector('.tt-artist').textContent = song.artist;
+          this.tooltip.style.opacity = 1; this.tooltip.querySelector('.tt-title').textContent = song.title; this.tooltip.querySelector('.tt-artist').textContent = song.artist;
           setTimeout(() => this.showDetail(song), 100);
         }
       }
     }
   },
-
-  showDetail: function(song) {
-    AudioSys.play("like");
-    const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult");
-    modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
-  },
-
-  open: function() {
-    this.active = true; this.container.classList.add('active');
-    if (!this.scene) this.init();
-    this.createStars(); 
-    this.animate(); AudioSys.play("active");
-  },
+  showDetail: function(song) { AudioSys.play("like"); const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult"); modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`; },
+  open: function() { this.active = true; this.container.classList.add('active'); if (!this.scene) this.init(); this.createStars(); this.animate(); AudioSys.play("active"); },
   close: function() { this.active = false; this.container.classList.remove('active'); cancelAnimationFrame(this.animationId); }
 };
 document.getElementById('enterGalaxyBtn').addEventListener('click', () => GalaxySys.open());
@@ -584,15 +527,8 @@ document.addEventListener('keydown', (e) => {
   inputSequence.push(e.key); if (inputSequence.length > secretCode.length) inputSequence.shift();
   if (JSON.stringify(inputSequence) === JSON.stringify(secretCode)) activateRedAlert();
 });
-function activateRedAlert() {
-  const body = document.body;
-  if (body.classList.contains('red-alert')) { body.classList.remove('red-alert'); alert("SYSTEM RESTORED."); }
-  else { body.classList.add('red-alert'); if(!AudioSys.isMuted) playSiren(); }
-}
-function playSiren() {
-  if (!AudioSys.ctx) return; const osc = AudioSys.ctx.createOscillator(); const gain = AudioSys.ctx.createGain(); osc.connect(gain); gain.connect(AudioSys.ctx.destination); osc.type = 'sawtooth'; gain.gain.value = 0.1; const now = AudioSys.ctx.currentTime;
-  osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now + 0.5); osc.frequency.linearRampToValueAtTime(400, now + 1.0); osc.frequency.linearRampToValueAtTime(800, now + 1.5); osc.frequency.linearRampToValueAtTime(400, now + 2.0); gain.gain.linearRampToValueAtTime(0.01, now + 2.0); osc.start(now); osc.stop(now + 2.0);
-}
+function activateRedAlert() { const body = document.body; if (body.classList.contains('red-alert')) { body.classList.remove('red-alert'); alert("SYSTEM RESTORED."); } else { body.classList.add('red-alert'); if(!AudioSys.isMuted) playSiren(); } }
+function playSiren() { if (!AudioSys.ctx) return; const osc = AudioSys.ctx.createOscillator(); const gain = AudioSys.ctx.createGain(); osc.connect(gain); gain.connect(AudioSys.ctx.destination); osc.type = 'sawtooth'; gain.gain.value = 0.1; const now = AudioSys.ctx.currentTime; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now + 0.5); osc.frequency.linearRampToValueAtTime(400, now + 1.0); osc.frequency.linearRampToValueAtTime(800, now + 1.5); osc.frequency.linearRampToValueAtTime(400, now + 2.0); gain.gain.linearRampToValueAtTime(0.01, now + 2.0); osc.start(now); osc.stop(now + 2.0); }
 const mCanvas=document.getElementById("matrix-canvas"), mCtx=mCanvas.getContext("2d"); let mCols, mDrops;
 function initMatrix(){ mCanvas.width=innerWidth; mCanvas.height=innerHeight; mCols=Math.floor(innerWidth/20); mDrops=Array(mCols).fill(1); }
 function drawMatrix(){ mCtx.fillStyle="rgba(0,0,0,0.05)"; mCtx.fillRect(0,0,innerWidth,innerHeight); mCtx.fillStyle="#0f0"; mCtx.font="15px monospace"; for(let i=0; i<mDrops.length; i++){ mCtx.fillText(String.fromCharCode(0x30A0+Math.random()*96), i*20, mDrops[i]*20); if(mDrops[i]*20>innerHeight && Math.random()>0.975) mDrops[i]=0; mDrops[i]++; } requestAnimationFrame(drawMatrix); }
