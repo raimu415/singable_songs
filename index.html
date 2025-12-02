@@ -56,7 +56,7 @@ body { margin: 0; font-family: "Segoe UI", sans-serif; color: var(--text-main); 
 }
 .galaxy-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
 
-/* 星ツールチップ（PC用） */
+/* 星ツールチップ */
 #star-tooltip {
   position: absolute; top: 0; left: 0; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--neon-pink);
   padding: 10px 15px; border-radius: 8px; color: #fff; pointer-events: none; opacity: 0; transition: opacity 0.2s;
@@ -422,11 +422,13 @@ if(els.roulette) els.roulette.addEventListener("click", () => {
 });
 
 // =========================================================
-// 3D GALAXY SYSTEM
+// 3D GALAXY SYSTEM (スマホ対応強化版)
 // =========================================================
 const GalaxySys = {
-  active: false, scene: null, camera: null, renderer: null, controls: null, stars: [], raycaster: null, mouse: null, container: document.getElementById('galaxy-container'), tooltip: document.getElementById('star-tooltip'), animationId: null,
-  
+  active: false, scene: null, camera: null, renderer: null, controls: null, stars: [], raycaster: null, mouse: null,
+  container: document.getElementById('galaxy-container'), tooltip: document.getElementById('star-tooltip'), animationId: null,
+  touchStartTime: 0, touchStartX: 0, touchStartY: 0, // スマホ用変数
+
   init: function() {
     this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x000000, 0.002);
     this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000); this.camera.position.z = 1; this.camera.rotation.x = Math.PI/2;
@@ -435,10 +437,12 @@ const GalaxySys = {
     this.raycaster = new THREE.Raycaster(); this.mouse = new THREE.Vector2();
     window.addEventListener('resize', () => this.onResize());
     
-    // ★タッチイベント対応（スマホ）
+    // イベント登録（PC・スマホ両対応）
     this.container.addEventListener('mousemove', (e) => this.onMouseMove(e));
     this.container.addEventListener('click', (e) => this.onClick(e));
+    // ★スマホ用タッチ判定を追加
     this.container.addEventListener('touchstart', (e) => this.onTouchStart(e), {passive: false});
+    this.container.addEventListener('touchend', (e) => this.onTouchEnd(e), {passive: false});
   },
 
   createStars: function() {
@@ -471,7 +475,7 @@ const GalaxySys = {
     if (!this.active) return;
     this.animationId = requestAnimationFrame(() => this.animate()); this.controls.update();
     
-    // PCのみホバーでツールチップ表示（スマホはクリック時のみ）
+    // PCのみホバーでツールチップ表示
     if(window.innerWidth > 768) {
       this.raycaster.setFromCamera(this.mouse, this.camera); const intersects = this.raycaster.intersectObjects(this.stars);
       if (intersects.length > 0) {
@@ -486,50 +490,54 @@ const GalaxySys = {
   onResize: function() { if (!this.camera) return; this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); },
   onMouseMove: function(event) { this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1; this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1; this.tooltip.style.left = (event.clientX + 15) + 'px'; this.tooltip.style.top = (event.clientY + 15) + 'px'; },
   
-  // ★タップ/クリック時の処理
+  // ★ PC用クリック
   onClick: function(event) {
-    // タップ位置を正規化
-    let cx = event.clientX; let cy = event.clientY;
-    if(event.changedTouches && event.changedTouches.length > 0) {
-       cx = event.changedTouches[0].clientX; cy = event.changedTouches[0].clientY;
-    }
-    this.mouse.x = (cx / window.innerWidth) * 2 - 1;
-    this.mouse.y = -(cy / window.innerHeight) * 2 + 1;
-
+    if(event.type === 'touchstart' || event.type === 'touchend') return; // タッチは別処理
     this.raycaster.setFromCamera(this.mouse, this.camera); 
     const intersects = this.raycaster.intersectObjects(this.stars);
-    
     if (intersects.length > 0) {
-      const song = intersects[0].object.userData.song;
-      
-      // スマホの場合：1回目はツールチップ表示、2回目(またはツールチップ表示中)は詳細へ
-      if(window.innerWidth <= 768) {
-         // ツールチップを表示
-         this.tooltip.style.opacity = 1;
-         this.tooltip.querySelector('.tt-title').textContent = song.title;
-         this.tooltip.querySelector('.tt-artist').textContent = song.artist;
-         // すぐ開く
-         setTimeout(() => {
-            AudioSys.play("like");
-            const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult");
-            modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
-         }, 300);
-      } else {
-         // PC
-         AudioSys.play("like");
-         const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult");
-         modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
+      this.showDetail(intersects[0].object.userData.song);
+    }
+  },
+
+  // ★ スマホ用タッチ処理（グリグリとタップを判別）
+  onTouchStart: function(e) {
+    if (e.touches.length === 1) {
+      this.touchStartTime = Date.now();
+      this.touchStartX = e.touches[0].clientX;
+      this.touchStartY = e.touches[0].clientY;
+    }
+  },
+  onTouchEnd: function(e) {
+    if (e.changedTouches.length === 1) {
+      const timeDiff = Date.now() - this.touchStartTime;
+      const xDiff = Math.abs(e.changedTouches[0].clientX - this.touchStartX);
+      const yDiff = Math.abs(e.changedTouches[0].clientY - this.touchStartY);
+
+      // 短い時間で、指があまり動いていなければ「タップ」とみなす
+      if (timeDiff < 300 && xDiff < 10 && yDiff < 10) {
+        // 座標をセット
+        this.mouse.x = (e.changedTouches[0].clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = -(e.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
+        
+        this.raycaster.setFromCamera(this.mouse, this.camera); 
+        const intersects = this.raycaster.intersectObjects(this.stars);
+        if (intersects.length > 0) {
+          const song = intersects[0].object.userData.song;
+          // スマホはツールチップを一瞬出して、すぐ詳細へ
+          this.tooltip.style.opacity = 1;
+          this.tooltip.querySelector('.tt-title').textContent = song.title;
+          this.tooltip.querySelector('.tt-artist').textContent = song.artist;
+          setTimeout(() => this.showDetail(song), 100);
+        }
       }
     }
   },
-  
-  onTouchStart: function(e) {
-     // タッチでも座標更新（クリック判定用）
-     if(e.touches.length > 0) {
-        this.mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
-        this.mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-     }
-     // OrbitControlsと競合しないようにClickイベントへ任せる
+
+  showDetail: function(song) {
+    AudioSys.play("like");
+    const modal = document.getElementById("rouletteModal"); const result = document.getElementById("rouletteResult");
+    modal.classList.add("show"); result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
   },
 
   open: function() {
