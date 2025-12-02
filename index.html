@@ -243,7 +243,39 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
   .roulette-btn { padding: 6px 16px; font-size: 0.8rem; }
   #boot-screen { padding: 20px; font-size: 0.8rem; }
 }
+/* === 宇宙空間モード === */
+#galaxy-container {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #000; z-index: 9000; /* ヘッダーより奥、背景より手前 */
+  opacity: 0; pointer-events: none; transition: opacity 0.5s;
+}
+#galaxy-container.active {
+  opacity: 1; pointer-events: auto; z-index: 99999; /* 最前面へ */
+}
 
+/* 宇宙モード時のUI */
+#galaxy-ui {
+  position: absolute; top: 20px; left: 20px; pointer-events: none;
+}
+.galaxy-btn {
+  pointer-events: auto;
+  background: rgba(0,0,0,0.7); border: 1px solid var(--neon-blue); color: var(--neon-blue);
+  padding: 10px 20px; border-radius: 999px; cursor: pointer;
+  font-family: monospace; font-weight: bold; text-shadow: 0 0 5px var(--neon-blue);
+  transition: 0.3s;
+}
+.galaxy-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
+
+/* 星にカーソルを合わせた時のツールチップ */
+#star-tooltip {
+  position: absolute; top: 0; left: 0;
+  background: rgba(15, 23, 42, 0.9); border: 1px solid var(--neon-pink);
+  padding: 10px 15px; border-radius: 8px; color: #fff;
+  pointer-events: none; opacity: 0; transition: opacity 0.2s;
+  transform: translate(15px, 15px); box-shadow: 0 0 15px var(--neon-pink);
+}
+#star-tooltip .tt-title { font-weight: bold; font-size: 1rem; margin-bottom: 2px; }
+#star-tooltip .tt-artist { font-size: 0.8rem; color: #ccc; }
 </style>
 </head>
 <body>
@@ -280,6 +312,8 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
         <div class="filter-row" id="filterRow"></div>
       </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   </header>
 
   <main id="songSections"></main>
@@ -297,6 +331,7 @@ h1.glitch-effect { position: relative; animation: textGlitch 3s infinite alterna
   </div>
 </div>
 <div id="toast" class="toast-notification">DATA COPIED TO CLIPBOARD</div>
+
 
 <script>
 // =========================================================
@@ -678,6 +713,199 @@ if(els.roulette) {
     }
   });
 }
+// =========================================================
+// ★ 3D GALAXY SYSTEM (Three.js)
+// =========================================================
+const GalaxySys = {
+  active: false,
+  scene: null, camera: null, renderer: null, controls: null,
+  stars: [], raycaster: null, mouse: null,
+  container: document.getElementById('galaxy-container'),
+  tooltip: document.getElementById('star-tooltip'),
+  animationId: null,
+
+  init: function() {
+    // 1. シーン作成
+    this.scene = new THREE.Scene();
+    this.scene.fog = new THREE.FogExp2(0x000000, 0.002);
+
+    // 2. カメラ作成
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+    this.camera.position.z = 1;
+    this.camera.rotation.x = Math.PI/2;
+
+    // 3. レンダラー作成
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.container.appendChild(this.renderer.domElement);
+
+    // 4. コントロール（マウスでグリグリ）
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.05;
+    this.controls.autoRotate = true;
+    this.controls.autoRotateSpeed = 0.5;
+
+    // 5. インタラクション用
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+
+    // イベント
+    window.addEventListener('resize', () => this.onResize());
+    this.container.addEventListener('mousemove', (e) => this.onMouseMove(e));
+    this.container.addEventListener('click', () => this.onClick());
+
+    // 星（曲）を生成
+    this.createStars();
+    
+    // 起動アニメーション開始
+    this.animate();
+  },
+
+  // 曲データから星を作る
+  createStars: function() {
+    // 星の画像（Canvasで動的に生成）
+    const getStarMaterial = (color) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 32; canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(16,16,0, 16,16,16);
+      grad.addColorStop(0, 'rgba(255,255,255,1)');
+      grad.addColorStop(0.2, color);
+      grad.addColorStop(0.5, 'rgba(0,0,0,1)'); // 黒背景用
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad; ctx.fillRect(0,0,32,32);
+      const texture = new THREE.CanvasTexture(canvas);
+      return new THREE.SpriteMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending });
+    };
+
+    const matBlue = getStarMaterial('rgba(96, 165, 250, 1)');
+    const matPink = getStarMaterial('rgba(236, 72, 153, 1)');
+
+    // 全曲を配置
+    allSongs.forEach((song, i) => {
+      const material = (i % 2 === 0) ? matBlue : matPink;
+      const sprite = new THREE.Sprite(material);
+      
+      // ランダム配置（球状）
+      const r = 200 + Math.random() * 300; // 半径
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      
+      sprite.position.x = r * Math.sin(phi) * Math.cos(theta);
+      sprite.position.y = r * Math.sin(phi) * Math.sin(theta);
+      sprite.position.z = r * Math.cos(phi);
+      
+      sprite.scale.set(8, 8, 1);
+      
+      // 曲データを紐付け
+      sprite.userData = { song: song, id: i };
+      
+      this.scene.add(sprite);
+      this.stars.push(sprite);
+    });
+
+    // 背景の細かい星屑
+    const geometry = new THREE.BufferGeometry();
+    const vertices = [];
+    for (let i = 0; i < 1000; i++) {
+      vertices.push((Math.random() - 0.5) * 2000);
+      vertices.push((Math.random() - 0.5) * 2000);
+      vertices.push((Math.random() - 0.5) * 2000);
+    }
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    const partsMat = new THREE.PointsMaterial({ color: 0x888888, size: 2 });
+    const starField = new THREE.Points(geometry, partsMat);
+    this.scene.add(starField);
+  },
+
+  animate: function() {
+    if (!this.active) return;
+    this.animationId = requestAnimationFrame(() => this.animate());
+    this.controls.update();
+    
+    // レイキャスト（マウス判定）
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.stars);
+
+    if (intersects.length > 0) {
+      const target = intersects[0].object;
+      const song = target.userData.song;
+      
+      // ツールチップ表示
+      this.tooltip.style.opacity = 1;
+      this.tooltip.style.left = (event.clientX) + 'px'; // mousemoveで更新
+      this.tooltip.style.top = (event.clientY) + 'px';
+      this.tooltip.querySelector('.tt-title').textContent = song.title;
+      this.tooltip.querySelector('.tt-artist').textContent = song.artist;
+      
+      document.body.style.cursor = 'pointer';
+      
+      // 星を拡大
+      target.scale.set(15, 15, 1);
+    } else {
+      this.tooltip.style.opacity = 0;
+      document.body.style.cursor = 'default';
+      // 元のサイズに戻す
+      this.stars.forEach(s => s.scale.set(8, 8, 1));
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  },
+
+  onResize: function() {
+    if (!this.camera) return;
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  },
+
+  onMouseMove: function(event) {
+    // 座標を正規化 (-1 to +1)
+    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
+    // ツールチップ追従
+    this.tooltip.style.left = (event.clientX + 15) + 'px';
+    this.tooltip.style.top = (event.clientY + 15) + 'px';
+  },
+
+  onClick: function() {
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.stars);
+    if (intersects.length > 0) {
+      const song = intersects[0].object.userData.song;
+      
+      // ルーレットの結果画面を流用して表示
+      if(AudioSys) AudioSys.play("like"); // 音も鳴らす
+      const modal = document.getElementById("rouletteModal");
+      const result = document.getElementById("rouletteResult");
+      modal.classList.add("show");
+      result.innerHTML = `<div style="font-size:0.8em;opacity:0.7">${song.artist}</div><div>${song.title}</div>`;
+    }
+  },
+
+  open: function() {
+    this.active = true;
+    this.container.classList.add('active');
+    if (!this.scene) this.init(); // 初回のみ初期化
+    else this.animate(); // 再開
+    
+    // 音
+    if(AudioSys) AudioSys.play("active");
+  },
+
+  close: function() {
+    this.active = false;
+    this.container.classList.remove('active');
+    cancelAnimationFrame(this.animationId);
+  }
+};
+
+// ボタンイベント登録
+document.getElementById('enterGalaxyBtn').addEventListener('click', () => GalaxySys.open());
+document.getElementById('exitGalaxyBtn').addEventListener('click', () => GalaxySys.close());
 </script>
 </body>
 </html>
